@@ -1,0 +1,12 @@
+{
+  "name": "@magpie-eye/uiv-cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "uiv": "dist/index.js"
+  },
+  "dependencies": {
+    "@magpie-eye/uiv-core": "*"
+  }
+}

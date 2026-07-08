@@ -1,0 +1,18 @@
+{
+  "name": "magpie-eye",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc -b packages/uiv-core packages/uiv-cli",
+    "typecheck": "tsc -b packages/uiv-core packages/uiv-cli --noEmit false --dry"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
