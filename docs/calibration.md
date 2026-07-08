@@ -48,3 +48,7 @@ runs=[2228,2404,2069]ms, median=**2228ms**(含 npx 转发开销,预热后;odiff 
 - Robolectric 4.16 `@GraphicsMode(NATIVE)` sdk=36:Compose `hasVisualOverflow==true`(超长串+maxLines=1)、真 TextView measure+layout 后 `getEllipsisCount>0`(实测 488) —— 均实测通过
 - LEGACY 对照:探针值见 meta.json.text_metrics.legacy(hasVisualOverflow=false 假阴 / ellipsisCount=0,伪造测量,不可用)
 - 结论:文本溢出/截断两项 L2-invariant 可进硬门禁(text_overflow_invariant=hard-gate),约束条件:NATIVE + sdk>=26 钉死
+
+## NATIVE hard-gate 约束条款(Codex 裁定,2026-07-08)
+
+text_overflow_invariant=hard-gate 仅在以下钉死环境成立:Robolectric 4.16 + `@GraphicsMode(NATIVE)` + sdk/minSdk ≥ 26 + 当前测试字体环境。升级 Robolectric/AGP/SDK 或切换图形模式时**必须重跑 CS1/CS2 probe**(demo-android 的 NativeTextMetrics 测试),未重跑前该 invariant 降回 advisory。

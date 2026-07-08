@@ -5,7 +5,7 @@
   "codex": {
     "transport": "mcp",
     "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
-    "status": "usage-limited until 2026-07-08 21:19; decisions queued in pending-codex-decisions.md"
+    "last_decisions": "D-01 A/B/C + D-02 all approved 2026-07-08 21:2x; M1 subplan round 3/10"
   },
   "consensus_reached": true,
   "current_milestone": "M1",
@@ -54,8 +54,8 @@
       "last_commit": "6744f39"
     },
     "T1.0a": {
-      "status": "awaiting_review",
-      "last_commit": null
+      "status": "done",
+      "last_commit": "fcd29c2"
     },
     "T1.1": {
       "status": "awaiting_review",
@@ -195,7 +195,9 @@
     },
     "metadata_coord_system": "relative-to-parent",
     "odiff_720x1600_median_ms": 2228,
-    "rest_cross_check": "pending-B1-PAT"
+    "rest_cross_check": "pending-B1-PAT",
+    "get_screenshot_scale2": "refuted",
+    "exportAsync_scale2": "confirmed"
   },
   "latency_baseline": {
     "task": "T1.1",
@@ -252,7 +254,8 @@
       "textViewEllipsisCount": 0,
       "errors": []
     },
-    "text_overflow_invariant": "hard-gate"
+    "text_overflow_invariant": "hard-gate",
+    "hard_gate_constraints": "Robolectric 4.16 + @GraphicsMode(NATIVE) + sdk>=26 + 当前测试字体环境; 升级 Robolectric/AGP/SDK 或切图形模式必须重跑 CS1/CS2 probe, 未重跑前降回 advisory (Codex 裁定)"
   },
   "native_text_metrics": {
     "hasVisualOverflow": "pass",

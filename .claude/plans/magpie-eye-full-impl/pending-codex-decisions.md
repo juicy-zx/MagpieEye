@@ -25,3 +25,10 @@ T1.2 core 已完成(44/44 单测),两个子计划未指明处执行 agent 自决
 1. `uiv check` 的 version 来源:从 mapping.json 按 nodeId 查(baseline pull 的 upsert 产物,与设计文档"mapping.json 是 source of truth"一致);未 pull 先 check 报 "run baseline pull first" exit 2。
 2. diff.png 落位 `renders/<nodeDir>/diff.png`(运行产物,.gitignore 的 renders/ 已覆盖)。
 附:实现中修复两个库级坑——odiff-bin 空 ignoreRegions 序列化成非法 --ignore=(仅非空传参);looks-same 相同图返回 null 占位簇(equal 时清空)。
+
+---
+## 决断结果(2026-07-08 21:2x 通道恢复后)
+- D-01 A/B/C:全部同意。C 附加:calibration 并记 get_screenshot_scale2=refuted / exportAsync_scale2=confirmed(已落 meta.json)。
+- D-02:两项同意。附加:T1.3/T1.4 报告体系目录语义收敛——rendered.png 归 renders/,report.json/diff/overlay 归 reports/(已转发 T1.3 agent);M3 同 nodeId 多 scope 时再升级消歧。
+- T1.1 两处非版本类修正无异议;NATIVE hard-gate 同意,约束已写死进 meta.json.text_metrics.hard_gate_constraints。
+队列清空。
