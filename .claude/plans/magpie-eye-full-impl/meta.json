@@ -103,9 +103,9 @@
       "note": "186 全绿(+14); missing 硬失败/熔断/diagnostics 对象落地; T2.7 交接提醒: v1.test 4 处字面量+runL2 钩子"
     },
     "T2.6": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null,
-      "note": "CLI 接线等 T2.1 落地"
+      "note": "范围扩充: CLI接线+record+odiff悬挂+冷道stdio悬挂+findNewestPng+latency判定字段"
     },
     "T3.0": {
       "status": "pending",
@@ -152,14 +152,18 @@
       "last_commit": null
     },
     "T2.7": {
-      "status": "blocked",
+      "status": "done",
       "last_commit": "cb73335",
-      "note": "像素通道 100% 正确(192 全绿); 4/4 检出门被 T2.5 熔断语义阻塞(D4 致 mr=0.75<0.8 吞 violations); 待 D-06"
+      "note": "D-06 后 4/4 复验过(D3 parity-pixel-sampled); 零假阳性; 195 全绿"
     },
     "T2.8": {
       "status": "pending",
       "last_commit": null,
       "note": "D-05 立项: fastlane 接线(daemon 托管 worker), 条件依赖 T2.1; T2.1 延期则推 M4"
+    },
+    "D-06-fix": {
+      "status": "done",
+      "last_commit": "4120834"
     }
   },
   "blockers": [
