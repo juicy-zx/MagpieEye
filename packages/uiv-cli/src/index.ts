@@ -7,30 +7,14 @@
  * 约定:输出根 = cwd/.ui-verify;stdout 最后一行 = spec.json(pull)/report.json(check)绝对路径;
  * check 的 exit code = report.pass ? 0 : 1;pull 恒 0(baseline.png 缺失仅 WARN)。
  */
-import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   FixtureFigmaClient, UIV_CORE_VERSION, addIgnoreRegion, pullBaseline, runCheckL2,
 } from '@magpie-eye/uiv-core';
-import type { GradleRunner, MappingEntry } from '@magpie-eye/uiv-core';
+import type { MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
-
-/** 生产 gradle 层:spawn ./gradlew,GRADLE_USER_HOME 钉在 demo 工程内(与 T1.1 约定一致)。 */
-class SpawnGradleRunner implements GradleRunner {
-  run(cwd: string, args: string[]): Promise<{ exitCode: number; stderr: string }> {
-    return new Promise((resolve, reject) => {
-      const child = spawn('./gradlew', args, {
-        cwd,
-        env: { ...process.env, GRADLE_USER_HOME: path.join(cwd, '.gradle-home') },
-      });
-      let stderr = '';
-      child.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
-      child.on('error', reject);
-      child.on('close', (code) => resolve({ exitCode: code ?? 1, stderr }));
-    });
-  }
-}
+import { selectGradleRunner } from './gradle-runner.js';
 
 /** check 的 version 取自 mapping.json(baseline pull 的 upsert 产物,source of truth)。 */
 async function readMappingEntry(uiVerifyDir: string, nodeId: string): Promise<MappingEntry> {
@@ -75,7 +59,9 @@ async function main(): Promise<void> {
     addIgnoreRegion(uiVerifyDir, cmd.node, cmd.ignoreRegion);   // 先持久化再执行
   }
   const entry = await readMappingEntry(uiVerifyDir, cmd.node);
-  const { report, reportPath } = await runCheckL2(new SpawnGradleRunner(), {
+  const sel = await selectGradleRunner(uiVerifyDir);
+  console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
+  const { report, reportPath } = await runCheckL2(sel.runner, {
     demoDir: path.resolve(cmd.demo),
     testFqn,
     nodeId: cmd.node,
