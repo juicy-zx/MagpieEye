@@ -13,6 +13,7 @@ export * from './l1/engine.js'
 export * from './l1/ignore.js'
 export * from './baseline/pull.js'
 export * from './check/run.js'
+export * from './check/runL2.js'
 
 // L2 结构裁判引擎(T1.3)
 export * from './l2/types.js'

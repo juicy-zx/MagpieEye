@@ -94,7 +94,10 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
   let pixel: PixelResult | null = null;
   let diffPng: string | null = null;
   if (baselineExists) {
-    diffPng = join(renderDir, 'diff.png');
+    // 产物目录口径:diff/report 归 reports/<nodeDir>/;rendered.png/semantics.json 归 renders/<nodeDir>/。
+    const reportsDir = join(opts.uiVerifyDir, 'reports', nodeDir);
+    mkdirSync(reportsDir, { recursive: true });
+    diffPng = join(reportsDir, 'diff.png');
     pixel = await runL1(baselinePng, renderedPng, diffPng, loadIgnoreRegions(opts.uiVerifyDir, opts.nodeId));
   }
 

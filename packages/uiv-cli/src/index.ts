@@ -11,7 +11,7 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  FixtureFigmaClient, UIV_CORE_VERSION, addIgnoreRegion, pullBaseline, runCheck,
+  FixtureFigmaClient, UIV_CORE_VERSION, addIgnoreRegion, pullBaseline, runCheckL2,
 } from '@magpie-eye/uiv-core';
 import type { GradleRunner, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
@@ -75,14 +75,15 @@ async function main(): Promise<void> {
     addIgnoreRegion(uiVerifyDir, cmd.node, cmd.ignoreRegion);   // 先持久化再执行
   }
   const entry = await readMappingEntry(uiVerifyDir, cmd.node);
-  const { report, reportPath } = await runCheck(new SpawnGradleRunner(), {
+  const { report, reportPath } = await runCheckL2(new SpawnGradleRunner(), {
     demoDir: path.resolve(cmd.demo),
     testFqn,
     nodeId: cmd.node,
     version: entry.version,
     uiVerifyDir,
+    minScore: entry.minScore,
   });
-  console.log(reportPath);   // 最后一行 = report.json 绝对路径
+  console.log(reportPath);   // 最后一行 = report.json v1 绝对路径
   process.exitCode = report.pass ? 0 : 1;
 }
 
