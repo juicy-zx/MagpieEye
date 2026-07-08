@@ -7,13 +7,14 @@ import {
   DEFAULT_BLOCKING_SEVERITIES, DEFAULT_MIN_SCORE, MATCH_RATE_FUSE, UNTAGGED_COVERAGE_THRESHOLD,
 } from './constants.js';
 import { assertPair } from './assert.js';
-import { joinByTag } from './join.js';
+import { matchThreeTier } from './match.js';
+import type { MatchResult } from './match.js';
 import { leafPairCount, leafTagHits, matchRate, score, untaggedCoverage } from './metrics.js';
 import { comparableNodes } from './nodeset.js';
 import { rebase } from './rebase.js';
 import { stepState } from './stability.js';
 import { L2Error } from './types.js';
-import type { Box, FigmaNode, SemNode, SemanticsDump, StateFile, SubReason, Violation } from './types.js';
+import type { Box, FigmaNode, SemDp, SemNode, SemanticsDump, StateFile, SubReason, Violation } from './types.js';
 import { verdict } from './verdict.js';
 import type { ReportV1, StructuralV1 } from '../report/v1.js';
 
@@ -41,11 +42,23 @@ function collectDumpTags(n: SemNode, out: Set<string>): Set<string> {
   return out;
 }
 
+// v1 结构块格式器(纯投影,确定性)。
+const idName = (n: FigmaNode): { figmaId: string; name: string } => ({ figmaId: n.id, name: n.name });
+const bounds4 = (b: Box | null): [number, number, number, number] | null =>
+  b === null ? null : [b.x, b.y, b.width, b.height];
+const figLine = (n: FigmaNode): string => {
+  const b = n.absoluteBoundingBox;
+  return `${n.id} ${n.name} ${n.type} ${b === null ? '-' : `(${b.x},${b.y} ${b.width}x${b.height})`}`;
+};
+const semLine = (s: SemDp): string =>
+  `${s.testTag ?? '-'} ${s.text ?? '-'} (${s.positionDp.x},${s.positionDp.y} ${s.sizeDp.width}x${s.sizeDp.height})dp`;
+
 export interface RunL2Opts {
   minScore?: number;
   blockingSeverities?: readonly string[];
   ignoreRegions?: Box[];
   prevState?: StateFile | null;
+  untaggedCoverageThreshold?: number;
 }
 
 function inconclusiveReport(subReason: SubReason, structural: StructuralV1 | null, sc: number): ReportV1 {
@@ -61,13 +74,14 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
   const minScore = opts.minScore ?? DEFAULT_MIN_SCORE;
   const blockingSeverities = opts.blockingSeverities ?? DEFAULT_BLOCKING_SEVERITIES;
   const prevState = opts.prevState ?? null;
+  const covThreshold = opts.untaggedCoverageThreshold ?? UNTAGGED_COVERAGE_THRESHOLD;
 
   const rebased = rebase(root);
   const N = comparableNodes(rebased, opts.ignoreRegions ?? []);
 
-  let joined;
+  let m: MatchResult;
   try {
-    joined = joinByTag(rebased, dump);
+    m = matchThreeTier(rebased, dump, N);
   } catch (e) {
     if (e instanceof L2Error) return inconclusiveReport(e.subReason, null, 0);
     throw e;
@@ -76,37 +90,48 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
   const dumpTags = collectDumpTags(dump.root, new Set<string>());
   const nSize = N.length;
   const cov = untaggedCoverage(leafTagHits(N, dumpTags), nSize);
-  const pairedIds = new Set(joined.pairs.map((p) => p.figma.id));
+  const pairedIds = new Set(m.pairs.map((p) => p.figma.id));
   const mr = matchRate(leafPairCount(N, pairedIds), nSize);
 
-  // 逐属性断言(全 pair,含容器供 padding),hint 确定性填充。
+  // 熔断:mr<0.8 → 不执行断言、不输出 violations(不强行断言);缺失叶子硬失败仅在非熔断态生成。
+  const fused = mr < MATCH_RATE_FUSE;
   const violations: Violation[] = [];
   let executed = 0;
-  for (const pair of joined.pairs) {
-    const r = assertPair(pair);
-    executed += r.executed;
-    for (const v of r.violations) violations.push({ ...v, hint: makeHint(v, pair.figma.name) });
+  if (!fused) {
+    // 逐属性断言(全 pair,含容器供 padding),hint 确定性填充。
+    for (const pair of m.pairs) {
+      const r = assertPair(pair);
+      executed += r.executed;
+      for (const v of r.violations) violations.push({ ...v, hint: makeHint(v, pair.figma.name) });
+    }
+    // missing 叶子硬失败(Codex M2 审查裁定):每个 comparable missing 叶子计一条 high 违规。
+    for (const n of m.missingLeaves) {
+      violations.push({
+        judgePath: 'parity', testTag: `fig:${n.id}`, figmaName: n.name,
+        property: 'missing', expected: 'present', actual: 'missing', severity: 'high',
+        hint: `节点在语义树中缺失(Figma "${n.name}"):检查是否漏渲染或 testTag 未导出`,
+      });
+    }
   }
-  const sc = score(violations, executed);
+  const sc = fused ? 0 : score(violations, executed);
 
   const structural: StructuralV1 = {
-    matched: joined.pairs.length,
-    untaggedCoverage: cov,
-    matchRate: mr,
-    missing: joined.missing.map((n) => ({
-      figmaId: n.id, name: n.name,
-      expectedBounds: n.absoluteBoundingBox === null
-        ? null
-        : [n.absoluteBoundingBox.x, n.absoluteBoundingBox.y, n.absoluteBoundingBox.width, n.absoluteBoundingBox.height],
-    })),
-    extra: joined.extra,
-    violations,
+    matched: m.pairs.length, untaggedCoverage: cov, matchRate: mr,
+    matchedNodes: m.pairs.map((p) => ({ ...idName(p.figma), joinSource: p.joinSource })),
+    untagged: N.filter((n) => !dumpTags.has(`fig:${n.id}`)).map((n) => ({ ...idName(n), suggestedTag: `fig:${n.id}` })),
+    missing: m.missingLeaves.map((n) => ({ ...idName(n), expectedBounds: bounds4(n.absoluteBoundingBox) })),
+    diagnostics: { containerMissing: m.containerMissing.map(idName) },
+    matchFailure: fused ? {
+      figmaLeaves: N.slice(0, 50).map(figLine), semLeaves: m.semLeavesDp.slice(0, 50).map(semLine),
+      unmatchedFigma: m.missingLeaves.map(idName), unmatchedSem: m.unmatchedSem.slice(0, 50).map(semLine),
+    } : null,
+    extra: m.extra, violations,
   };
 
-  // subReason:coverage 判定优先于 matchRate 熔断。
+  // subReason:coverage 判定优先于 matchRate 熔断;熔断行为与该优先级无关。
   let subReason: SubReason | null = null;
-  if (cov < UNTAGGED_COVERAGE_THRESHOLD) subReason = 'tag_coverage_low';
-  else if (mr < MATCH_RATE_FUSE) subReason = 'matching_rate_low';
+  if (cov < covThreshold) subReason = 'tag_coverage_low';
+  else if (fused) subReason = 'matching_rate_low';
 
   const { pass } = verdict({ subReason, violations, score: sc, minScore, blockingSeverities });
 

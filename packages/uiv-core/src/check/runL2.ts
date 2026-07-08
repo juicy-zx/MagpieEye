@@ -63,7 +63,7 @@ function readState(statePath: string): StateFile | null {
   return JSON.parse(readFileSync(statePath, 'utf8')) as StateFile;
 }
 
-export interface RunCheckL2Opts extends CheckOpts { minScore?: number; blockingSeverities?: readonly string[] }
+export interface RunCheckL2Opts extends CheckOpts { minScore?: number; blockingSeverities?: readonly string[]; untaggedCoverageThreshold?: number }
 
 export async function runCheckL2(
   runner: GradleRunner, opts: RunCheckL2Opts,
@@ -115,6 +115,7 @@ export async function runCheckL2(
   const l2Opts: Parameters<typeof runL2>[2] = { prevState };
   if (opts.minScore !== undefined) l2Opts.minScore = opts.minScore;
   if (opts.blockingSeverities !== undefined) l2Opts.blockingSeverities = opts.blockingSeverities;
+  if (opts.untaggedCoverageThreshold !== undefined) l2Opts.untaggedCoverageThreshold = opts.untaggedCoverageThreshold;
   const l2 = runL2(figmaRoot, dump, l2Opts);
 
   // persist state.json(与 runL2 内部同参 stepState,结果一致)。

@@ -97,18 +97,22 @@ describe('runL2 组装(v1 结构块 + 顶层判定)', () => {
     expect(r.pass).toBe(false);
   });
 
-  // 端到端(fixture 级,不跑 gradle):写偏 4 类 → position/fontSize/color 命中 violations,badge 命中 missing。
-  it('端到端 4 类: padding(position)16应12 / 字号14应16 / swatch颜色偏 / badge缺失', () => {
+  // 端到端(fixture 级,不跑 gradle):写偏 4 类 → position/fontSize/color/missing 命中 violations。
+  // 本章 T2.5:badge 缺失致 mr=0.75<0.8 会触熔断吞 violations,故本用例内(不动共享 calibSpec)加第 5 叶子使 mr=0.8 越过熔断,断言 4 类。
+  it('端到端 4 类: padding(position)16应12 / 字号14应16 / swatch颜色偏 / badge缺失(硬失败)', () => {
+    const spec = calibSpec();
+    spec.children!.push({ id: '1:105', name: 'CalibFooter', type: 'RECTANGLE', absoluteBoundingBox: { x: 112, y: 260, width: 120, height: 16 } });
     const bad: SemanticsDump = { density: 2.0, root: sem('fig:1:100', 0, 0, 720, 400, null, null, [
       sem('fig:1:101', 24, 24, 400, 40, '#FFFFFF', 14),   // 字号 14 应 16 → fontSize
       sem('fig:1:102', 32, 72, 400, 32, '#CCE0FF', 12),   // x px32→dp16 vs 12(左边距 16 应 12) → position
       sem('fig:1:103', 24, 120, 160, 80, '#0000FF', null),// 颜色 #0000FF vs #FF9900 → color
-      // CalibBadge (1:104) 缺失 → structural.missing
+      sem('fig:1:105', 24, 320, 240, 32),                 // 对齐第 5 叶子(免熔断)
+      // CalibBadge (1:104) 缺失 → structural.missing + missing/high violation
     ]) };
-    const r = runL2(calibSpec(), bad, {});
-    expect(props(r.structural!.violations).sort()).toEqual(['color', 'fontSize', 'position']);
+    const r = runL2(spec, bad, {});
+    expect(props(r.structural!.violations).sort()).toEqual(['color', 'fontSize', 'missing', 'position']);
     expect(r.structural?.missing.map((m) => m.figmaId)).toEqual(['1:104']);
-    expect(r.structural?.untaggedCoverage).toBe(0.75);          // badge 缺 tag → 3/4
+    expect(r.structural?.untaggedCoverage).toBe(0.8);           // badge 缺 tag → 4/5
     expect(r.reason).toBe('inconclusive');
     expect(r.subReason).toBe('tag_coverage_low');
     expect(r.pass).toBe(false);
@@ -139,9 +143,11 @@ describe('runL2 组装(v1 结构块 + 顶层判定)', () => {
     } };
     const report = runL2(spec, dump, {});
     expect(report.structural?.untaggedCoverage).toBe(0);    // 容器命中不进分子
-    expect(report.structural?.matchRate).toBe(0);
+    expect(report.structural?.matchRate).toBe(0.5);          // swatch/badge 被 LCS 补配(几何全等、同 OTHER);TEXT 叶 sem 无文本、类型折 0.5<0.6 不配
     expect(report.reason).toBe('inconclusive');
-    expect(['tag_coverage_low', 'matching_rate_low']).toContain(report.subReason);
+    expect(report.subReason).toBe('tag_coverage_low');       // cov=0 优先于熔断
+    expect(report.structural?.violations).toEqual([]);       // mr=0.5<0.8 熔断吞 violations
+    expect(report.structural?.matchFailure).not.toBeNull();  // 熔断→失败报告
     expect(report.pass).toBe(false);
   });
 

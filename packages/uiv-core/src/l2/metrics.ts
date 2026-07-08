@@ -21,7 +21,7 @@ export function untaggedCoverage(taggedLeafHits: number, nSize: number): number 
   return nSize === 0 ? 1 : taggedLeafHits / nSize;
 }
 
-/** 两树可比性 = N 中配对成功叶子 / |N|;v0 仅 tag 策略;N=0 视为 1。 */
+/** 两树可比性 = N 中配对成功叶子 / |N|;三级匹配后配对率;N=0 视为 1。 */
 export function matchRate(pairedLeaves: number, nSize: number): number {
   return nSize === 0 ? 1 : pairedLeaves / nSize;
 }

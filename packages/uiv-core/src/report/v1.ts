@@ -6,11 +6,20 @@
 import type { PixelResult } from './v0.js';
 import type { SubReason, Violation } from '../l2/types.js';
 
+export interface MatchFailureV1 {
+  figmaLeaves: string[]; semLeaves: string[];
+  unmatchedFigma: Array<{ figmaId: string; name: string }>; unmatchedSem: string[];
+}
+
 export interface StructuralV1 {
   matched: number;
   untaggedCoverage: number;
   matchRate: number;
+  matchedNodes: Array<{ figmaId: string; name: string; joinSource: 'tag' | 'text' | 'lcs' }>;
+  untagged: Array<{ figmaId: string; name: string; suggestedTag: string }>;
   missing: Array<{ figmaId: string; name: string; expectedBounds: [number, number, number, number] | null }>;
+  diagnostics: { containerMissing: Array<{ figmaId: string; name: string }> };  // 对象形态钉死(全文统一,Codex M2 审查裁定);本章只填 containerMissing,T2.7 在同一对象上追加 pixel: PixelDiagnostic[] 键,不新增并列字段
+  matchFailure: MatchFailureV1 | null;
   extra: string[];
   violations: Violation[];
 }
@@ -58,8 +67,21 @@ function checkStructural(v: unknown, path: string): void {
   num(s['matched'], `${path}.matched`);
   num(s['untaggedCoverage'], `${path}.untaggedCoverage`);
   num(s['matchRate'], `${path}.matchRate`);
-  for (const k of ['missing', 'extra', 'violations'] as const) {
+  for (const k of ['missing', 'extra', 'violations', 'matchedNodes', 'untagged'] as const) {
     if (!Array.isArray(s[k])) fail(`${path}.${k}`, 'array', s[k]);
+  }
+  const diag = s['diagnostics'];
+  if (diag === null || typeof diag !== 'object') fail(`${path}.diagnostics`, 'object', diag);
+  else if (!Array.isArray((diag as Record<string, unknown>)['containerMissing'])) {
+    fail(`${path}.diagnostics.containerMissing`, 'array', (diag as Record<string, unknown>)['containerMissing']);
+  }
+  const mf = s['matchFailure'];
+  if (mf !== null) {
+    if (typeof mf !== 'object') fail(`${path}.matchFailure`, 'object | null', mf);
+    const m = mf as Record<string, unknown>;
+    for (const k of ['figmaLeaves', 'semLeaves', 'unmatchedFigma', 'unmatchedSem'] as const) {
+      if (!Array.isArray(m[k])) fail(`${path}.matchFailure.${k}`, 'array', m[k]);
+    }
   }
 }
 
@@ -88,5 +110,18 @@ export function validateReportV1(x: unknown): ReportV1 {
   if (r['pass'] === true && r['compileError'] !== null) fail('compileError', 'null when pass===true', r['compileError']);
   if (r['pass'] === true && r['reason'] !== null) fail('reason', 'null when pass===true', r['reason']);
   if (r['regression'] === true && r['regressionReason'] === null) fail('regressionReason', 'non-null when regression===true', r['regressionReason']);
+
+  // structural 组合约束(仅 structural 非 null)
+  const st = r['structural'];
+  if (st !== null && typeof st === 'object') {
+    const s = st as Record<string, unknown>;
+    if (r['subReason'] === 'matching_rate_low') {
+      if (s['matchFailure'] === null) fail('structural.matchFailure', 'non-null when subReason===matching_rate_low', s['matchFailure']);
+      if (Array.isArray(s['violations']) && s['violations'].length > 0) fail('structural.violations', 'empty when subReason===matching_rate_low', s['violations']);
+    }
+    if (r['subReason'] === 'tag_coverage_low' && Array.isArray(s['untagged']) && s['untagged'].length === 0) {
+      fail('structural.untagged', 'non-empty when subReason===tag_coverage_low', s['untagged']);
+    }
+  }
   return x as ReportV1;
 }
