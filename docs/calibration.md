@@ -36,3 +36,9 @@ runs=[2228,2404,2069]ms, median=**2228ms**(含 npx 转发开销,预热后;odiff 
 - REST(`/v1/files/:key/nodes` absoluteBoundingBox / `/v1/images scale=2`)交叉标定: 待 PAT(pending_followups)。
 - **exportAsync base64 大小边界**:卡片级(720×400)14.7k 字符无压力;整页(720×1600)估 100~300KB base64,可能超 use_figma 返回限制——M3 verify-page 整页基准优先走 REST `/v1/images?scale=2`(PAT 后),exportAsync 分块仅兜底(pending_followups)。
 - get_screenshot 降为快速预览用途,不再承担基准 PNG 职责(待 Codex 确认)。
+
+## T1.0b 渲染侧标定(T1.1)
+
+- 渲染环境:Robolectric 4.16 `@Config(qualifiers="w360dp-h800dp-xhdpi")`(density 2.0)+ `@GraphicsMode(NATIVE)`
+- CalibCard(360x200dp)node capture 实际像素 720x400,与期望值及 T1.0a Figma 2x 标定值均在 |Δ|<=2px 内(scripts/check-t10b.mjs exit 0;scripts/calibration/check-scale.mjs 360 200 2 → deltaPx=[0,0] pass)
+- 结论:渲染侧 density 2.0 与 Figma 侧 scale=2 对齐,"1 Figma 单位 = 1dp" 在渲染链路成立

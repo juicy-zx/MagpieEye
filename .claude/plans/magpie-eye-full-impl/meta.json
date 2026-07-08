@@ -206,5 +206,22 @@
     "figma_desktop_mcp": "port 3845 alive (B2 pending real-call check)",
     "figma_pat": "absent",
     "magpie_agent_drift": "8e0dcb2 -> HEAD ~129 commits, T3.0 required"
+  },
+  "calibration_render": {
+    "task": "T1.1/T1.0b",
+    "rendered_px": {
+      "width": 720,
+      "height": 400
+    },
+    "expected_px": {
+      "width": 720,
+      "height": 400
+    },
+    "figma_2x_px": {
+      "width": 720,
+      "height": 400
+    },
+    "tolerance_px": 2,
+    "density_aligned": true
   }
 }
