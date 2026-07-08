@@ -77,5 +77,37 @@ launchctl bootout gui/$(id -u)/com.magpie.uiv-render-daemon
 
 - UDS sock **0600**,仅属主可连;不监听任何 TCP 端口(含 localhost)。
 - daemon 拒绝 workspace 外的 cwd(`cwd_outside_workspace`),`gradle.run` 只能在
-  `<WS>` 子树内执行。
+  `<WS>` 子树内执行;`renderPreview` 的 outPng/outSemantics 同样拒绝 workspace 外路径。
 - 未知命令 → `unknown_cmd`;非法 JSON → `bad_request`。
+
+## 6. 快车道 worker(T2.8,fast lane)
+
+daemon 除慢车道 `gradle.run` 外,还托管 **Paparazzi 快车道 worker**(`renderPreview` cmd)。
+worker = `fastlane-worker/` 模块编译出的 JUnit-free 常驻 JVM 子进程,**纯 stdin/stdout,零监听面**
+(Codex D-05 硬约束);由 daemon 懒拉起、复用、随 daemon 退出清理(无孤儿)。
+
+### 6.1 构建 worker(首次,或改动 fastlane-worker / demo-android 组件源后)
+
+```bash
+export GRADLE_USER_HOME=$PWD/demo-android/.gradle-home
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+# 编译 worker(含构建期 Sync demo-android 的 CalibCard 组件源)并落 worker-env(classpath/jvm-args 地面真值)
+demo-android/gradlew -p fastlane-worker testDebugUnitTest --tests "com.magpie.uiv.fastlane.DumpEnvTest" --offline --rerun-tasks
+```
+
+产物落 `fastlane-worker/build/worker-env/`(daemon 据此直启 `java` worker 子进程)。
+**未构建即触发 fast lane** → daemon 回 `worker_env_missing` → CLI 自动回落慢车道。
+
+### 6.2 新鲜度门(绝不供陈旧渲染,配置漂移即回落)
+
+- **门1(构建新鲜度)**:慢车道组件源 `demo-android/.../CalibCard.kt` 比 worker-env 新
+  ⇒ 未重建 ⇒ 回 `worker_stale`,CLI 回落慢车道。改了组件源必须重跑 §6.1。
+- **门2(运行新鲜度)**:worker-env 比运行中的 worker 启动时刻新 ⇒ 重建过 ⇒ daemon 杀旧进程重启,
+  自动拾取新类。无需手动重启 daemon。
+
+### 6.3 降级语义(自动)
+
+CLI 侧对**静态 @Preview 白名单**(当前钉 `CalibCardPreview`)先试 fast:daemon 可达且 worker 就绪
+→ `report.lane=fast`;daemon 不可达 / worker stale / 崩溃 / 渲染错 → 自动回落慢车道,
+`report.lane=fast-fallback-slow`;白名单外 preview 恒走慢车道 `report.lane=slow`。
+**报告内容与车道正交**:同一卡片 fast/slow 两道 L2 violations 集合逐字段一致(T2.8 实测)。

@@ -47,5 +47,55 @@
   "savedMs": 4604,
   "speedupRatio": 1.79,
   "target_ms": 6000
+ },
+ "t2_8_fast": {
+  "task": "T2.8",
+  "lane": "fast",
+  "protocol": "daemon renderPreview (UDS) → worker render + semantics export per round (--rerun 等价:每轮重渲)",
+  "worker": "fastlane-worker Paparazzi 2.0.0-alpha05 persistent JVM subprocess (daemon-hosted)",
+  "warmupRounds": 2,
+  "measuredRounds": 10,
+  "samples": [
+   24,
+   29,
+   29,
+   20,
+   21,
+   19,
+   18,
+   18,
+   18,
+   19
+  ],
+  "workerRenderMs": [
+   17,
+   22,
+   22,
+   14,
+   15,
+   13,
+   13,
+   13,
+   13,
+   13
+  ],
+  "workerSemanticsMs": [
+   5,
+   5,
+   4,
+   3,
+   4,
+   4,
+   4,
+   3,
+   3,
+   3
+  ],
+  "p50Ms": 20,
+  "medianWorkerRenderMs": 14,
+  "medianWorkerSemanticsMs": 4,
+  "targetMs": 6000,
+  "pass": true,
+  "measuredAt": "2026-07-08T21:09:23.485Z"
  }
 }

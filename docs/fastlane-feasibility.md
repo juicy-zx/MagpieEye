@@ -123,3 +123,45 @@ G1 ✓ G2 ✓ 语义 ✓ 稳定性 ✓ 共存 ✓(AGP 9.0.1 实测)→ **候选 
 2. 若纳入:确认"UDS/token 加固完成"(§6 推荐 daemon 子进程托管方案)为纳入前置;加固任务与排期归属 **M2 尾 or M4**?
 3. §5 口径边界下,"已编译 preview 高频渲染"(15ms)与"改码内循环"(秒级)两个适用域是否都要,还是只取前者?
 4. 语义导出依赖 1 处内部反射(§7.3),是否接受该维护面(替代方案 = 快车道仅 L1,L2 仍走慢车道)?
+
+---
+
+## 10. T2.8 产品化落地(Codex D-05 立项后)
+
+D-05 裁定纳入,定位钉死 = **静态 @Preview 组件级加速插槽,不替代慢车道、不进正确性关键路径**;任何不可判/语义不可达/配置漂移/fast lane 崩溃自动回落慢车道。落地结构:
+
+- **`fastlane-worker/`**(独立 Android+Paparazzi Gradle 模块,daemon 工程域):从 §3 spike 的 `RenderWorker.kt` 拷贝改造(标注来源)。改造点:①`dumpSemantics` 升级为慢车道 `SemanticsDumpRule` 逐字段同格式的完整 `SemanticsDump`(density + positionInRoot/size/touchBoundsInRoot/colorHex/fontSizeSp/cornerRadiusPx),使 fast/slow 的 L2 等价;②渲染的 `CalibCard` 组件经构建期 `Sync` 从 demo-android 引入(单一事实源,禁副本漂移);③`render`/`semantics` 指令对 previewFqn 做白名单门。构建:`GRADLE_USER_HOME=demo-android/.gradle-home; demo-android/gradlew -p fastlane-worker testDebugUnitTest --tests *DumpEnvTest --offline`(复用已缓存 transforms,离线)。
+- **daemon `renderPreview` cmd**(`daemon/.../FastLaneWorker.kt` 的 `WorkerManager`):懒拉起 worker 为 **stdin/stdout 子进程,零监听面**;两道新鲜度门(源 vs 构建、构建 vs 运行中 worker)确保绝不供陈旧渲染,漂移即回错→回落;随 daemon shutdown hook 清理,无孤儿。
+- **uiv CLI 快车道**:静态 preview 先试 fast(daemon 可达 + worker 就绪),PNG+语义树经 `preRendered` 注入喂现有 L1/L2 管线;任何失败自动回落慢车道。`report.lane` ∈ {`fast`,`slow`,`fast-fallback-slow`}(v1 校验器允许缺省=slow 兼容存量)。
+
+### 10.1 钉版本硬门禁条款(必守)
+
+快车道与慢车道分属两套渲染栈(Paparazzi/LayoutLib vs Roborazzi/Robolectric),其像素与语义等价性是**特定版本组合下的实测快照**,非契约保证。故:
+
+> **Paparazzi / AGP / Kotlin / LayoutLib 任一升级,必须重跑 T2.3 spike 判据(S2 共存机判、S3 首图、G1 延迟、G2 像素一致、S6 语义可达),全部通过方可升级;并将新版本组合与实测数据追加登记到本节下表。** 判据脚本已归档可复跑(`experiments/fastlane-spike/bench-fastlane.mjs`、`s6-semantics.mjs`;coexist-probe 为现成共存机判夹具)。未重跑即升级 = 违规。
+
+钉死版本(源:`fastlane-worker/build.gradle.kts`;须与 `demo-android/gradle/libs.versions.toml` 逐一对齐):
+
+| 组件 | 钉死版本 | 升级门禁 |
+|---|---|---|
+| Paparazzi | 2.0.0-alpha05 | 重跑 S2/S3/G1/G2/S6 |
+| AGP | 9.0.1 | 重跑 S2(共存)/G2 |
+| Kotlin(内建,plugin.compose) | 2.2.10 | 重跑 S2/G2 |
+| LayoutLib | 16.2.1(mac-arm) | 重跑 G2(像素)/S6 |
+| compose-bom | 2026.06.00 | 重跑 G2/S6(语义字段) |
+
+升级重跑记录(初始):
+
+| 日期 | 变更 | S2 | S3 | G1(P50) | G2(diffRatio) | S6 | 结论 |
+|---|---|---|---|---|---|---|---|
+| 2026-07-09 | T2.8 立项基线(上述钉死版本) | ✓ | ✓ | 14ms(worker 渲染中位) | 0.008(L1 advisory,pass 不受影响) | ✓ 语义与慢车道字节级一致 | 纳入 |
+
+### 10.2 T2.8 验收证据(可机判)
+
+| # | 验收项 | 证据 |
+|---|---|---|
+| 1 | fast 端到端 + L2 等价 | 正确卡片 `check` → `report.lane=fast`、`pass=true`、score=1、violations=[];同一写偏卡片(字号 16→14)fast 与 slow(回落)的 violations 集合**逐字段一致**(fig:1:101 fontSize high),pass/score(0.95)/matchRate(1)全等 |
+| 2 | 杀 daemon 自动回落 | daemon 杀后 `check` 自动 `gradle lane=cold`,`report.lane=fast-fallback-slow`,结果正确(写偏 violation 与 fast 一致);worker 随 daemon 退出清理,无孤儿 |
+| 3 | fast 单轮延迟 | `docs/latency-m2.json` `t2_8_fast`:wall p50=20ms(worker render 中位 14ms + semantics 4ms + UDS 往返),`pass=true`(≪ 6000ms) |
+| 4 | 钉版本条款 | 本节 §10.1 |
+| 5 | 回归 | `npm test` 30 文件/209 测试全绿;daemon 单测(含 renderPreview 路由)绿 |
