@@ -15,3 +15,9 @@ export const MATCH_RATE_FUSE = 0.8;
 export const STAGNATION_TRIGGER = 2; // 连续停滞轮数→regression
 export const ROUND_LIMIT = 5;
 export const SCORE_BACKSLIDE_TOLERANCE = 0.02;
+
+// 降级匹配算子口径(T2.5,工程钉值;文档只钉 α/δ 与 LCS 五要素,合成式与阈值为工程锚)。
+export const TEXT_SIM_MIN = 0.95;     // 降级 1:文本归一化编辑距离相似度下限
+export const LCS_ALPHA = 10;          // 降级 2:simPos=1/(1+L1/α) 的位置尺度(dp)
+export const LCS_TYPE_DISCOUNT = 0.5; // 降级 2:TEXT/非 TEXT 类型不一致的相似度折扣 δ
+export const LCS_SIM_MIN = 0.6;       // 降级 2:LCS 配对相似度下限

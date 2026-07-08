@@ -4,6 +4,7 @@ import {
   SEVERITY_WEIGHT, DEFAULT_BLOCKING_SEVERITIES, DEFAULT_MIN_SCORE,
   UNTAGGED_COVERAGE_THRESHOLD, MATCH_RATE_FUSE, STAGNATION_TRIGGER,
   ROUND_LIMIT, SCORE_BACKSLIDE_TOLERANCE,
+  TEXT_SIM_MIN, LCS_ALPHA, LCS_TYPE_DISCOUNT, LCS_SIM_MIN,
 } from './constants.js';
 
 // 常量快照测试:防后续步骤悄改口径(设计文档 2.4 节 + 设计原则 2 的唯一出处)。
@@ -23,4 +24,10 @@ describe('L2 口径常量(2.4 节代码化)', () => {
   it('连续 2 轮停滞触发 regression', () => expect(STAGNATION_TRIGGER).toBe(2));
   it('轮上限 5(UI2Code^N 实证饱和)', () => expect(ROUND_LIMIT).toBe(5));
   it('总分回退容忍 0.02', () => expect(SCORE_BACKSLIDE_TOLERANCE).toBe(0.02));
+  it('降级算子口径:TEXT_SIM_MIN=0.95/LCS_ALPHA=10/LCS_TYPE_DISCOUNT=0.5/LCS_SIM_MIN=0.6', () => {
+    expect(TEXT_SIM_MIN).toBe(0.95);
+    expect(LCS_ALPHA).toBe(10);
+    expect(LCS_TYPE_DISCOUNT).toBe(0.5);
+    expect(LCS_SIM_MIN).toBe(0.6);
+  });
 });
