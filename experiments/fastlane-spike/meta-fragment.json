@@ -1,0 +1,27 @@
+{
+  "task": "T2.3",
+  "verdict": "feasible",
+  "p50_ms": 15,
+  "p90_ms": 17,
+  "diff_ratio": 0.0000313,
+  "diff_ratio_l1opts": 0.0,
+  "n_rounds": 20,
+  "warmup_rounds": 3,
+  "cold_start_ms": 2286,
+  "versions": {
+    "paparazzi": "2.0.0-alpha05",
+    "agp_probe": "9.0.1",
+    "kotlin_probe": "2.2.10 (AGP built-in)",
+    "layoutlib": "16.2.1",
+    "compose_bom": "2026.06.00",
+    "gradle": "9.5.1"
+  },
+  "semantics_reachable": true,
+  "infeasible_codes": [],
+  "coexist_agp9": "config+execution both OK (undeclared by upstream, empirically verified)",
+  "candidate2": "backup, not activated (minimal spike criteria archived in report §4)",
+  "slow_lane_baseline_ms": 5086,
+  "slow_lane_baseline_source": "T1.1 warm median (t2.1 hot P50 pending, to be backfilled)",
+  "timing_scope_note": "fast lane = render-only in warm persistent process; slow lane = full uiv check round",
+  "measured_at": "2026-07-09"
+}

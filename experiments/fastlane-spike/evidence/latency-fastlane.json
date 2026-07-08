@@ -1,0 +1,301 @@
+{
+  "task": "T2.3",
+  "candidate": "paparazzi-2.0.0-alpha05 PaparazziSdk persistent worker (JUnit-free)",
+  "probe": "coexist-probe (AGP 9.0.1 + built-in Kotlin 2.2.10 + compose-bom 2026.06.00)",
+  "protocol": "stdin \"render <fqn> <out>\" -> stdout JSON line after PNG written; timing = stdin write -> response received",
+  "deviceConfig": "720x400px, density XHIGH(2.0), LANDSCAPE, theme android:Theme.Material.Light.NoActionBar, RenderingMode.NORMAL",
+  "fqn": "com.magpie.uiv.demo.CalibCardPreview",
+  "warmupRounds": 3,
+  "measuredRounds": 20,
+  "totalRounds": 30,
+  "bootWallMs": 2286,
+  "setupMs": 1866,
+  "p50Ms": 15,
+  "p90Ms": 17,
+  "g1": {
+    "p50TargetMs": 6000,
+    "p90TargetMs": 10000,
+    "pass": true
+  },
+  "distinctPngMd5": [
+    "ef2a23a10eba6afcd031258d70bf6b54"
+  ],
+  "failed": null,
+  "workerExit": {
+    "code": 0,
+    "sig": null
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "phase": "warmup",
+      "wallMs": 273,
+      "workerMs": 271,
+      "heapUsedMb": 119,
+      "rssKb": 355632,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 2,
+      "phase": "warmup",
+      "wallMs": 27,
+      "workerMs": 25,
+      "heapUsedMb": 123,
+      "rssKb": 355824,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 3,
+      "phase": "warmup",
+      "wallMs": 17,
+      "workerMs": 17,
+      "heapUsedMb": 127,
+      "rssKb": 355936,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 4,
+      "phase": "measured",
+      "wallMs": 17,
+      "workerMs": 16,
+      "heapUsedMb": 131,
+      "rssKb": 356112,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 5,
+      "phase": "measured",
+      "wallMs": 17,
+      "workerMs": 16,
+      "heapUsedMb": 135,
+      "rssKb": 356224,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 6,
+      "phase": "measured",
+      "wallMs": 18,
+      "workerMs": 18,
+      "heapUsedMb": 64,
+      "rssKb": 356352,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 7,
+      "phase": "measured",
+      "wallMs": 16,
+      "workerMs": 15,
+      "heapUsedMb": 68,
+      "rssKb": 356480,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 8,
+      "phase": "measured",
+      "wallMs": 15,
+      "workerMs": 15,
+      "heapUsedMb": 72,
+      "rssKb": 356576,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 9,
+      "phase": "measured",
+      "wallMs": 16,
+      "workerMs": 15,
+      "heapUsedMb": 76,
+      "rssKb": 356624,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 10,
+      "phase": "measured",
+      "wallMs": 18,
+      "workerMs": 16,
+      "heapUsedMb": 80,
+      "rssKb": 356768,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 11,
+      "phase": "measured",
+      "wallMs": 16,
+      "workerMs": 16,
+      "heapUsedMb": 84,
+      "rssKb": 356896,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 12,
+      "phase": "measured",
+      "wallMs": 15,
+      "workerMs": 14,
+      "heapUsedMb": 88,
+      "rssKb": 357056,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 13,
+      "phase": "measured",
+      "wallMs": 16,
+      "workerMs": 15,
+      "heapUsedMb": 92,
+      "rssKb": 357248,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 14,
+      "phase": "measured",
+      "wallMs": 15,
+      "workerMs": 14,
+      "heapUsedMb": 96,
+      "rssKb": 357328,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 15,
+      "phase": "measured",
+      "wallMs": 15,
+      "workerMs": 15,
+      "heapUsedMb": 100,
+      "rssKb": 360672,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 16,
+      "phase": "measured",
+      "wallMs": 15,
+      "workerMs": 14,
+      "heapUsedMb": 104,
+      "rssKb": 361024,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 17,
+      "phase": "measured",
+      "wallMs": 14,
+      "workerMs": 14,
+      "heapUsedMb": 108,
+      "rssKb": 361136,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 18,
+      "phase": "measured",
+      "wallMs": 14,
+      "workerMs": 13,
+      "heapUsedMb": 111,
+      "rssKb": 361280,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 19,
+      "phase": "measured",
+      "wallMs": 14,
+      "workerMs": 13,
+      "heapUsedMb": 115,
+      "rssKb": 361408,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 20,
+      "phase": "measured",
+      "wallMs": 14,
+      "workerMs": 13,
+      "heapUsedMb": 119,
+      "rssKb": 361536,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 21,
+      "phase": "measured",
+      "wallMs": 15,
+      "workerMs": 14,
+      "heapUsedMb": 123,
+      "rssKb": 361616,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 22,
+      "phase": "measured",
+      "wallMs": 16,
+      "workerMs": 15,
+      "heapUsedMb": 127,
+      "rssKb": 361776,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 23,
+      "phase": "measured",
+      "wallMs": 15,
+      "workerMs": 14,
+      "heapUsedMb": 131,
+      "rssKb": 361856,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 24,
+      "phase": "extra",
+      "wallMs": 21,
+      "workerMs": 20,
+      "heapUsedMb": 136,
+      "rssKb": 355920,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 25,
+      "phase": "extra",
+      "wallMs": 18,
+      "workerMs": 16,
+      "heapUsedMb": 139,
+      "rssKb": 343520,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 26,
+      "phase": "extra",
+      "wallMs": 14,
+      "workerMs": 13,
+      "heapUsedMb": 143,
+      "rssKb": 344720,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 27,
+      "phase": "extra",
+      "wallMs": 14,
+      "workerMs": 13,
+      "heapUsedMb": 147,
+      "rssKb": 344880,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 28,
+      "phase": "extra",
+      "wallMs": 14,
+      "workerMs": 13,
+      "heapUsedMb": 151,
+      "rssKb": 345280,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 29,
+      "phase": "extra",
+      "wallMs": 13,
+      "workerMs": 13,
+      "heapUsedMb": 155,
+      "rssKb": 346704,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    },
+    {
+      "round": 30,
+      "phase": "extra",
+      "wallMs": 16,
+      "workerMs": 15,
+      "heapUsedMb": 62,
+      "rssKb": 351808,
+      "md5": "ef2a23a10eba6afcd031258d70bf6b54"
+    }
+  ],
+  "measuredAt": "2026-07-08T18:14:17.140Z"
+}

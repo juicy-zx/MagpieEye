@@ -1,0 +1,96 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Task :tasks
+
+------------------------------------------------------------
+Tasks runnable from root project 'coexist-probe'
+------------------------------------------------------------
+
+Android tasks
+-------------
+signingReport - Displays the signing info for the base and test modules
+
+Build tasks
+-----------
+assemble - Assemble main outputs for all the variants.
+assembleAndroidTest - Assembles all the Test applications.
+assembleUnitTest - Assembles all the unit test applications.
+build - Assembles and tests this project.
+buildDependents - Assembles and tests this project and all projects that depend on it.
+buildNeeded - Assembles and tests this project and all projects it depends on.
+bundle - Assemble bundles for all the variants.
+clean - Deletes the build directory.
+compileDebugAndroidTestSources
+compileDebugSources
+compileDebugUnitTestSources
+compileReleaseSources
+
+Build Setup tasks
+-----------------
+init - Initializes a new Gradle build.
+updateDaemonJvm - Generates or updates the Gradle Daemon JVM criteria.
+wrapper - Generates Gradle wrapper files.
+
+Help tasks
+----------
+artifactTransforms - Displays the Artifact Transforms that can be executed in root project 'coexist-probe'.
+buildEnvironment - Displays all buildscript dependencies declared in root project 'coexist-probe'.
+dependencies - Displays all dependencies declared in root project 'coexist-probe'.
+dependencyInsight - Displays the insight into a specific dependency in root project 'coexist-probe'.
+help - Displays a help message.
+javaToolchains - Displays the detected java toolchains.
+kotlinDslAccessorsReport - Prints the Kotlin code for accessing the currently available project extensions.
+outgoingVariants - Displays the outgoing variants of root project 'coexist-probe'.
+projects - Displays the sub-projects of root project 'coexist-probe'.
+properties - Displays the properties of root project 'coexist-probe'.
+resolvableConfigurations - Displays the configurations that can be resolved in root project 'coexist-probe'.
+tasks - Displays the tasks runnable from root project 'coexist-probe'.
+
+Install tasks
+-------------
+installDebug - Installs the Debug build.
+installDebugAndroidTest - Installs the android (on device) tests for the Debug build.
+uninstallAll - Uninstall all applications.
+uninstallDebug - Uninstalls the Debug build.
+uninstallDebugAndroidTest - Uninstalls the android (on device) tests for the Debug build.
+uninstallRelease - Uninstalls the Release build.
+
+Verification tasks
+------------------
+check - Runs all checks.
+checkJetifier - Checks whether Jetifier is needed for the current project
+cleanRecordPaparazzi - Clean and record golden images for all variants
+cleanRecordPaparazziDebug - Clean and record golden images for variant 'debug'
+connectedAndroidTest - Installs and runs instrumentation tests for all flavors on connected devices.
+connectedCheck - Runs all device checks on currently connected devices.
+connectedDebugAndroidTest - Installs and runs the tests for debug on connected devices.
+deleteDebugPaparazziSnapshots - Delete all golden images for variant 'Debug'
+deletePaparazziSnapshots - Delete all golden images
+deviceAndroidTest - Installs and runs instrumentation tests using all Device Providers.
+deviceCheck - Runs all device checks using Device Providers and Test Servers.
+lint - Runs lint on the default variant.
+lintDebug - Print text output from the corresponding lint report task
+lintFix - Runs lint on the default variant and applies any safe suggestions to the source code.
+lintRelease - Print text output from the corresponding lint report task
+lintVitalRelease - Print text output from the corresponding lint report task
+recordPaparazzi - Record golden images for all variants
+recordPaparazziDebug - Record golden images for variant 'debug'
+test - Run unit tests for all variants.
+testDebugUnitTest - Run unit tests for the debug build.
+updateLintBaseline - Updates the lint baseline using the default variant.
+verifyPaparazzi - Run screenshot tests for all variants
+verifyPaparazziDebug - Run screenshot tests for variant 'debug'
+
+Rules
+-----
+Pattern: clean<TaskName>: Cleans the output files of a task.
+Pattern: build<ConfigurationName>: Assembles the artifacts of a configuration.
+
+To see all tasks and more detail, run gradlew tasks --all
+
+To see more detail about a task, run gradlew help --task <task>
+
+BUILD SUCCESSFUL in 12s
+1 actionable task: 1 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
