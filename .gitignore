@@ -1,0 +1,9 @@
+.DS_Store
+node_modules/
+build/
+.gradle/
+.gradle-home/
+.ui-verify/state.json
+.ui-verify/renders/
+.ui-verify/reports/
+local.properties
