@@ -12,11 +12,9 @@ import { mkdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  FixtureFigmaClient, UIV_CORE_VERSION, addIgnoreRegion, pullBaseline, runCheckL2,
+  FixtureFigmaClient, RecordRefusedError, UIV_CORE_VERSION, addIgnoreRegion, pullBaseline, runCheckL2, runRecord, stopOdiffServer,
 } from '@magpie-eye/uiv-core';
 import type { MappingEntry } from '@magpie-eye/uiv-core';
-import { RecordRefusedError, runRecord } from '@magpie-eye/uiv-core/check/record.js';
-import { stopOdiffServer } from '@magpie-eye/uiv-core/l1/server.js';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
 import { renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
 
