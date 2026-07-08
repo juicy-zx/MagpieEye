@@ -6,10 +6,12 @@ import java.net.UnixDomainSocketAddress
 import java.nio.channels.Channels
 import java.nio.channels.SocketChannel
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermissions
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class DaemonTest {
@@ -57,5 +59,13 @@ class DaemonTest {
         assertTrue(rpc("""{"id":"4","cmd":"nope"}""").contains("unknown_cmd"))
 
         ch.close()
+    }
+}
+
+class MainArgsTest {
+    @Test
+    fun `parseWorkspace 解析 --workspace,缺失即抛`() {
+        assertEquals(Path.of("/w"), parseWorkspace(arrayOf("--workspace", "/w")))
+        assertFailsWith<IllegalArgumentException> { parseWorkspace(emptyArray()) }
     }
 }
