@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "uiv-demo-android"
-// include(":app") 在 T1.1.3 加入
+include(":app")

@@ -9,19 +9,21 @@ import org.gradle.api.tasks.testing.Test
  */
 class UivScreenshotConventionPlugin : Plugin<Project> {
     override fun apply(target: Project): Unit = with(target) {
-        tasks.withType(Test::class.java).configureEach { test ->
+        // kotlin-dsl(Gradle 9.5.1)将 Action<Test> SAM 映射为 receiver 风格 Test.() -> Unit,
+        // lambda 不接受显式参数(this 即 Test);与子计划语义一致,仅语法形式修正
+        tasks.withType(Test::class.java).configureEach {
             // C2:封死测试代码误初始化 AWT Toolkit -> WindowServer 的路径
-            test.jvmArgs("-Djava.awt.headless=true")
+            jvmArgs("-Djava.awt.headless=true")
             // C2:可写且可从中加载 dylib 的 tmpdir(RNG dylib 与字体解包后 System.load)
             val tmpDir = layout.buildDirectory.dir("robolectric-tmp").get().asFile
-            test.systemProperty("java.io.tmpdir", tmpDir.absolutePath)
-            test.doFirst { tmpDir.mkdirs() }
+            systemProperty("java.io.tmpdir", tmpDir.absolutePath)
+            doFirst { tmpDir.mkdirs() }
             // 关键:gradlew 命令行 -D 只落在 Gradle daemon JVM 上,
             // 必须显式透传给 fork 出来的 test worker JVM,离线验收才真正生效
             listOf("robolectric.offline", "robolectric.dependency.dir").forEach { key ->
-                providers.systemProperty(key).orNull?.let { test.systemProperty(key, it) }
+                providers.systemProperty(key).orNull?.let { systemProperty(key, it) }
             }
-            test.maxHeapSize = "2g"
+            maxHeapSize = "2g"
         }
     }
 }
