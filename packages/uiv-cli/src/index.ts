@@ -111,17 +111,30 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e: unknown) => {
+/**
+ * D-08(T2.9):一次性 CLI 收尾即时退出。odiff-bin 常驻 server 启动时会设一枚未 unref、
+ * 无句柄可清的 5s 看门狗定时器(odiff-bin/server.js,仅非 CI 分支)。check 功能完成
+ * (report 已落盘+打印、finally 已 stopOdiffServer)后,该定时器仍吊住事件循环 ~5s,
+ * 令进程迟迟不退(实测 report→exit ~4964ms,占慢车道 P50 近半)。一次性命令理应即时收尾
+ * (D-07 退出治理同旨),故 flush stdout(保末行 report/spec 路径契约)后显式退出,
+ * 消除空转尾;不改 L1 常驻 server 架构本身。
+ */
+function flushAndExit(): void {
+  const code = process.exitCode ?? 0;
+  if (process.stdout.writableLength === 0) process.exit(code);
+  else process.stdout.write('', () => process.exit(code));
+}
+
+main().then(flushAndExit, (e: unknown) => {
   if (e instanceof RecordRefusedError) {
     console.error(`uiv: ${e.message}`);
     process.exitCode = 3;
-    return;
-  }
-  if (e instanceof CliUsageError) {
+  } else if (e instanceof CliUsageError) {
     console.error(`uiv: ${e.message}`);
     process.exitCode = 2;
-    return;
+  } else {
+    console.error(e);
+    process.exitCode = 2;
   }
-  console.error(e);
-  process.exitCode = 2;
+  flushAndExit();
 });

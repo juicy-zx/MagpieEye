@@ -23,24 +23,25 @@
  "t2_1_hot": {
   "protocol": "--rerun",
   "samples": [
-   10182,
-   10107,
-   10005,
-   10217,
-   10141,
-   9995,
-   10222,
-   10138,
-   9948,
-   10208
+   5235,
+   5296,
+   5092,
+   5037,
+   5285,
+   5058,
+   5088,
+   5324,
+   4993,
+   4992
   ],
-  "p50_ms": 10140,
+  "p50_ms": 5090,
   "cold_p50_ms": 10442,
-  "saved_ms": 302,
-  "speedup_ratio": 1.03,
+  "saved_ms": 5352,
+  "speedup_ratio": 2.05,
   "target_ms": 6000,
-  "pass": false,
-  "measured_at": "2026-07-08T21:44:39.863Z"
+  "pass": true,
+  "measured_at": "2026-07-08T22:14:05.187Z",
+  "note": "T2.9 诊断后:D-08 揭出的 P50=10140ms 经归因为 odiff-bin server 未 unref 的 5s 看门狗定时器空转尾(report 打印后 ~4964ms 才退出),非 T2.6~T2.8 工程退化。裸 Gradle --rerun 无退化(5c689c4=5304ms≈HEAD=5184ms);daemon 渲染 4901ms。修复 packages/uiv-cli/src/index.ts 收尾即时退出后复测 P50=5090ms<=6000 达标。"
  },
  "t2_8_fast": {
   "task": "T2.8",
