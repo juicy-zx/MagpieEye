@@ -5,7 +5,7 @@
   "codex": {
     "transport": "mcp",
     "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
-    "last_decisions": "D-08: T2.9 degradation diagnosis established; M2 review open pending its conclusion"
+    "last_decisions": "D-09: M3 dual-insurance plan (adapter hard gate + evidence unit), verify-page at implementation, narrow .ui-verify exemption"
   },
   "consensus_reached": true,
   "current_milestone": "M3",
@@ -109,8 +109,9 @@
       "note": "199 全绿; 退出治理四条实证(7min->5s); record+拒录; findNewestPng 三级; exports 子路径变通已申报"
     },
     "T3.0": {
-      "status": "pending",
-      "last_commit": null
+      "status": "done",
+      "last_commit": null,
+      "note": "只读核验完成: 3 承重发现驱动 D-09 方案重写; magpie HEAD 4d86bbc5; 测试基线 3346/3349(3 failed=Go 缺失环境性)"
     },
     "T3.1": {
       "status": "pending",
