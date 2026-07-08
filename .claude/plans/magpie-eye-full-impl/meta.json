@@ -22,9 +22,9 @@
       "code_review_rounds": 2
     },
     "M2": {
-      "subplan": "none",
+      "subplan": "draft",
       "code_review": "none",
-      "review_rounds": 0
+      "review_rounds": 1
     },
     "M3": {
       "subplan": "none",

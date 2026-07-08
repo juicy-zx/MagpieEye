@@ -9,6 +9,9 @@
 - **Wave 1(并行,路径互斥)**:T2.1(daemon/,opus)、T2.2(uiv-core l1,仅 odiff server 部分,sonnet)、T2.3(experiments/,fable 研究型)、T2.4(uiv-core figma/,opus)。各 agent 只 add 自己路径;latency-m2.json 按键分治(t2_1_hot / t2_2_odiff)。
 - **T2.6 CLI 接线时机(与 T2.1 冲突协调)**:T2.6(check/run.ts + cli,与 T2.2 同一 agent 续作,sonnet)Step 4~6(args/runRecord/收集三级优先)不碰 CLI 入口,可与 Wave 1 同步开工;**Step 7(CLI 接线+golden 目录切换+e2e,改 `packages/uiv-cli/src/index.ts`)与 T2.1 的接线同改一文件,必须待 T2.1 落地(`selectGradleRunner` 已产出)后执行**,执行时机可与 Wave 2 并行。
 - **Wave 2(严格串行,均动 l2/ 与 report)**:T2.5(opus)→ T2.7(opus)。**diagnostics 字段结构由 T2.5 首先定义,T2.7 开工前必须读 T2.5 落地后的现状适配**(两章草稿独立起草,以先执行者的落地为准)。Wave 2 与 Wave 1 可同时启动(l2/ 与 Wave1 路径互斥;T2.5 的 check/runL2.ts 与 T2.6 的 check/run.ts 是不同文件)。
+- **共享文件协调**:
+  - `packages/uiv-core/src/index.ts`(barrel):各任务一律不改;新增导出统一由"barrel export integration"收尾步骤(各 Wave 全部任务完成后,主会话派单一 agent 串行执行:汇总各章声明的 export 清单一次性追加 + npm test 全绿)完成;各任务自己的测试从相对路径 import(如 `../l1/server.js`),不依赖 barrel。
+  - `.gitignore`:由主会话(编排者)按各章声明的忽略项一次性预编辑,各任务不碰。
 - 沙箱/网络前置(编排者一次性处理):域名白名单补 repo.gradle.org(T2.1 gradle-tooling-api 仅此仓库有 9.5.1)。
 - 三章字符数超软限(T2.1/T2.4/T2.5),内容完整性优先,已豁免。
 
@@ -36,7 +39,7 @@
 
 #### Step 1:daemon 模块+协议+UDS 服务器(commit `[T2.1] daemon: protocol + UDS server (0600)`)
 
-建目录 `mkdir -p daemon/src/{main,test}/kotlin/com/magpie/uiv/daemon`;.gitignore 追加 `.ui-verify/daemon.sock` 与 `.ui-verify/daemon.log` 两行;`git check-ignore daemon/build` 应 exit 0(通配已覆盖)。
+建目录 `mkdir -p daemon/src/{main,test}/kotlin/com/magpie/uiv/daemon`;`.ui-verify/daemon.sock` 与 `.ui-verify/daemon.log` 两行登记入本章"gitignore 清单"(由编排者预编辑,本任务不改 `.gitignore`);`git check-ignore daemon/build` 应 exit 0(通配已覆盖,预编辑后生效)。
 `daemon/settings.gradle.kts` 一行:`rootProject.name = "uiv-render-daemon"`。`daemon/build.gradle.kts` 照条成码:plugins=`kotlin("jvm")`+`kotlin("plugin.serialization")`(均 `version "2.3.21"`)+`application`;repositories=`mavenCentral()`+`maven("https://repo.gradle.org/gradle/libs-releases")`;dependencies=implementation(tooling-api 与 serialization-json,坐标见事实源)+runtimeOnly(slf4j-simple)+testImplementation(`kotlin("test")`);`kotlin { jvmToolchain(21) }`;`application { mainClass = "com.magpie.uiv.daemon.MainKt"; applicationName = "uiv-render-daemon" }`;`tasks.test { useJUnitPlatform() }`。
 
 **先写失败测试** `daemon/src/test/kotlin/com/magpie/uiv/daemon/DaemonTest.kt`。前置:`ws=Files.createTempDirectory("uivd")`;`sock=ws.resolve("daemon.sock")`;`FakeExec: GradleExecutor`(记录 `calls`,恒回 `RunPayload(0,"fake-stderr")`);起 `DaemonServer(sock, fake, ws)`;客户端 `SocketChannel.open(StandardProtocolFamily.UNIX)` 连 sock,逐行"写→flush→readLine";finally `server.stop()`。单 @Test 五断言:
@@ -64,7 +67,7 @@
   }
 ```
 
-跑绿后 `git add daemon .gitignore`,commit。
+跑绿后 `git add daemon`,commit(`.gitignore` 由编排者预编辑并提交,本任务不 add)。
 
 #### Step 2:TapiGradleExecutor+Main+冒烟(commit `[T2.1] Tooling API executor + main`)
 
@@ -152,6 +155,8 @@ node scripts/t2.1/measure-hot.mjs          # {"p50Ms":…,"pass":true},exit 0
 
 机判集=各 Step 跑绿命令+执行序六条+Step 4 两项机判,全部 exit 0 即过。P50 未达标→落档 JSON 携 samples 回 Codex(候选:daemon 预热、配置缓存、测量协议复核);DIVERGENT 输出即最小复现证据,回 Codex。收尾报请编排者更新 meta.json(`tasks.T2.1=awaiting_review`,`latency_baseline.t2_1_hot`=落档 JSON)。
 
+gitignore 清单:`.ui-verify/daemon.sock`、`.ui-verify/daemon.log`(`daemon/build` 已被现有通配覆盖,无需新增条目)。
+
 
 ---
 
@@ -215,7 +220,7 @@ export async function odiffCompare(base: string, cmp: string, out: string, opts:
 }
 ```
 
-`engine.ts`:`runL1` 加尾参 `mode?: OdiffMode`,`compare(...)` 调用改 `odiffCompare(baselinePng, renderedPng, diffOut, {…options 逐字不动…}, mode)`(删未用导入);core index 加 `export * from './l1/server.js'`;CLI `main().catch(...)` 链尾加 `.finally(stopOdiffServer)`。
+`engine.ts`:`runL1` 加尾参 `mode?: OdiffMode`,`compare(...)` 调用改 `odiffCompare(baselinePng, renderedPng, diffOut, {…options 逐字不动…}, mode)`(删未用导入);`export * from './l1/server.js'` 登记入本章"barrel export 清单"(收尾统一追加,见 header 共享文件协调),不改 `src/index.ts`,测试已用相对路径 `./server.js` import(见 Step 1)。CLI 退出清理由 server.ts 的 `process.on('exit')` 兜底,本任务不碰 CLI 入口(Codex 复审裁定)。
 验 `npm run build && npm test` 全绿后 commit:`git add -A && git commit -m "T2.2: odiff server 常驻门面,runL1 双模式一致,spawn 降级保留"`
 
 ### Step 3:耗时落档
@@ -250,6 +255,8 @@ console.log('BENCH-OK', med(P.ms), med(S.ms));
 
 验收:末行 `BENCH-OK <spawn中位> <server中位>`,latency-m2.json 含 t2_2_odiff(速度只落档,不覆盖他任务 key)。
 commit:`git add scripts/bench-odiff-t22.mjs docs/latency-m2.json && git commit -m "T2.2: spawn vs server 耗时落档,结果一致门通过"`
+
+barrel export 清单:`export * from './l1/server.js'`
 
 ## T2.6 `uiv check --record`
 
@@ -311,7 +318,7 @@ export async function runRecord(runner: GradleRunner, opts: { demoDir: string; t
 }
 ```
 
-core index 加 `export * from './check/record.js'` → 绿。
+`export * from './check/record.js'` 登记入本章"barrel export 清单"(收尾统一追加),不改 `src/index.ts`,测试已用相对路径 `./record.js` import(见上)→ 绿。
 
 ### Step 6(红→绿):收集防 `_compare` 误收
 
@@ -383,6 +390,8 @@ node packages/uiv-cli/dist/index.js check --preview com.magpie.uiv.demo.CalibCar
 预期:`exit=0`,stdout 含 `golden recorded: `,末行为 report.json 路径;`GOLDEN-OK`;`verify=0`(=编排表"对应 compare 任务";全量 verify 待 PreviewScanner golden 补录,列 M2 收尾);`exit2=0`(golden 在场收集不断)。不符 → 证伪。
 commit:`git add -A && git commit -m "T2.6: uiv check --record 录 golden 入库,定向 verify 绿,e2e 闭环"`
 
+barrel export 清单:`export * from './check/record.js'`
+
 收口:`npm run build && npm test` 全绿;报主会话:两任务 commit hash、t2_2_odiff 中位数、待办"PreviewScanner golden 补录评估"。
 
 
@@ -434,7 +443,7 @@ experiments/fastlane-spike/          # 唯一写入区
 └── meta-fragment.json               # 【提交】交主会话合入 meta.json(子 agent 不写 meta.json)
 ```
 
-GRADLE_USER_HOME 沿用仓库 `.gradle-home`(依赖缓存复用);probe 的 `build/`、`.gradle/` 进 .gitignore;CalibCard 源码**拷贝**进 probe(标注"实验专用副本,不回流不维护")。
+GRADLE_USER_HOME 沿用仓库 `.gradle-home`(依赖缓存复用);probe 的 `build/`、`.gradle/` 忽略项登记入本章"gitignore 清单"(由编排者预编辑,本任务不改 `.gitignore`);CalibCard 源码**拷贝**进 probe(标注"实验专用副本,不回流不维护")。
 
 #### 候选 1:Paparazzi 2.0.0-alpha 程序化钩子(时间盒 2h,超时即记 F2)
 
@@ -491,12 +500,14 @@ exit 0 = 数据落档完成;Codex 决断结论由主会话回写 pending-codex-d
 - 候选 1 可行但语义不可达 → `verdict: partial`(仅 L1/预览价值),交 Codex 裁量是否值得纳入。
 - 总时间盒:候选 1 ≤2h + 候选 2 ≤2h + 收口 0.5h,合计 ≤4.5h;任何步骤超时跳收口,以已得数据出报告。
 
+gitignore 清单:`experiments/fastlane-spike/*/build/`、`experiments/fastlane-spike/*/.gradle/`
+
 
 ---
 
 ### Task T2.4 — figma-spec-cache:钉版本缓存 + 配额预算器 + 变量解析三级降级
 
-> 上游:orchestration.md M2 表 T2.4;设计文档 2.1。北极星:内循环 Figma 请求数=0 + MCP 不可用时降级解出 token 值(fixture 驱动)。前置:T1.2 done。文件均在 `packages/uiv-core/src/figma/`(下文省路径);存量只碰 client.ts/pull.ts/index.ts/.gitignore,可与其他 M2 任务并行。逐步红→绿→commit(统一 `git add packages/uiv-core <另列> && git commit -m <msg>`,下文只给 msg);验收失败非环境因 → 回 Codex。
+> 上游:orchestration.md M2 表 T2.4;设计文档 2.1。北极星:内循环 Figma 请求数=0 + MCP 不可用时降级解出 token 值(fixture 驱动)。前置:T1.2 done。文件均在 `packages/uiv-core/src/figma/`(下文省路径);存量只碰 client.ts/pull.ts,可与其他 M2 任务并行(`index.ts`/`.gitignore` 一律不改,见 header 共享文件协调)。逐步红→绿→commit(统一 `git add packages/uiv-core <另列> && git commit -m <msg>`,下文只给 msg);验收失败非环境因 → 回 Codex。
 
 #### 口径钉死
 
@@ -616,7 +627,7 @@ export class CachedFigmaClient implements FigmaClient {   // 口径 1
 }
 ```
 
-`echo ".uiv-cache/" >> .gitignore`;`npx vitest run packages/uiv-core` → 绿且存量不回归。commit(加 .gitignore)msg:`T2.4: 钉版本缓存+接口层请求计数(内循环零请求验收用例)`
+`.uiv-cache/` 忽略项登记入本章"gitignore 清单"(由编排者预编辑,本任务不改 `.gitignore`);`npx vitest run packages/uiv-core` → 绿且存量不回归。commit msg:`T2.4: 钉版本缓存+接口层请求计数(内循环零请求验收用例)`
 
 #### Step 3:RestFigmaClient
 
@@ -783,11 +794,14 @@ export class TokensStudioJsonResolver implements VariableResolver {
 
 #### Step 5:导出面 + 任务门
 
-`src/index.ts` 追加四行 export(同 client.js 形式):`./figma/quota.js`、`cache.js`、`rest.js`、`variables.js`。
+四个模块的 export(同 client.js 形式:`./figma/quota.js`、`cache.js`、`rest.js`、`variables.js`)登记入本章"barrel export 清单"(收尾统一追加),不改 `src/index.ts`;quota.test.ts/cache.test.ts/rest.test.ts/variables.test.ts 均已用相对路径 import(见 Step 1~4)。
 
 **任务门(可机判)**:① `npm test` exit 0(存量不回归,可断网复跑);② `npm run build` exit 0;③ 验收锚:cache.test【T2.4 验收】= 内循环零请求;variables.test = 降级解 token。
 
 commit msg:`T2.4: figma 导出面收口`。主会话:meta.json 置 T2.4 `awaiting_review` 记 last_commit;pending_followups 含"PAT 到位后 REST 真实验证";交付口径 = fixture/mock 驱动完成,不得宣称 REST 闭环(Release Gate)。
+
+barrel export 清单:`export * from './figma/quota.js'`;`export * from './figma/cache.js'`;`export * from './figma/rest.js'`;`export * from './figma/variables.js'`
+gitignore 清单:`.uiv-cache/`
 
 
 ---
@@ -925,7 +939,7 @@ export function matchThreeTier(rebased: FigmaNode, dump: SemanticsDump, N: Figma
 }
 ```
 
-`src/index.ts` 枚举区补三行 export(similarity/lcs/match)。全绿→commit `T2.5: 三级匹配编排(joinSource)`。
+similarity/lcs/match 三个模块的 export 登记入本章"barrel export 清单"(收尾统一追加),不改 `src/index.ts`;`t25.test.ts` 与 `match.ts` 均从相对路径 import(`./lcs.js`/`./similarity.js` 等),不依赖 barrel。全绿→commit `T2.5: 三级匹配编排(joinSource)`。
 
 ## Step 3 report v1 + runL2 接线
 
@@ -1025,6 +1039,8 @@ describe「T2.5 验收六类」六个 it 逐条落码(除注明外 r = `runL2(SP
 
 1. `LCS_SIM_MIN=0.6`、合成式 `(simPos+IoU+simAR)/3`、`simPos=1/(1+L1/α)` 为工程钉值(文档只钉 α/δ 与五要素);交换位/小偏移用例是行为锚。语义树无绘制类型,类型一致性仅判 TEXT/非 TEXT。
 2. missing 叶子(comparable leaves 未配对)必须生成 violation:`structural.missing` 中每个叶子额外计入一条 `property:'missing'、severity:'high'` 的 violation(计入 verdict 的 blockingSeverities 命中,见 Step 3 实现与 Step 4 验收⑥反例);`structural.missing` 数组本身保留不变。Codex M2 审查裁定:硬失败(不留待实现期决断)。
+
+barrel export 清单:`export * from './l2/similarity.js'`;`export * from './l2/lcs.js'`;`export * from './l2/match.js'`
 
 
 ---
