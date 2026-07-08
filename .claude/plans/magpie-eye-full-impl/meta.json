@@ -5,7 +5,7 @@
   "codex": {
     "transport": "mcp",
     "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
-    "last_decisions": "D-06 approved: fuse only gates degraded pairs (text/lcs), tag pairs always assert; v1 validator relaxed; expect 4/4"
+    "last_decisions": "D-07(a') approved: slow-lane P50<=6.0s --rerun protocol, M2 north-star revised; finding-2 -> T2.6 w/ 4 criteria"
   },
   "consensus_reached": true,
   "current_milestone": "M2",
@@ -80,7 +80,7 @@
     "T2.1": {
       "status": "awaiting_review",
       "last_commit": "5c689c4",
-      "note": "等价 EQUIVALENT/UDS 0600 过; P50 发现回 Codex(D-07): 真热渲染地板~5.8s vs 目标 3.1s, 226ms 系缓存跳过"
+      "note": "D-07(a') 达标: --rerun 热 5838ms<=6.0s, 冷 10442ms saved~4.6s; 等价/0600 过"
     },
     "T2.2": {
       "status": "awaiting_review",
