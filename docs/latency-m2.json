@@ -1,0 +1,23 @@
+{
+ "t2_2_odiff": {
+  "image": "720x1600",
+  "spawn_ms": [
+   13,
+   12,
+   11,
+   11,
+   9
+  ],
+  "server_ms": [
+   5,
+   6,
+   7,
+   5,
+   5
+  ],
+  "median_spawn_ms": 11,
+  "median_server_ms": 5,
+  "resultsIdentical": true,
+  "measured_at": "2026-07-08"
+ }
+}
