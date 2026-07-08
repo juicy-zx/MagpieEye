@@ -25,7 +25,7 @@
       "subplan": "approved",
       "code_review": "in_progress",
       "review_rounds": 3,
-      "code_review_rounds": 0
+      "code_review_rounds": 1
     },
     "M3": {
       "subplan": "none",
@@ -192,7 +192,10 @@
     "真实远程 CI 接入(用户侧)",
     "provider 形态 vlm-judge(视 API key)",
     "M3 verify-page 整页基准优先 REST /v1/images?scale=2(PAT 后); exportAsync base64 大图分块仅兜底",
-    "housekeeping: milestone-1.md 旧 FIX_MAP position 描述标注已被 bdebb59/D-03 取代(Codex 非阻塞建议)"
+    "housekeeping: milestone-1.md 旧 FIX_MAP position 描述标注已被 bdebb59/D-03 取代(Codex 非阻塞建议)",
+    "M2 审查建议: fast-stage 文件名改 request/pid 级防并发覆盖(T2.8 后续)",
+    "M2 审查建议: fastlane worker 命令协议改 JSON line/长度前缀(含空格路径稳健性)",
+    "M2 审查建议: fused 态 score 固定 0 使防震荡趋势信号变粗(延后优化)"
   ],
   "calibration": {
     "channel": "mcp-only",
