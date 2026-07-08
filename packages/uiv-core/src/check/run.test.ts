@@ -152,3 +152,20 @@ describe('T2.6: 收集三级优先 + 新鲜度门(防 _compare/陈旧 _actual �
     expect(W(r.report.artifacts.render!)).toBe(64);
   });
 });
+
+describe('D-07(c): L1 advisory 失败隔离(不污染已成功的渲染主链/L2 verdict)', () => {
+  it('baseline.png 损坏致 L1(server+spawn 双降级)全链路抛错: pass 仍 true,pixel/diff 置 null', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();
+    seedRoborazziPng(demoDir);
+    const baseDir = join(uiVerifyDir, 'baselines', '1-100@T1_0A_V1');
+    mkdirSync(baseDir, { recursive: true });
+    // 非法 PNG 字节:odiff server/spawn 与 looks-same 均无法解析,runL1 必抛错。
+    writeFileSync(join(baseDir, 'baseline.png'), 'not a real png, deliberately corrupt for D-07(c)');
+    const runner = new FakeRunner(0, '');
+    const { report } = await runCheck(runner, opts(demoDir, uiVerifyDir));
+    expect(report.pass).toBe(true);
+    expect(report.pixel).toBeNull();
+    expect(report.artifacts.diff).toBeNull();
+    expect(report.artifacts.render).not.toBeNull();
+  });
+});
