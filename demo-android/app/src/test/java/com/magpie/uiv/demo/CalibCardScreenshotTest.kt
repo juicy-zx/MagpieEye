@@ -18,11 +18,16 @@ class CalibCardScreenshotTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    // semantics-exporter(T1.3):CLI check 跑本测试时同步落 build/uiv/CalibCard.semantics.json
+    @get:Rule
+    val dumpRule = SemanticsDumpRule()
+
     @Test
     fun captureCalibCard() {
         composeRule.setContent { CalibCard() }
         // node capture 裁到 fig:1:100 的 unclipped bounds:360x200dp * 2.0 = 720x400 px
         composeRule.onNodeWithTag("fig:1:100")
             .captureRoboImage("build/outputs/roborazzi/CalibCard.png")
+        dumpRule.dump(composeRule, "CalibCard")
     }
 }
