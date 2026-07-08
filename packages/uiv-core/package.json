@@ -7,5 +7,9 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js"
+  },
+  "dependencies": {
+    "looks-same": "^10.0.1",
+    "odiff-bin": "^4.3.8"
   }
 }
