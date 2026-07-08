@@ -5,7 +5,7 @@
   "codex": {
     "transport": "mcp",
     "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
-    "last_decisions": "D-01 A/B/C + D-02 all approved 2026-07-08 21:2x; M1 subplan round 3/10"
+    "last_decisions": "D-04 approved 2026-07-08 ~22:5x: (b) D3->subtitle, (c) T2.7 established, (a) rejected as antipattern; M1 round 5/10"
   },
   "consensus_reached": true,
   "current_milestone": "M1",
@@ -143,6 +143,11 @@
     "T4.5": {
       "status": "pending",
       "last_commit": null
+    },
+    "T2.7": {
+      "status": "pending",
+      "last_commit": null,
+      "note": "D-04 立项: 像素采样颜色断言(非文本节点)——semantics bounds 定位 rendered.png 内部安全区中位色 vs spec fills ΔE00; 完成后 D3 回归 CalibSwatch 复验"
     }
   },
   "blockers": [

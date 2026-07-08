@@ -35,3 +35,6 @@ T1.2 core 已完成(44/44 单测),两个子计划未指明处执行 agent 自决
 
 ## D-03 决断结果(2026-07-08 21:5x)
 A/B/C 全同意:A 优先自定义 Layout(禁 offset 替代品绕行);B 契约条款加边界措辞(offset 仅限非验收关键微调);C T1.3 awaiting_review,修复后 pass:true 为收尾验收门。已固化 orchestration.md 第 5 节。
+
+## D-04 决断结果(2026-07-08 ~22:5x)
+(b) D3 改 CalibSubtitle #CCE0FF→#99B3E6(color@fig:1:102),Contract 不动;(c) M2 立项 T2.7 像素采样颜色断言,完成后 D3 回归 CalibSwatch;(a) 自声明语义属性否决入反模式;--verify-detection 独立设计确认,固化"循环前必过"规则。已落 orchestration.md 第 5 节与 meta.json。
