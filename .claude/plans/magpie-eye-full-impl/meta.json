@@ -1,0 +1,180 @@
+{
+  "schema_version": 2,
+  "task_slug": "magpie-eye-full-impl",
+  "created": "2026-07-08",
+  "codex": {
+    "transport": "mcp",
+    "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a"
+  },
+  "consensus_reached": true,
+  "current_milestone": "M0",
+  "milestones": {
+    "M0": {
+      "subplan": "approved-inline",
+      "code_review": "none",
+      "review_rounds": 0
+    },
+    "M1": {
+      "subplan": "none",
+      "code_review": "none",
+      "review_rounds": 0
+    },
+    "M2": {
+      "subplan": "none",
+      "code_review": "none",
+      "review_rounds": 0
+    },
+    "M3": {
+      "subplan": "none",
+      "code_review": "none",
+      "review_rounds": 0
+    },
+    "M4": {
+      "subplan": "none",
+      "code_review": "none",
+      "review_rounds": 0
+    }
+  },
+  "plan_review": {
+    "review_rounds": 1,
+    "result": "consensus reached, 4 suggestions adopted"
+  },
+  "tasks": {
+    "T0.1": {
+      "status": "done",
+      "last_commit": "6cdd9ce"
+    },
+    "T0.2": {
+      "status": "in_progress",
+      "last_commit": null
+    },
+    "T0.3": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T1.0a": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T1.1": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T1.2": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T1.3": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T1.4": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T2.1": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T2.2": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T2.3": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T2.4": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T2.5": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T2.6": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T3.0": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T3.1": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T3.2": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T3.3": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T3.4": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T3.5": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T4.1": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T4.2": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T4.3": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T4.4": {
+      "status": "pending",
+      "last_commit": null
+    },
+    "T4.5": {
+      "status": "pending",
+      "last_commit": null
+    }
+  },
+  "blockers": [
+    {
+      "id": "B1",
+      "desc": "FIGMA_PAT (file_content:read + file_metadata:read, Dev/Full seat)",
+      "mitigation": "手工 REST-shape fixture 先行; PAT 到位后走 pending_followups",
+      "blocking": false
+    },
+    {
+      "id": "B2",
+      "desc": "Figma desktop MCP 实际可用性(桌面 App 常驻/活动 tab/client 注册/seat 档位)",
+      "mitigation": "T1.0a 首步实调 get_metadata 校验; 失败降级人工导出 PNG + 手写 spec fixture",
+      "blocking": false
+    },
+    {
+      "id": "B3",
+      "desc": "vlm-judge provider 形态需模型 API key",
+      "mitigation": "仅交付轻量形态, provider 入 pending_followups",
+      "blocking": false
+    }
+  ],
+  "pending_followups": [
+    "PAT 到位后: T1.0a③ MCP<->REST 坐标交叉标定 + 重录 REST fixture + 复跑 T1.2 验收",
+    "真实远程 CI 接入(用户侧)",
+    "provider 形态 vlm-judge(视 API key)"
+  ],
+  "calibration": {},
+  "latency_baseline": {},
+  "environment": {
+    "jdk": "Corretto 21.0.9",
+    "node": "v26.3.0",
+    "codex_cli": "0.142.5",
+    "android_sdk": "installing (T0.2 background)",
+    "figma_desktop_mcp": "port 3845 alive (B2 pending real-call check)",
+    "figma_pat": "absent",
+    "magpie_agent_drift": "8e0dcb2 -> HEAD ~129 commits, T3.0 required"
+  }
+}
