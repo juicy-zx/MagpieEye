@@ -18,7 +18,10 @@ import kotlinx.serialization.json.put
 data class RunArgs(val cwd: String? = null, val args: List<String> = emptyList())
 
 @Serializable
-data class Request(val id: String, val cmd: String, val args: RunArgs? = null)
+data class RenderArgs(val previewFqn: String, val outPng: String, val outSemantics: String)
+
+@Serializable
+data class Request(val id: String, val cmd: String, val args: RunArgs? = null, val render: RenderArgs? = null)
 
 data class RunPayload(val exitCode: Int, val stderr: String)
 
@@ -35,7 +38,7 @@ private fun err(id: String, m: String): String =
     buildJsonObject { put("id", id); put("ok", false); put("error", m) }.toString()
 
 /** 单线程顺序服务:一连接多行,EOF 收尾;UDS 绑定即 0600。 */
-class DaemonServer(private val sock: Path, private val exec: GradleExecutor, private val ws: Path) {
+class DaemonServer(private val sock: Path, private val exec: GradleExecutor, private val ws: Path, private val renderer: PreviewRenderer) {
     private val ch = ServerSocketChannel.open(StandardProtocolFamily.UNIX)
         .bind(UnixDomainSocketAddress.of(sock))
         .also { Files.setPosixFilePermissions(sock, PosixFilePermissions.fromString("rw-------")) }
@@ -66,6 +69,20 @@ class DaemonServer(private val sock: Path, private val exec: GradleExecutor, pri
                 if (!cwd.toPath().startsWith(ws.toRealPath())) return err(q.id, "cwd_outside_workspace: $cwd")
                 val r = exec.run(cwd, q.args.args)
                 ok(q.id, buildJsonObject { put("exitCode", r.exitCode); put("stderr", r.stderr) })
+            }
+            "renderPreview" -> {
+                val ra = q.render ?: return err(q.id, "bad_request: render args required")
+                val png = File(ra.outPng).canonicalFile
+                val sem = File(ra.outSemantics).canonicalFile
+                if (!png.toPath().startsWith(ws.toRealPath()) || !sem.toPath().startsWith(ws.toRealPath())) {
+                    return err(q.id, "path_outside_workspace")
+                }
+                val r = renderer.render(ra.previewFqn, png, sem)
+                if (!r.ok) return err(q.id, r.error ?: "render_failed")
+                ok(q.id, buildJsonObject {
+                    put("png", png.toString()); put("semantics", sem.toString())
+                    put("renderMs", r.renderMs ?: 0L); put("semanticsMs", r.semanticsMs ?: 0L)
+                })
             }
             else -> err(q.id, "unknown_cmd: ${q.cmd}")
         }

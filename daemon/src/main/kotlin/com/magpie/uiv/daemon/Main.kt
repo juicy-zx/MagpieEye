@@ -77,8 +77,9 @@ fun main(a: Array<String>) {
         Files.delete(sock)
     }
     val ex = TapiGradleExecutor()
-    val server = DaemonServer(sock, ex, ws)
-    Runtime.getRuntime().addShutdownHook(Thread { server.stop(); ex.close() })
+    val worker = WorkerManager(ws)   // T2.8:快车道 worker 托管;懒拉起,随 daemon 退出清理
+    val server = DaemonServer(sock, ex, ws, worker)
+    Runtime.getRuntime().addShutdownHook(Thread { server.stop(); ex.close(); worker.close() })
     println("listening on $sock")
     server.start().join()
 }

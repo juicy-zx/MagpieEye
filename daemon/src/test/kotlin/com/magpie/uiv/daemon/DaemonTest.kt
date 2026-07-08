@@ -18,7 +18,8 @@ class DaemonTest {
     private val ws = Files.createTempDirectory("uivd")
     private val sock = ws.resolve("daemon.sock")
     private val fake = FakeExec()
-    private val server = DaemonServer(sock, fake, ws).also { it.start() }
+    private val renderer = FakeRenderer()
+    private val server = DaemonServer(sock, fake, ws, renderer).also { it.start() }
 
     class FakeExec : GradleExecutor {
         val calls = mutableListOf<Pair<File, List<String>>>()
@@ -26,6 +27,15 @@ class DaemonTest {
             calls.add(cwd to args)
             return RunPayload(0, "fake-stderr")
         }
+    }
+
+    class FakeRenderer : PreviewRenderer {
+        var result = RenderResult(true, null, 12L, 8L)
+        val calls = mutableListOf<Triple<String, File, File>>()
+        override fun render(previewFqn: String, outPng: File, outSemantics: File): RenderResult {
+            calls.add(Triple(previewFqn, outPng, outSemantics)); return result
+        }
+        override fun close() {}
     }
 
     @AfterTest
@@ -57,6 +67,33 @@ class DaemonTest {
         assertTrue(rpc("""{"id":"3","cmd":"gradle.run","args":{"cwd":"/private/tmp","args":[]}}""").contains("cwd_outside_workspace"))
         // 5. 未知命令
         assertTrue(rpc("""{"id":"4","cmd":"nope"}""").contains("unknown_cmd"))
+
+        ch.close()
+    }
+
+    @Test
+    fun `renderPreview routing + workspace 边界`() {
+        val ch = SocketChannel.open(StandardProtocolFamily.UNIX).apply { connect(UnixDomainSocketAddress.of(sock)) }
+        val w = Channels.newOutputStream(ch).bufferedWriter()
+        val r = Channels.newInputStream(ch).bufferedReader()
+        fun rpc(line: String): String { w.write(line); w.write("\n"); w.flush(); return r.readLine() }
+        val fqn = "com.magpie.uiv.demo.CalibCardPreview"
+
+        // 1. 成功:透传 previewFqn + 回显 png/semantics/renderMs
+        val okResp = rpc("""{"id":"1","cmd":"renderPreview","render":{"previewFqn":"$fqn","outPng":"$ws/.ui-verify/r.png","outSemantics":"$ws/.ui-verify/s.json"}}""")
+        assertTrue(okResp.contains("\"ok\":true"), okResp)
+        assertTrue(okResp.contains("\"renderMs\":12"), okResp)
+        assertEquals(fqn, renderer.calls.single().first)
+
+        // 2. 失败原因如实上抛(供 CLI 回落判定)
+        renderer.result = RenderResult(false, "worker_stale: rebuild required")
+        assertTrue(rpc("""{"id":"2","cmd":"renderPreview","render":{"previewFqn":"$fqn","outPng":"$ws/.ui-verify/r.png","outSemantics":"$ws/.ui-verify/s.json"}}""").contains("worker_stale"))
+
+        // 3. workspace 外输出路径拒绝
+        assertTrue(rpc("""{"id":"3","cmd":"renderPreview","render":{"previewFqn":"$fqn","outPng":"/private/tmp/r.png","outSemantics":"/private/tmp/s.json"}}""").contains("path_outside_workspace"))
+
+        // 4. 缺 render 参数
+        assertTrue(rpc("""{"id":"4","cmd":"renderPreview"}""").contains("bad_request"))
 
         ch.close()
     }
