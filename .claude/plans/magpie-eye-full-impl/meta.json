@@ -62,8 +62,9 @@
       "last_commit": null
     },
     "T1.2": {
-      "status": "pending",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "e33132a",
+      "note": "core 44/44 绿; 留待: check e2e(等T1.1)+Step9b+baseline实图落盘(等Codex #B)+资产入库"
     },
     "T1.3": {
       "status": "pending",

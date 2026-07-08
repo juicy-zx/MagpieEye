@@ -18,3 +18,10 @@ B. T1.2 baseline.png 来源约定变更:从"get_screenshot(2x)"改为"use_figma 
 C. T1.0a 按"三断言全部闭合(①经修正通道)"置 done 并单 commit 收口,是否同意?
 
 (执行中口径决断;若计轮次,当前 M1 子计划节点 3/10。)
+
+## D-2026-07-08-02: T1.2 core 两个自决口径复核(轻量)
+
+T1.2 core 已完成(44/44 单测),两个子计划未指明处执行 agent 自决,请复核:
+1. `uiv check` 的 version 来源:从 mapping.json 按 nodeId 查(baseline pull 的 upsert 产物,与设计文档"mapping.json 是 source of truth"一致);未 pull 先 check 报 "run baseline pull first" exit 2。
+2. diff.png 落位 `renders/<nodeDir>/diff.png`(运行产物,.gitignore 的 renders/ 已覆盖)。
+附:实现中修复两个库级坑——odiff-bin 空 ignoreRegions 序列化成非法 --ignore=(仅非空传参);looks-same 相同图返回 null 占位簇(equal 时清空)。
