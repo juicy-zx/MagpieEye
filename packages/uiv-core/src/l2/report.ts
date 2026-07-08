@@ -18,7 +18,7 @@ import { verdict } from './verdict.js';
 import type { ReportV1, StructuralV1 } from '../report/v1.js';
 
 const FIX_MAP: Record<string, string> = {
-  position: '布局排列/Modifier.offset',
+  position: '用参与测量的布局定位调整位置(自定义 Layout/padding/align/Arrangement/约束布局),避免绘制期位移做主定位',
   size: 'Modifier.size/width/height',
   itemSpacing: 'Arrangement.spacedBy',
   fontSize: 'TextStyle.fontSize',

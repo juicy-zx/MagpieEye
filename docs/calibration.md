@@ -13,7 +13,7 @@ whoami/create_new_file/get_metadata 实调结果: **通过**。Full seat(xi zhu'
 
 - **原定通道 get_screenshot(maxDimension=720):证伪**——返回 360×200(=original,1x)。maxDimension 语义为"只封顶不放大",无 2x 渲染能力。check-scale 实测 actualPx=[360,200],pass=false(docs/calibration-assets/card-mcp.png 留档)。
 - **备选通道 use_figma 内 Plugin API `exportAsync({format:'PNG', constraint:{type:'SCALE', value:2}})`:成立**——返回 720×400 PNG(11030 字节,base64 经工具结果传回落盘,PNG 签名/sips/check-scale 三重校验通过)。check-scale 实测 actualPx=[720,400],delta=[0,0] ≤ 2px,pass=true(docs/calibration-assets/card-2x.png)。
-- 落档口径:**scale=2 像素对应成立(经 exportAsync 通道);get_screenshot 无 2x 能力**。⚠ 该口径变更(T1.2 baseline 来源约定)待 Codex 决断确认(见 pending-codex-decisions.md #A/#B,Codex 通道 usage-limit 恢复后补审)。
+- 落档口径:**scale=2 像素对应成立(经 exportAsync 通道);get_screenshot 无 2x 能力**。⚠ 该口径变更(T1.2 baseline 来源约定)已经 Codex D-01 裁定确认(2026-07-08)(见 pending-codex-decisions.md #A/#B,Codex 通道 usage-limit 恢复后补审)。
 
 ## 断言② 1 Figma 单位 = 1dp(Figma 侧)
 
@@ -35,7 +35,7 @@ runs=[2228,2404,2069]ms, median=**2228ms**(含 npx 转发开销,预热后;odiff 
 
 - REST(`/v1/files/:key/nodes` absoluteBoundingBox / `/v1/images scale=2`)交叉标定: 待 PAT(pending_followups)。
 - **exportAsync base64 大小边界**:卡片级(720×400)14.7k 字符无压力;整页(720×1600)估 100~300KB base64,可能超 use_figma 返回限制——M3 verify-page 整页基准优先走 REST `/v1/images?scale=2`(PAT 后),exportAsync 分块仅兜底(pending_followups)。
-- get_screenshot 降为快速预览用途,不再承担基准 PNG 职责(待 Codex 确认)。
+- get_screenshot 降为快速预览用途,不再承担基准 PNG 职责(已经 Codex D-01 裁定确认(2026-07-08))。
 
 ## T1.0b 渲染侧标定(T1.1)
 

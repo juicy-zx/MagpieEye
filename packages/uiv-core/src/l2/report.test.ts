@@ -55,6 +55,13 @@ describe('makeHint(确定性模板)', () => {
     expect(h).toContain('TextStyle.fontSize');
     expect(h).toContain('16sp');
   });
+  it('position 违规 hint 含"参与测量"布局措辞且不含 offset 字样(D-03:禁止引导绘制期位移做主定位)', () => {
+    const v: Violation = { judgePath: 'parity', testTag: 'fig:1:102', figmaName: 'CalibSubtitle',
+      property: 'position', expected: '(12,12)', actual: '(16,12)', severity: 'high', hint: '' };
+    const h = makeHint(v, 'CalibSubtitle');
+    expect(h).toContain('参与测量');
+    expect(h.toLowerCase()).not.toContain('offset');
+  });
 });
 
 describe('runL2 组装(v1 结构块 + 顶层判定)', () => {
