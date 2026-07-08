@@ -10,3 +10,8 @@ build/
 local.properties
 .calib-tmp/
 demo-android/.robolectric-deps/
+.ui-verify/daemon.sock
+.ui-verify/daemon.log
+experiments/fastlane-spike/*/build/
+experiments/fastlane-spike/*/.gradle/
+.uiv-cache/
