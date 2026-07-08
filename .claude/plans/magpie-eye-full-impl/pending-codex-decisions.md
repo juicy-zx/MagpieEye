@@ -1,0 +1,20 @@
+# 待 Codex 决断队列
+
+> Codex 通道(MCP + CLI)于 2026-07-08 ~15:40 触达 usage limit,预计 21:19 恢复。
+> 恢复后按序发送以下决断请求(用 codex-reply, threadId 019f4082-3d47-77e3-a6d0-b060aa41f41a;若 MCP 仍不可用则 codex exec resume)。
+> 在决断到达前:T1.0a 保持 awaiting_review 不置 done;T1.1 照常推进(不依赖以下任何决断)。
+
+## D-2026-07-08-01: T1.0a 断言① 通道证伪的口径决断
+
+【三断言结果】
+① scale=2 像素对应:原定通道证伪——get_screenshot(maxDimension=720) 返回 360×200(1x);maxDimension 语义"只封顶不放大"。备选通道实测成立:use_figma 内 `node.exportAsync({format:'PNG', constraint:{type:'SCALE', value:2}})` → 720×400 PNG(11KB,base64 14.7k 字符经工具结果传回,落盘后 PNG 签名/sips/check-scale 三重校验通过,delta=[0,0])。
+② 1 Figma 单位=1dp(Figma 侧):成立(CalibCard 360×200、CalibSwatch 80×40,±0.5 命中)。
+③ get_metadata 坐标系:relative-to-parent(swatch 报 x=12 非 112;双分支自测正确)→ 该通道无须 re-base;REST 仍恒须 re-base,适配层统一为"相对目标 Frame"。
+附:odiff 720×1600 median 2228ms(含 npx 开销);红/绿自测全部按预期;B2 已验证(Full seat)。
+
+【请决断】
+A. 断言① 落档口径:提议"get_screenshot 无 2x 能力(证伪);scale=2 经 exportAsync 通道成立";run-all.sh 的 check-scale 以 exportAsync 产物 card-2x.png 为对象。
+B. T1.2 baseline.png 来源约定变更:从"get_screenshot(2x)"改为"use_figma exportAsync(SCALE 2) → base64 → 落盘"。边界:整页(720×1600)base64 估 100~300KB 可能超限——提议 M3 verify-page 整页基准优先走 REST /v1/images?scale=2(PAT 后),exportAsync 分块兜底,边界入 pending_followups。
+C. T1.0a 按"三断言全部闭合(①经修正通道)"置 done 并单 commit 收口,是否同意?
+
+(执行中口径决断;若计轮次,当前 M1 子计划节点 3/10。)

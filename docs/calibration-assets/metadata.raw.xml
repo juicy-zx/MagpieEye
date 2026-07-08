@@ -1,0 +1,8 @@
+<canvas id="0:1" name="Page 1" x="0" y="0" width="0" height="0">
+  <frame id="1:2" name="CalibCard" x="100" y="100" width="360" height="200">
+    <text id="1:3" name="CalibTitle" x="12" y="12" width="200" height="20" />
+    <text id="1:4" name="CalibSubtitle" x="12" y="36" width="200" height="16" />
+    <rounded-rectangle id="1:5" name="CalibSwatch" x="12" y="60" width="80" height="40" />
+    <rounded-rectangle id="1:6" name="CalibBadge" x="296" y="12" width="52" height="20" />
+  </frame>
+</canvas>

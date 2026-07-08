@@ -4,7 +4,8 @@
   "created": "2026-07-08",
   "codex": {
     "transport": "mcp",
-    "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a"
+    "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
+    "status": "usage-limited until 2026-07-08 21:19; decisions queued in pending-codex-decisions.md"
   },
   "consensus_reached": true,
   "current_milestone": "M1",
@@ -53,11 +54,11 @@
       "last_commit": "6744f39"
     },
     "T1.0a": {
-      "status": "in_progress",
+      "status": "awaiting_review",
       "last_commit": null
     },
     "T1.1": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T1.2": {
@@ -164,9 +165,37 @@
   "pending_followups": [
     "PAT 到位后: T1.0a③ MCP<->REST 坐标交叉标定 + 重录 REST fixture + 复跑 T1.2 验收",
     "真实远程 CI 接入(用户侧)",
-    "provider 形态 vlm-judge(视 API key)"
+    "provider 形态 vlm-judge(视 API key)",
+    "M3 verify-page 整页基准优先 REST /v1/images?scale=2(PAT 后); exportAsync base64 大图分块仅兜底"
   ],
-  "calibration": {},
+  "calibration": {
+    "channel": "mcp-only",
+    "tolerances_provisional": true,
+    "b2_verified": true,
+    "figma_file_key": "a3EzhvJtAuEzTpM0bxzYjT",
+    "calib_frame_node_id": "1:2",
+    "scale2_px": {
+      "expected": [
+        720,
+        400
+      ],
+      "actual": [
+        720,
+        400
+      ],
+      "tolerance_px": 2,
+      "pass": true,
+      "channel": "use_figma exportAsync SCALE2",
+      "get_screenshot_2x": "refuted (maxDimension caps, no upscale)"
+    },
+    "figma_unit_eq_dp": {
+      "figma_side": "pass",
+      "render_side": "pending-T1.0b"
+    },
+    "metadata_coord_system": "relative-to-parent",
+    "odiff_720x1600_median_ms": 2228,
+    "rest_cross_check": "pending-B1-PAT"
+  },
   "latency_baseline": {},
   "environment": {
     "jdk": "Corretto 21.0.9",

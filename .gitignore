@@ -7,3 +7,4 @@ build/
 .ui-verify/renders/
 .ui-verify/reports/
 local.properties
+.calib-tmp/
