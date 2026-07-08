@@ -9,7 +9,9 @@
  */
 import { TOL_DELTA_E, TOL_FONT_SP, TOL_POS_DP, EXACT_GRID_DP } from './constants.js';
 import { ciede2000 } from './color.js';
-import type { FigmaNode, Pair, SemDp, Severity, Violation } from './types.js';
+import { DEFAULT_INSET_RATIO, samplePixelColor } from './sampler.js';
+import type { DecodedPng } from './sampler.js';
+import type { FigmaNode, Pair, PixelDiagnostic, SemDp, Severity, Violation } from './types.js';
 
 function rgbToHex(c: { r: number; g: number; b: number }): string {
   const h = (v: number): string => Math.round(v * 255).toString(16).padStart(2, '0').toUpperCase();
@@ -25,9 +27,14 @@ function sortedChildren(sem: SemDp): SemDp[] {
     p.positionDp.y - q.positionDp.y || p.positionDp.x - q.positionDp.x);
 }
 
-export function assertPair(p: Pair): { violations: Violation[]; executed: number } {
+export interface PixelSampleCtx { png: DecodedPng; density: number; insetRatio?: number }
+
+export function assertPair(
+  p: Pair, pixel?: PixelSampleCtx,
+): { violations: Violation[]; executed: number; diagnostics: PixelDiagnostic[] } {
   const violations: Violation[] = [];
   let executed = 0;
+  const diagnostics: PixelDiagnostic[] = [];
   const testTag = `fig:${p.figma.id}`;
   const figmaName = p.figma.name;
   const add = (property: string, expected: string, actual: string, severity: Severity): void => {
@@ -64,13 +71,34 @@ export function assertPair(p: Pair): { violations: Violation[]; executed: number
     }
   }
 
-  // color(CIEDE2000 ΔE<3)
+  // color:文本节点语义通道;非文本叶子像素通道(T2.7);其余值不可得跳过
   const firstFill = p.figma.fills?.[0];
   if (firstFill?.color !== undefined && sem.colorHex !== null) {
     executed++;
     const figHex = rgbToHex(firstFill.color);
-    if (ciede2000(figHex, sem.colorHex) >= TOL_DELTA_E) {
-      add('color', figHex, sem.colorHex, 'high');
+    if (ciede2000(figHex, sem.colorHex) >= TOL_DELTA_E) add('color', figHex, sem.colorHex, 'high');
+  } else if (sem.colorHex === null && (p.figma.fills?.length ?? 0) > 0 && pixel !== undefined) {
+    const skip = (code: PixelDiagnostic['code'], detail: string): void => {
+      diagnostics.push({ code, testTag, detail });
+    };
+    if (firstFill?.type !== 'SOLID' || firstFill.color === undefined) {
+      skip('pixel_sample_skipped_nonsolid', `首 fill ${firstFill?.type ?? '?'} 非纯色`);
+    } else if (sem.children.length > 0) {
+      skip('pixel_sample_skipped_container', '容器子像素污染');
+    } else {
+      const d = pixel.density;
+      const sampled = samplePixelColor(pixel.png,
+        { x: sem.positionDp.x * d, y: sem.positionDp.y * d, width: sem.sizeDp.width * d, height: sem.sizeDp.height * d },
+        { insetRatio: pixel.insetRatio ?? DEFAULT_INSET_RATIO });
+      if (sampled === null) skip('pixel_sample_empty_region', '采样区为空(越界)');
+      else {
+        executed++;
+        const figHex = rgbToHex(firstFill.color);
+        if (ciede2000(figHex, sampled.hex) >= TOL_DELTA_E) {
+          violations.push({ judgePath: 'parity-pixel-sampled', testTag, figmaName,
+            property: 'color', expected: figHex, actual: sampled.hex, severity: 'high', hint: '' });
+        }
+      }
     }
   }
 
@@ -121,5 +149,5 @@ export function assertPair(p: Pair): { violations: Violation[]; executed: number
     }
   }
 
-  return { violations, executed };
+  return { violations, executed, diagnostics };
 }

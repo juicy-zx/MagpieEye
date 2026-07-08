@@ -40,8 +40,14 @@ export interface Pair { figma: FigmaNode; sem: SemDp }
 export type Severity = 'blocking' | 'high' | 'medium' | 'low';
 
 export interface Violation {
-  judgePath: 'parity'; testTag: string; figmaName: string;
+  judgePath: 'parity' | 'parity-pixel-sampled'; testTag: string; figmaName: string;
   property: string; expected: string; actual: string; severity: Severity; hint: string;
+}
+
+/** T2.7 像素通道跳过记录。 */
+export interface PixelDiagnostic {
+  code: 'pixel_sample_skipped_nonsolid' | 'pixel_sample_skipped_container' | 'pixel_sample_empty_region';
+  testTag: string; detail: string;
 }
 
 /** report.json 顶层 reason=inconclusive 时的细分(设计文档 2.4 节/步骤 5)。 */

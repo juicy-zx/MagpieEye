@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { assertPair } from './assert.js';
+import type { PixelSampleCtx } from './assert.js';
 import type { FigmaNode, Pair, SemDp } from './types.js';
 
 function mkPair(fig: Partial<FigmaNode>, sem: Partial<SemDp>): Pair {
@@ -109,5 +110,44 @@ describe('assertPair 逐属性断言(±2dp/精确/±0.5sp/ΔE<3)', () => {
   it('违规对象带 judgePath=parity/testTag/figmaName', () => {
     const r = assertPair(mkPair({ name: 'Title', style: { fontSize: 16 } }, { fontSizeSp: 14 }));
     expect(r.violations[0]).toMatchObject({ judgePath: 'parity', testTag: 'fig:1:101', figmaName: 'Title' });
+  });
+});
+
+describe('assertPair 像素采样颜色通道(T2.7)', () => {
+  const px = (r: number, g: number, b: number): PixelSampleCtx => ({
+    png: { width: 4, height: 4, data: Uint8Array.from({ length: 64 }, (_, i) => [r, g, b, 255][i % 4] as number) },
+    density: 2,
+  });
+  const fig = { absoluteBoundingBox: { x: 0, y: 0, width: 2, height: 2 },   // spec #FF9900
+    fills: [{ type: 'SOLID', color: { r: 1, g: 0.6, b: 0, a: 1 } }] };
+  const sem = { sizeDp: { width: 2, height: 2 } };   // dp×2 = px(0,0,4,4)
+
+  it('非文本叶子:偏色→parity-pixel-sampled;同色不违规计 executed;无 ctx 不执行', () => {
+    const bad = assertPair(mkPair(fig, sem), px(0xff, 0x66, 0x00));
+    expect(bad.violations).toContainEqual(expect.objectContaining({
+      judgePath: 'parity-pixel-sampled', property: 'color',
+      expected: '#FF9900', actual: '#FF6600' }));
+    const ok = assertPair(mkPair(fig, sem), px(0xff, 0x99, 0x00));
+    expect(has(ok, 'color', 'high')).toBe(false);
+    expect(ok.executed).toBe(3);                            // position+size+color
+    expect(assertPair(mkPair(fig, sem)).executed).toBe(2);  // 无 ctx 跳过
+  });
+  it('跳过三态记 diagnostics 不计 executed:非纯色/容器/完全越界', () => {
+    const cases: Array<[string, Pair]> = [
+      ['pixel_sample_skipped_nonsolid', mkPair({ ...fig, fills: [{ type: 'GRADIENT_LINEAR' }] }, sem)],
+      ['pixel_sample_skipped_container', mkPair(fig, { ...sem, children: [mkPair({}, {}).sem] })],
+      ['pixel_sample_empty_region', mkPair(fig, { ...sem, positionDp: { x: 99, y: 99 } })],
+    ];
+    for (const [code, pair] of cases) {
+      const r = assertPair(pair, px(1, 2, 3));
+      expect(r.diagnostics).toContainEqual(expect.objectContaining({ code }));
+      expect(r.executed).toBe(2);
+    }
+  });
+  it('文本节点恒走语义通道(subtitle 语义色检出保留)', () => {
+    const r = assertPair(mkPair(
+      { fills: [{ type: 'SOLID', color: { r: 0.8, g: 0.878, b: 1, a: 1 } }] },  // #CCE0FF
+      { colorHex: '#99B3E6' }), px(0x99, 0xb3, 0xe6));
+    expect(r.violations).toContainEqual(expect.objectContaining({ judgePath: 'parity', property: 'color' }));
   });
 });
