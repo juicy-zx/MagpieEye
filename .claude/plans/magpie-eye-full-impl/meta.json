@@ -22,9 +22,9 @@
       "code_review_rounds": 2
     },
     "M2": {
-      "subplan": "draft",
+      "subplan": "approved",
       "code_review": "none",
-      "review_rounds": 1
+      "review_rounds": 3
     },
     "M3": {
       "subplan": "none",
@@ -78,28 +78,29 @@
       "note": "Phase 0 北极星达成: 2轮/上限5, 修正者仅凭剥离版 report.json, 134s"
     },
     "T2.1": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T2.2": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T2.3": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T2.4": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T2.5": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T2.6": {
       "status": "pending",
-      "last_commit": null
+      "last_commit": null,
+      "note": "CLI 接线等 T2.1 落地"
     },
     "T3.0": {
       "status": "pending",
@@ -148,7 +149,7 @@
     "T2.7": {
       "status": "pending",
       "last_commit": null,
-      "note": "D-04 立项: 像素采样颜色断言(非文本节点)——semantics bounds 定位 rendered.png 内部安全区中位色 vs spec fills ΔE00; 完成后 D3 回归 CalibSwatch 复验"
+      "note": "等 T2.5 落地(diagnostics 结构先行)"
     }
   },
   "blockers": [
