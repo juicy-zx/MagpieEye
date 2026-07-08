@@ -11,6 +11,7 @@ import { runCheckL2 } from './runL2.js';
 import type { GradleRunner } from './run.js';
 
 const FIXTURE = fileURLToPath(new URL('../../fixtures/rest-nodes-card.json', import.meta.url));
+const REAL_SEMANTICS = fileURLToPath(new URL('../../fixtures/CalibCard.real.semantics.json', import.meta.url));
 const TEST_FQN = 'com.magpie.uiv.demo.CalibCardScreenshotTest';
 
 class FakeRunner implements GradleRunner {
@@ -95,6 +96,20 @@ describe('runCheckL2(uiv check 接入 L2,fixture 级不跑 gradle)', () => {
     expect(report.reason).toBe('inconclusive');
     expect(report.subReason).toBe('semantics_export_failed');
     expect(report.pass).toBe(false);
+  });
+
+  // T1.3 收尾验收(Codex D-03):CalibCard.kt 改自定义 Layout 摆放(非 Modifier.offset)后,
+  // 真实 Gradle/Robolectric 渲染产出的 semantics.json(而非手写 goodDump())喂给 runCheckL2,
+  // 验证 positionInRoot 已是真实布局几何、L2 全过。fixture 为该次真实产出的原样快照。
+  it('真实 Gradle 渲染 semantics.json(自定义 Layout 摆放)→ pass true, coverage/matchRate 1, score 1', async () => {
+    const realDump: unknown = JSON.parse(readFileSync(REAL_SEMANTICS, 'utf8'));
+    const { demoDir, uiVerifyDir } = await setup(realDump);
+    const { report } = await runCheckL2(new FakeRunner(0, ''), opts(demoDir, uiVerifyDir));
+    expect(report.pass).toBe(true);
+    expect(report.structural?.untaggedCoverage).toBe(1);
+    expect(report.structural?.matchRate).toBe(1);
+    expect(report.score).toBe(1);
+    expect(report.structural?.violations).toHaveLength(0);
   });
 
   it('编译失败 → v1 携 compileError, structural null, pass false', async () => {
