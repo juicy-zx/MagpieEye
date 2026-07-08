@@ -5,7 +5,7 @@
   "codex": {
     "transport": "mcp",
     "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
-    "last_decisions": "D-07(a') approved: slow-lane P50<=6.0s --rerun protocol, M2 north-star revised; finding-2 -> T2.6 w/ 4 criteria"
+    "last_decisions": "D-08: T2.9 degradation diagnosis established; M2 review open pending its conclusion"
   },
   "consensus_reached": true,
   "current_milestone": "M2",
@@ -165,6 +165,11 @@
     "D-06-fix": {
       "status": "done",
       "last_commit": "4120834"
+    },
+    "T2.9": {
+      "status": "in_progress",
+      "last_commit": null,
+      "note": "D-08 立项: 慢车道退化诊断(bisect T2.6~T2.8, 两段测, 先修可修复项)"
     }
   },
   "blockers": [
