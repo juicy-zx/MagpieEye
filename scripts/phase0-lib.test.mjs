@@ -28,7 +28,7 @@ describe('applyDeviations:对真实 CalibCard.kt 源码机械生成写偏副本(
     expect(out).toContain('16.dp to 16.dp,  // fig:1:101 CalibTitle'); // D1:CHILD_POSITIONS 表 title 项
     expect(out).not.toContain('12.dp to 12.dp'); // 原值不再出现
     expect(out).toContain('fontSize = 14.sp'); // D2
-    expect(out).toContain('Color(0xFFFF6600)'); // D3
+    expect(out).toContain('Color(0xFF99B3E6)'); // D3
     expect(out).not.toMatch(/^[ \t]*CalibBadge\(\)/m); // D4:调用行已移除
     expect(out).toContain('private fun CalibBadge'); // D4:定义保留,只是不再被调用
     // 其余三条 CHILD_POSITIONS 项与合同值不变(subtitle/swatch/badge 坐标未被误改)
@@ -114,7 +114,7 @@ describe('assertSeededDetection:检出能力门(D1~D4 全命中,防假通过)', 
     violations: [
       { property: 'position', testTag: 'fig:1:101' },
       { property: 'fontSize', testTag: 'fig:1:101' },
-      { property: 'color', testTag: 'fig:1:103' },
+      { property: 'color', testTag: 'fig:1:102' },
     ],
     missing: [{ figmaId: '1:104' }],
   } });

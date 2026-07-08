@@ -2309,7 +2309,7 @@ class SemanticsDumpRule(private val outDir: File = File("build/uiv")) : TestWatc
 |---|------|--------|---------------------------|----------------|
 | D1 | CalibTitle 位置 | `CHILD_POSITIONS` 表 title 项 `16.dp to 16.dp` | `CHILD_POSITIONS` 表 title 项 `12.dp to 12.dp`(合同值) | position(±2dp) |
 | D2 | CalibTitle 字号 | `fontSize = 14.sp` | `fontSize = 16.sp` | fontSize(±0.5sp) |
-| D3 | CalibSwatch 颜色 | `Color(0xFFFF6600)` | `Color(0xFFFF9900)` | color(ΔE00<3) |
+| D3 | CalibSubtitle 文本颜色(D-04 改目标,原 CalibSwatch 背景色;Compose 语义树纯色块颜色不可得,M2 T2.7 像素采样断言落地后 D3 回归 CalibSwatch 复验) | `Color(0xFF99B3E6)` | `Color(0xFFCCE0FF)` | color(ΔE00<3) |
 | D4 | CalibBadge 缺失 | 移除 `CalibBadge()` 调用行(不渲染) | 渲染 `fig:1:104`(52×20dp @ 卡内 (296,12)) | missing(`structural.missing` 含 `figmaId=1:104` + untaggedCoverage) |
 
 (圆角不作偏差项:L2 v0 的 semantics exporter 不导出圆角,断言自动跳过,见 Canonical Contract。)

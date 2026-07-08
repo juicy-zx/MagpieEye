@@ -46,7 +46,7 @@ fun CalibCard(modifier: Modifier = Modifier) {
             Text(
                 text = "Known geometry fixture",
                 fontSize = 12.sp,
-                color = Color(0xFFCCE0FF),
+                color = Color(0xFF99B3E6),
                 modifier = Modifier
                     .testTag("fig:1:102")
                     .size(width = 200.dp, height = 16.dp),
@@ -55,7 +55,7 @@ fun CalibCard(modifier: Modifier = Modifier) {
                 Modifier
                     .testTag("fig:1:103")
                     .size(width = 80.dp, height = 40.dp)
-                    .background(Color(0xFFFF6600))
+                    .background(Color(0xFFFF9900))
             )
         },
         modifier = modifier
