@@ -24,6 +24,7 @@
 - **无人值守权限预配**:开跑前一次性在项目 settings 配好 Bash allowlist(sdkmanager/gradlew/npm/npx/node)与网络域名白名单(dl.google.com、services.gradle.org、repo.maven.apache.org、maven.google.com、plugins.gradle.org、registry.npmjs.org),避免中途挂起等人。
 - **Codex 协同节点**(单一 thread 贯穿):① 计划共识 → `consensus_reached: true`;② 里程碑子计划审查(开工前);③ 里程碑完成代码审查;每节点 ≤10 轮,超轮升级用户;决策链:设计文档 → Codex → 用户;Codex 决断优先。
 - **失败处理**:环境类失败自主重试/换源;口径类失败(标定与文档假设冲突)回 Codex 决断;已证伪方案(C4/C6/CS2/CS5/CS6 原假设)不得复用。
+- **方向锚定(防偏移,用户指令)**:北极星 = 设计文档的最终目标——Phase 0:模型仅凭 report.json ≤5 轮修到 L2 全过;全量:ui_change 需求在 magpie loop 全自动验收闭环。三条强制规则:① 任务开工前自检"这一步直接服务当前里程碑的哪条验收标准",答不上即停,回编排计划;② 实现内容超出编排计划范围或与设计文档冲突时,先回 Codex 决断/计划修订,禁止顺手扩散(YAGNI);③ 会话恢复或里程碑切换时,必须先重读本节 + 当前里程碑验收标准再行动;Codex 里程碑审查固定包含"是否偏离设计文档与最终目标"维度。
 
 ## 1. Blocker 清单
 
