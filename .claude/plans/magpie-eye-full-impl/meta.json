@@ -8,7 +8,7 @@
     "last_decisions": "D-04 approved 2026-07-08 ~22:5x: (b) D3->subtitle, (c) T2.7 established, (a) rejected as antipattern; M1 round 5/10"
   },
   "consensus_reached": true,
-  "current_milestone": "M1",
+  "current_milestone": "M2",
   "milestones": {
     "M0": {
       "subplan": "approved-inline",
@@ -17,9 +17,9 @@
     },
     "M1": {
       "subplan": "approved",
-      "code_review": "in_progress",
+      "code_review": "approved",
       "review_rounds": 2,
-      "code_review_rounds": 1
+      "code_review_rounds": 2
     },
     "M2": {
       "subplan": "none",
@@ -175,7 +175,8 @@
     "PAT 到位后: T1.0a③ MCP<->REST 坐标交叉标定 + 重录 REST fixture + 复跑 T1.2 验收",
     "真实远程 CI 接入(用户侧)",
     "provider 形态 vlm-judge(视 API key)",
-    "M3 verify-page 整页基准优先 REST /v1/images?scale=2(PAT 后); exportAsync base64 大图分块仅兜底"
+    "M3 verify-page 整页基准优先 REST /v1/images?scale=2(PAT 后); exportAsync base64 大图分块仅兜底",
+    "housekeeping: milestone-1.md 旧 FIX_MAP position 描述标注已被 bdebb59/D-03 取代(Codex 非阻塞建议)"
   ],
   "calibration": {
     "channel": "mcp-only",
