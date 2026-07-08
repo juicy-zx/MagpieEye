@@ -8,7 +8,7 @@
     "last_decisions": "D-08: T2.9 degradation diagnosis established; M2 review open pending its conclusion"
   },
   "consensus_reached": true,
-  "current_milestone": "M2",
+  "current_milestone": "M3",
   "milestones": {
     "M0": {
       "subplan": "approved-inline",
@@ -23,9 +23,9 @@
     },
     "M2": {
       "subplan": "approved",
-      "code_review": "in_progress",
+      "code_review": "approved",
       "review_rounds": 3,
-      "code_review_rounds": 1
+      "code_review_rounds": 2
     },
     "M3": {
       "subplan": "none",
@@ -79,32 +79,32 @@
       "note": "Phase 0 北极星达成: 2轮/上限5, 修正者仅凭剥离版 report.json, 134s"
     },
     "T2.1": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "5c689c4",
       "note": "D-07(a') 达标: --rerun 热 5838ms<=6.0s, 冷 10442ms saved~4.6s; 等价/0600 过"
     },
     "T2.2": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "f4cafe9",
       "note": "server 5ms vs spawn 11ms, identical; T2.1 落档文件名不一致待收尾对齐"
     },
     "T2.3": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "a868337",
       "note": "feasible: P50 15ms/P90 17ms, diffRatio~0, 语义可达; AGP9 共存证伪计划预判; 待 D-05 决断"
     },
     "T2.4": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "47c265e",
       "note": "fixture/mock 驱动完成; REST 真实闭环受 Release Gate 约束(B1)"
     },
     "T2.5": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "092b3bc",
       "note": "186 全绿(+14); missing 硬失败/熔断/diagnostics 对象落地; T2.7 交接提醒: v1.test 4 处字面量+runL2 钩子"
     },
     "T2.6": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "cb8bb76",
       "note": "199 全绿; 退出治理四条实证(7min->5s); record+拒录; findNewestPng 三级; exports 子路径变通已申报"
     },
@@ -158,7 +158,7 @@
       "note": "D-06 后 4/4 复验过(D3 parity-pixel-sampled); 零假阳性; 195 全绿"
     },
     "T2.8": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "687bae7",
       "note": "fast p50 20ms; fast/slow violations 逐字段一致+语义字节级一致; 回落实证; 209 全绿"
     },
@@ -167,9 +167,9 @@
       "last_commit": "4120834"
     },
     "T2.9": {
-      "status": "in_progress",
-      "last_commit": null,
-      "note": "D-08 立项: 慢车道退化诊断(bisect T2.6~T2.8, 两段测, 先修可修复项)"
+      "status": "done",
+      "last_commit": "3b0cfa1",
+      "note": "双退化证伪(测量假象); 真凶 odiff 看门狗5s; 修复后 P50=5090 达标"
     }
   },
   "blockers": [
