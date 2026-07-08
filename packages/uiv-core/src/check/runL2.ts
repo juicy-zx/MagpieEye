@@ -7,6 +7,7 @@
  */
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { PNG } from 'pngjs';
 import { baselineDirName } from '../baseline/pull.js';
 import { FigmaSpecInvalidError } from '../figma/types.js';
 import type { Spec, SpecNode } from '../figma/types.js';
@@ -116,6 +117,14 @@ export async function runCheckL2(
   if (opts.minScore !== undefined) l2Opts.minScore = opts.minScore;
   if (opts.blockingSeverities !== undefined) l2Opts.blockingSeverities = opts.blockingSeverities;
   if (opts.untaggedCoverageThreshold !== undefined) l2Opts.untaggedCoverageThreshold = opts.untaggedCoverageThreshold;
+  // T2.7:同轮渲染的 rendered.png 喂像素通道;不可读则跳过
+  const renderPath = v0.report.artifacts.render;
+  if (renderPath !== null) {
+    try {
+      const png = PNG.sync.read(readFileSync(renderPath));
+      l2Opts.pixelSource = { png };
+    } catch { /* 像素通道跳过 */ }
+  }
   const l2 = runL2(figmaRoot, dump, l2Opts);
 
   // persist state.json(与 runL2 内部同参 stepState,结果一致)。

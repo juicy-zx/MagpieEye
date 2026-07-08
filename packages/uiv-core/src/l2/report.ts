@@ -7,14 +7,16 @@ import {
   DEFAULT_BLOCKING_SEVERITIES, DEFAULT_MIN_SCORE, MATCH_RATE_FUSE, UNTAGGED_COVERAGE_THRESHOLD,
 } from './constants.js';
 import { assertPair } from './assert.js';
+import type { PixelSampleCtx } from './assert.js';
 import { matchThreeTier } from './match.js';
 import type { MatchResult } from './match.js';
 import { leafPairCount, leafTagHits, matchRate, score, untaggedCoverage } from './metrics.js';
 import { comparableNodes } from './nodeset.js';
 import { rebase } from './rebase.js';
+import type { DecodedPng } from './sampler.js';
 import { stepState } from './stability.js';
 import { L2Error } from './types.js';
-import type { Box, FigmaNode, SemDp, SemNode, SemanticsDump, StateFile, SubReason, Violation } from './types.js';
+import type { Box, FigmaNode, PixelDiagnostic, SemDp, SemNode, SemanticsDump, StateFile, SubReason, Violation } from './types.js';
 import { verdict } from './verdict.js';
 import type { ReportV1, StructuralV1 } from '../report/v1.js';
 
@@ -59,6 +61,7 @@ export interface RunL2Opts {
   ignoreRegions?: Box[];
   prevState?: StateFile | null;
   untaggedCoverageThreshold?: number;
+  pixelSource?: { png: DecodedPng };
 }
 
 function inconclusiveReport(subReason: SubReason, structural: StructuralV1 | null, sc: number): ReportV1 {
@@ -97,12 +100,16 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
   const fused = mr < MATCH_RATE_FUSE;
   const violations: Violation[] = [];
   let executed = 0;
+  const pixelCtx: PixelSampleCtx | undefined = opts.pixelSource === undefined
+    ? undefined : { png: opts.pixelSource.png, density: dump.density };
+  const pixelDiagnostics: PixelDiagnostic[] = [];
   if (!fused) {
-    // 逐属性断言(全 pair,含容器供 padding),hint 确定性填充。
+    // 逐属性断言(全 pair,含容器供 padding),hint 确定性填充;非文本叶子走像素通道(T2.7)。
     for (const pair of m.pairs) {
-      const r = assertPair(pair);
+      const r = assertPair(pair, pixelCtx);
       executed += r.executed;
       for (const v of r.violations) violations.push({ ...v, hint: makeHint(v, pair.figma.name) });
+      for (const d of r.diagnostics) pixelDiagnostics.push(d);
     }
     // missing 叶子硬失败(Codex M2 审查裁定):每个 comparable missing 叶子计一条 high 违规。
     for (const n of m.missingLeaves) {
@@ -120,7 +127,7 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
     matchedNodes: m.pairs.map((p) => ({ ...idName(p.figma), joinSource: p.joinSource })),
     untagged: N.filter((n) => !dumpTags.has(`fig:${n.id}`)).map((n) => ({ ...idName(n), suggestedTag: `fig:${n.id}` })),
     missing: m.missingLeaves.map((n) => ({ ...idName(n), expectedBounds: bounds4(n.absoluteBoundingBox) })),
-    diagnostics: { containerMissing: m.containerMissing.map(idName) },
+    diagnostics: { containerMissing: m.containerMissing.map(idName), pixel: pixelDiagnostics },
     matchFailure: fused ? {
       figmaLeaves: N.slice(0, 50).map(figLine), semLeaves: m.semLeavesDp.slice(0, 50).map(semLine),
       unmatchedFigma: m.missingLeaves.map(idName), unmatchedSem: m.unmatchedSem.slice(0, 50).map(semLine),

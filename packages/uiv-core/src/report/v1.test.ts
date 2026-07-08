@@ -7,7 +7,7 @@ function validPass(): ReportV1 {
     schemaVersion: 1, pass: true, reason: null, subReason: null, compileError: null,
     pixel: null,
     structural: { matched: 5, untaggedCoverage: 1, matchRate: 1, matchedNodes: [], untagged: [],
-      missing: [], diagnostics: { containerMissing: [] }, matchFailure: null, extra: [], violations: [] },
+      missing: [], diagnostics: { containerMissing: [], pixel: [] }, matchFailure: null, extra: [], violations: [] },
     artifacts: { baseline: '/abs/baseline.png', render: '/abs/rendered.png', diff: null },
     score: 1, regression: false, regressionReason: null,
   };
@@ -23,7 +23,7 @@ describe('report.json v1 校验器(扩展 v0)', () => {
       ...validPass(), pass: false, reason: 'inconclusive', subReason: 'tag_coverage_low',
       structural: { matched: 1, untaggedCoverage: 0.25, matchRate: 0.25, matchedNodes: [],
         untagged: [{ figmaId: '1:104', name: 'CalibBadge', suggestedTag: 'fig:1:104' }],
-        missing: [], diagnostics: { containerMissing: [] }, matchFailure: null, extra: [], violations: [] },
+        missing: [], diagnostics: { containerMissing: [], pixel: [] }, matchFailure: null, extra: [], violations: [] },
       score: 0.5,
     };
     expect(validateReportV1(r)).toEqual(r);
@@ -49,7 +49,7 @@ describe('report.json v1 校验器(扩展 v0)', () => {
     const r: ReportV1 = {
       ...validPass(), pass: false, reason: 'inconclusive', subReason: 'matching_rate_low',
       structural: { matched: 0, untaggedCoverage: 1, matchRate: 0, matchedNodes: [], untagged: [],
-        missing: [], diagnostics: { containerMissing: [] }, matchFailure: null, extra: [], violations: [] },
+        missing: [], diagnostics: { containerMissing: [], pixel: [] }, matchFailure: null, extra: [], violations: [] },
       score: 0,
     };
     expect(() => validateReportV1(r)).toThrow(/matchFailure/);
@@ -58,7 +58,7 @@ describe('report.json v1 校验器(扩展 v0)', () => {
     const r: ReportV1 = {
       ...validPass(), pass: false, reason: 'inconclusive', subReason: 'tag_coverage_low',
       structural: { matched: 1, untaggedCoverage: 0.5, matchRate: 1, matchedNodes: [], untagged: [],
-        missing: [], diagnostics: { containerMissing: [] }, matchFailure: null, extra: [], violations: [] },
+        missing: [], diagnostics: { containerMissing: [], pixel: [] }, matchFailure: null, extra: [], violations: [] },
       score: 1,
     };
     expect(() => validateReportV1(r)).toThrow(/untagged/);

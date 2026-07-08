@@ -4,7 +4,7 @@
  * v0 的 pass=渲染管线成功语义在 v1 升级为 L2 verdict:pass 由结构断言判定。
  */
 import type { PixelResult } from './v0.js';
-import type { SubReason, Violation } from '../l2/types.js';
+import type { PixelDiagnostic, SubReason, Violation } from '../l2/types.js';
 
 export interface MatchFailureV1 {
   figmaLeaves: string[]; semLeaves: string[];
@@ -18,7 +18,7 @@ export interface StructuralV1 {
   matchedNodes: Array<{ figmaId: string; name: string; joinSource: 'tag' | 'text' | 'lcs' }>;
   untagged: Array<{ figmaId: string; name: string; suggestedTag: string }>;
   missing: Array<{ figmaId: string; name: string; expectedBounds: [number, number, number, number] | null }>;
-  diagnostics: { containerMissing: Array<{ figmaId: string; name: string }> };  // 对象形态钉死(全文统一,Codex M2 审查裁定);本章只填 containerMissing,T2.7 在同一对象上追加 pixel: PixelDiagnostic[] 键,不新增并列字段
+  diagnostics: { containerMissing: Array<{ figmaId: string; name: string }>; pixel: PixelDiagnostic[] };  // 对象形态钉死(全文统一,Codex M2 审查裁定);T2.7 在同一对象上追加 pixel 键,不新增并列字段
   matchFailure: MatchFailureV1 | null;
   extra: string[];
   violations: Violation[];
@@ -72,8 +72,10 @@ function checkStructural(v: unknown, path: string): void {
   }
   const diag = s['diagnostics'];
   if (diag === null || typeof diag !== 'object') fail(`${path}.diagnostics`, 'object', diag);
-  else if (!Array.isArray((diag as Record<string, unknown>)['containerMissing'])) {
-    fail(`${path}.diagnostics.containerMissing`, 'array', (diag as Record<string, unknown>)['containerMissing']);
+  else {
+    const d = diag as Record<string, unknown>;
+    if (!Array.isArray(d['containerMissing'])) fail(`${path}.diagnostics.containerMissing`, 'array', d['containerMissing']);
+    if (!Array.isArray(d['pixel'])) fail(`${path}.diagnostics.pixel`, 'array', d['pixel']);
   }
   const mf = s['matchFailure'];
   if (mf !== null) {
