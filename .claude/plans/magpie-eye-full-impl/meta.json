@@ -23,8 +23,9 @@
     },
     "M2": {
       "subplan": "approved",
-      "code_review": "none",
-      "review_rounds": 3
+      "code_review": "in_progress",
+      "review_rounds": 3,
+      "code_review_rounds": 0
     },
     "M3": {
       "subplan": "none",
@@ -157,8 +158,9 @@
       "note": "D-06 后 4/4 复验过(D3 parity-pixel-sampled); 零假阳性; 195 全绿"
     },
     "T2.8": {
-      "status": "in_progress",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "687bae7",
+      "note": "fast p50 20ms; fast/slow violations 逐字段一致+语义字节级一致; 回落实证; 209 全绿"
     },
     "D-06-fix": {
       "status": "done",
