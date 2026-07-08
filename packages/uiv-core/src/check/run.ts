@@ -78,8 +78,11 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     found = existsSync(opts.preRenderedPng) ? opts.preRenderedPng : null;
   } else {
     const t0 = Date.now();
+    // T2.1(D-07):UIV_RERUN=1 追加 --rerun,供测量脚本强制忽略 up-to-date/build cache 真实重跑
+    // (默认不追加,不影响正常 check 的增量构建性能)。
+    const rerunArgs = process.env.UIV_RERUN === '1' ? ['--rerun'] : [];
     const { exitCode, stderr } = await runner.run(opts.demoDir, [
-      'testDebugUnitTest', '--tests', opts.testFqn, '-Proborazzi.test.compare=true',
+      'testDebugUnitTest', '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs,
     ]);
 
     if (exitCode !== 0) {

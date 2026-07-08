@@ -16,13 +16,8 @@ import {
 } from '@magpie-eye/uiv-core';
 import type { MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
+import { isFastLaneEnabled } from './fastlane.js';
 import { renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
-
-/**
- * T2.8:快车道适用的静态 @Preview 白名单(Codex D-05 定位钉死:仅静态 @Preview 组件级加速)。
- * worker 目前钉死 CalibCardPreview(preview 发现机制属后续里程碑);名单外一律慢车道 lane='slow'。
- */
-const FAST_LANE_PREVIEWS = new Set<string>(['com.magpie.uiv.demo.CalibCardPreview']);
 
 type Lane = 'fast' | 'slow' | 'fast-fallback-slow';
 
@@ -76,7 +71,7 @@ async function main(): Promise<void> {
   // T2.8 快车道:静态 preview 先试 fast(daemon 托管 worker);任何失败自动回落慢车道并如实标注 lane。
   let lane: Lane = 'slow';
   let preRendered: { renderedPng: string; semanticsPath: string } | undefined;
-  if (FAST_LANE_PREVIEWS.has(cmd.preview)) {
+  if (isFastLaneEnabled(cmd.preview)) {
     const stageDir = path.join(uiVerifyDir, 'renders');   // .ui-verify/renders 已被 .gitignore 忽略
     mkdirSync(stageDir, { recursive: true });
     const stagePng = path.join(stageDir, '.fast-stage.png');

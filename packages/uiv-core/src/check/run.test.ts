@@ -101,6 +101,24 @@ describe('runCheck (injectable gradle runner)', () => {
   });
 });
 
+describe('T2.1(D-07): UIV_RERUN=1 强制 --rerun(测量脚本专用,默认不影响增量构建)', () => {
+  it('设置 UIV_RERUN=1 时 gradle 参数追加 --rerun', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();
+    const runner = new FakeRunner(0, '');
+    const prev = process.env.UIV_RERUN;
+    process.env.UIV_RERUN = '1';
+    try {
+      await runCheck(runner, opts(demoDir, uiVerifyDir));
+    } finally {
+      if (prev === undefined) delete process.env.UIV_RERUN; else process.env.UIV_RERUN = prev;
+    }
+    expect(runner.calls[0]).toEqual({
+      cwd: demoDir,
+      args: ['testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true', '--rerun'],
+    });
+  });
+});
+
 describe('T2.6: runRecord(check 全过后录 golden)', () => {
   const rec: string[][] = [];
   const okRunner: GradleRunner = {
