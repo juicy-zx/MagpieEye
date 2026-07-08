@@ -72,9 +72,9 @@
       "note": "D-03 收尾验收门达成: 真实 semantics 驱动 runL2 pass:true score:1"
     },
     "T1.4": {
-      "status": "in_progress",
-      "last_commit": null,
-      "note": "harness 建设中(sonnet); 修正循环由主会话驱动"
+      "status": "done",
+      "last_commit": "03dc0e5",
+      "note": "Phase 0 北极星达成: 2轮/上限5, 修正者仅凭剥离版 report.json, 134s"
     },
     "T2.1": {
       "status": "pending",
@@ -220,7 +220,17 @@
       7.4
     ],
     "median_warm_s": 5.1,
-    "measured_at": "2026-07-08"
+    "measured_at": "2026-07-08",
+    "phase0_loop": {
+      "rounds": 2,
+      "checkMsPerRound": [
+        478,
+        6023
+      ],
+      "p50CheckMs": 478,
+      "totalWallMs": 134226,
+      "recordedAt": "2026-07-08T15:05:40.924Z"
+    }
   },
   "environment": {
     "jdk": "Corretto 21.0.9",
