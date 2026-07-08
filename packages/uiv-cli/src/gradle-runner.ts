@@ -11,7 +11,13 @@ import { connect } from 'node:net';
 import path from 'node:path';
 import type { GradleRunner } from '@magpie-eye/uiv-core';
 
-/** 生产 gradle 层:spawn ./gradlew,GRADLE_USER_HOME 钉在 demo 工程内(与 T1.1 约定一致)。 */
+/**
+ * 生产 gradle 层:spawn ./gradlew,GRADLE_USER_HOME 钉在 demo 工程内(与 T1.1 约定一致)。
+ * D-07(b):冷道构建内 kotlin daemon 可能继承并悬置 stdio 管道写端,导致 'close'(需等管道 EOF)
+ * 永不触发、事件循环不排空(实证挂 22+ 分钟)。对策两条:①stdout 未消费,直接 ignore 不建管道;
+ * ②stderr 仍需内容,但不再枯等 'close'——'exit' 后短宽限(容一次真正的 'close' 竞态)即强制
+ * 完成并显式销毁句柄,不依赖对端(可能被悬置的)EOF。
+ */
 export class SpawnGradleRunner implements GradleRunner {
   constructor(readonly extraArgs: string[] = []) {}
 
@@ -20,11 +26,26 @@ export class SpawnGradleRunner implements GradleRunner {
       const child = spawn('./gradlew', [...this.extraArgs, ...args], {
         cwd,
         env: { ...process.env, GRADLE_USER_HOME: path.join(cwd, '.gradle-home') },
+        stdio: ['ignore', 'ignore', 'pipe'],
       });
       let stderr = '';
+      let exitCode: number | null = null;
+      let settled = false;
+      let closeGraceTimer: ReturnType<typeof setTimeout> | null = null;
       child.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
       child.on('error', reject);
-      child.on('close', (code) => resolve({ exitCode: code ?? 1, stderr }));
+      const finish = (): void => {
+        if (settled) return;
+        settled = true;
+        if (closeGraceTimer !== null) clearTimeout(closeGraceTimer);
+        child.stderr.destroy();   // 显式释放句柄:即便对端仍悬置管道,我方句柄一关,事件循环即可排空
+        resolve({ exitCode: exitCode ?? 1, stderr });
+      };
+      child.on('close', (code) => { exitCode = code; finish(); });
+      child.on('exit', (code) => {
+        exitCode = code;
+        closeGraceTimer = setTimeout(finish, 300);
+      });
     });
   }
 }

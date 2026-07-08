@@ -6,7 +6,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./check/record.js": "./dist/check/record.js",
+    "./l1/server.js": "./dist/l1/server.js"
   },
   "dependencies": {
     "looks-same": "^10.0.1",
