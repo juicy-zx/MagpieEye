@@ -1,0 +1,23 @@
+{
+  "cardFile": "demo-android/app/src/main/java/com/magpie/uiv/demo/CalibCard.kt",
+  "backupSrc": "scripts/fixtures/CalibCard.original.kt",
+  "deviatedSrc": "scripts/fixtures/CalibCard.deviated.kt",
+  "allowedFixPaths": ["demo-android/app/src/main/java/com/magpie/uiv/demo/CalibCard.kt"],
+  "nodeId": "1:100",
+  "badgeNodeId": "1:104",
+  "fixturePath": "packages/uiv-core/fixtures/rest-nodes-card.json",
+  "baselinePullCmd": "node packages/uiv-cli/dist/index.js baseline pull --fixture packages/uiv-core/fixtures/rest-nodes-card.json --file FKEY --node 1:100",
+  "specPath": ".ui-verify/baselines/1-100@T1_0A_V1/spec.json",
+  "checkCmd": "node packages/uiv-cli/dist/index.js check --preview com.magpie.uiv.demo.CalibCardPreview --node 1:100 --demo demo-android",
+  "reportPath": ".ui-verify/reports/1-100@T1_0A_V1/report.json",
+  "stateDir": ".ui-verify/phase0",
+  "docPath": "docs/phase0-acceptance.md",
+  "metaPath": ".claude/plans/magpie-eye-full-impl/meta.json",
+  "skipGitGuard": false,
+  "deviations": [
+    "D1 CalibTitle 位置:CHILD_POSITIONS 表 title 项 (16,16)dp(应为 (12,12))→ position 断言(±2dp)",
+    "D2 CalibTitle 字号:14sp(应为 16sp)→ fontSize 断言(±0.5sp)",
+    "D3 CalibSwatch 颜色:#FF6600(应为 #FF9900)→ color 断言(ΔE00<3)",
+    "D4 CalibBadge 不渲染 → missing 断言(structural.missing 含 figmaId=1:104)"
+  ]
+}
