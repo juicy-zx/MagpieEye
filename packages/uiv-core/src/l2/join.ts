@@ -9,7 +9,7 @@ import { DENSITY } from './constants.js';
 import { L2Error } from './types.js';
 import type { FigmaNode, Pair, SemDp, SemNode, SemanticsDump } from './types.js';
 
-function toDp(n: SemNode, density: number): SemDp {
+export function toDp(n: SemNode, density: number): SemDp {
   const d = (v: number): number => v / density;
   return {
     testTag: n.testTag, text: n.text,
