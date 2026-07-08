@@ -17,7 +17,7 @@
   "deviations": [
     "D1 CalibTitle 位置:CHILD_POSITIONS 表 title 项 (16,16)dp(应为 (12,12))→ position 断言(±2dp)",
     "D2 CalibTitle 字号:14sp(应为 16sp)→ fontSize 断言(±0.5sp)",
-    "D3 CalibSubtitle 文本颜色:#99B3E6(应为 #CCE0FF)→ color 断言(ΔE00<3)",
+    "D3 CalibSwatch 填充色:#FF6600(应为 #FF9900)→ color 断言(像素采样通道 ΔE00<3,judgePath=parity-pixel-sampled)",
     "D4 CalibBadge 不渲染 → missing 断言(structural.missing 含 figmaId=1:104)"
   ]
 }

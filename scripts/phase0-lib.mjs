@@ -14,7 +14,7 @@ export const DEVIATION_SUBS = [
     name: 'D1 CalibTitle 位置(position,CHILD_POSITIONS 表 title 项)',
   },
   { re: /fontSize = 16\.sp/g, to: 'fontSize = 14.sp', name: 'D2 CalibTitle 字号(fontSize)' },
-  { re: /Color\(0xFFCCE0FF\)/g, to: 'Color(0xFF99B3E6)', name: 'D3 CalibSubtitle 颜色(color)' },
+  { re: /Color\(0xFFFF9900\)/g, to: 'Color(0xFFFF6600)', name: 'D3 CalibSwatch 填充色(color,像素采样通道)' },
   { re: /^[ \t]*CalibBadge\(\)[ \t]*\n/gm, to: '', name: 'D4 CalibBadge 调用行移除(missing,不渲染)' },
 ];
 
@@ -61,7 +61,7 @@ export function assertSeededDetection(report) {
   const misses = [];
   if (!hit(['position'], 'fig:1:101')) misses.push('D1 position@fig:1:101');
   if (!hit(['fontSize'], 'fig:1:101')) misses.push('D2 fontSize@fig:1:101');
-  if (!hit(['color', 'fill'], 'fig:1:102')) misses.push('D3 color@fig:1:102');
+  if (!hit(['color', 'fill'], 'fig:1:103')) misses.push('D3 color@fig:1:103');
   if (!(report.structural?.missing ?? []).some((m) => (m.figmaId ?? m.id) === '1:104')) {
     misses.push('D4 missing figmaId=1:104');
   }

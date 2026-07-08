@@ -33,7 +33,7 @@ describe('phase0-acceptance harness 冒烟(stub uiv check,不碰 Gradle)', () =>
     ')',
     'fun x() {',
     '    fontSize = 16.sp',
-    '    Color(0xFFCCE0FF)',
+    '    Color(0xFFFF9900)',
     '            CalibBadge()',
     '}',
     '',
@@ -49,7 +49,7 @@ describe('phase0-acceptance harness 冒烟(stub uiv check,不碰 Gradle)', () =>
       violations: [
         { judgePath: 'parity', testTag: 'fig:1:101', figmaName: 'CalibTitle', property: 'position', expected: '(12,12)', actual: '(16,16)', severity: 'high', hint: 'x' },
         { judgePath: 'parity', testTag: 'fig:1:101', figmaName: 'CalibTitle', property: 'fontSize', expected: '16sp', actual: '14sp', severity: 'high', hint: 'x' },
-        { judgePath: 'parity', testTag: 'fig:1:102', figmaName: 'CalibSubtitle', property: 'color', expected: '#CCE0FF', actual: '#99B3E6', severity: 'medium', hint: 'x' },
+        { judgePath: 'parity-pixel-sampled', testTag: 'fig:1:103', figmaName: 'CalibSwatch', property: 'color', expected: '#FF9900', actual: '#FF6600', severity: 'high', hint: 'x' },
       ],
       missing: [{ figmaId: '1:104', name: 'CalibBadge', expectedBounds: [296, 12, 52, 20] }],
       extra: [],
@@ -98,7 +98,7 @@ process.exit(report.pass ? 0 : 1);
     const installed = fs.readFileSync(path.join(tmp, 'card.kt'), 'utf8');
     expect(installed).toContain('16.dp to 16.dp,  // fig:1:101 CalibTitle');
     expect(installed).toContain('fontSize = 14.sp');
-    expect(installed).toContain('Color(0xFF99B3E6)');
+    expect(installed).toContain('Color(0xFFFF6600)');
     expect(installed).not.toMatch(/^\s*CalibBadge\(\)/m);
     const original = fs.readFileSync(path.join(tmp, 'fixtures/CalibCard.original.kt'), 'utf8');
     expect(original).toBe(CORRECT_CARD);
