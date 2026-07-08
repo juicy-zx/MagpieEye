@@ -1,0 +1,59 @@
+import { describe, it, expect } from 'vitest';
+import { CliUsageError, parseCliArgs, parseIgnoreRegion, previewToTestFqn } from './args.js';
+
+describe('parseCliArgs: baseline pull', () => {
+  it('解析 --fixture/--file/--node', () => {
+    expect(parseCliArgs(['baseline', 'pull', '--fixture', 'f.json', '--file', 'FKEY', '--node', '1:100'])).toEqual({
+      kind: 'baseline-pull', fixture: 'f.json', file: 'FKEY', node: '1:100',
+    });
+  });
+  it('缺 --fixture 抛 CliUsageError(T1.2 仅 fixture 模式,REST 通道待 PAT)', () => {
+    expect(() => parseCliArgs(['baseline', 'pull', '--file', 'FKEY', '--node', '1:100'])).toThrow(/--fixture/);
+  });
+  it('缺 --node 抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['baseline', 'pull', '--fixture', 'f.json', '--file', 'FKEY'])).toThrow(/--node/);
+  });
+});
+
+describe('parseCliArgs: check', () => {
+  it('解析 --preview/--node/--demo(无 ignore-region 时为 null)', () => {
+    expect(parseCliArgs(['check', '--preview', 'com.magpie.uiv.demo.CalibCardPreview', '--node', '1:100', '--demo', 'demo-android'])).toEqual({
+      kind: 'check', preview: 'com.magpie.uiv.demo.CalibCardPreview', node: '1:100', demo: 'demo-android', ignoreRegion: null,
+    });
+  });
+  it('解析 --ignore-region x,y,w,h', () => {
+    const c = parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:100', '--demo', 'd', '--ignore-region', '4,8,15,16']);
+    expect(c).toMatchObject({ kind: 'check', ignoreRegion: { x: 4, y: 8, w: 15, h: 16 } });
+  });
+  it('缺 --preview 抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['check', '--node', '1:100', '--demo', 'd'])).toThrow(/--preview/);
+  });
+});
+
+describe('parseCliArgs: 非法输入', () => {
+  it('未知子命令抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['frobnicate'])).toThrow(CliUsageError);
+  });
+  it('未知 flag 抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:100', '--demo', 'd', '--wat'])).toThrow(/--wat/);
+  });
+});
+
+describe('previewToTestFqn(--preview → --tests 映射规则,Phase 0 写死)', () => {
+  it('<pkg>.<Name>Preview → <pkg>.<Name>ScreenshotTest', () => {
+    expect(previewToTestFqn('com.magpie.uiv.demo.CalibCardPreview')).toBe('com.magpie.uiv.demo.CalibCardScreenshotTest');
+  });
+  it('非 Preview 后缀抛 CliUsageError', () => {
+    expect(() => previewToTestFqn('com.magpie.uiv.demo.CalibCard')).toThrow(CliUsageError);
+  });
+});
+
+describe('parseIgnoreRegion', () => {
+  it('四元组解析', () => {
+    expect(parseIgnoreRegion('1,2,3,4')).toEqual({ x: 1, y: 2, w: 3, h: 4 });
+  });
+  it('格式非法抛 CliUsageError', () => {
+    expect(() => parseIgnoreRegion('1,2,3')).toThrow(CliUsageError);
+    expect(() => parseIgnoreRegion('1,2,3,nope')).toThrow(CliUsageError);
+  });
+});
