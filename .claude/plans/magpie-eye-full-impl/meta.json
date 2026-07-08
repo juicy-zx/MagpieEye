@@ -5,7 +5,7 @@
   "codex": {
     "transport": "mcp",
     "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
-    "last_decisions": "D-04 approved 2026-07-08 ~22:5x: (b) D3->subtitle, (c) T2.7 established, (a) rejected as antipattern; M1 round 5/10"
+    "last_decisions": "D-05 approved 2026-07-09: fastlane adopted (static @Preview slot, T2.8 wiring, pinned-version hard gate); T2.2/T2.5 口径无异议"
   },
   "consensus_reached": true,
   "current_milestone": "M2",
@@ -154,6 +154,11 @@
       "status": "pending",
       "last_commit": null,
       "note": "等 T2.5 落地(diagnostics 结构先行)"
+    },
+    "T2.8": {
+      "status": "pending",
+      "last_commit": null,
+      "note": "D-05 立项: fastlane 接线(daemon 托管 worker), 条件依赖 T2.1; T2.1 延期则推 M4"
     }
   },
   "blockers": [
