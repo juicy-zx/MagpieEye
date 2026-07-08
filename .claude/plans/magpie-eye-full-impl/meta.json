@@ -103,9 +103,9 @@
       "note": "186 全绿(+14); missing 硬失败/熔断/diagnostics 对象落地; T2.7 交接提醒: v1.test 4 处字面量+runL2 钩子"
     },
     "T2.6": {
-      "status": "in_progress",
-      "last_commit": null,
-      "note": "范围扩充: CLI接线+record+odiff悬挂+冷道stdio悬挂+findNewestPng+latency判定字段"
+      "status": "awaiting_review",
+      "last_commit": "cb8bb76",
+      "note": "199 全绿; 退出治理四条实证(7min->5s); record+拒录; findNewestPng 三级; exports 子路径变通已申报"
     },
     "T3.0": {
       "status": "pending",
@@ -157,9 +157,8 @@
       "note": "D-06 后 4/4 复验过(D3 parity-pixel-sampled); 零假阳性; 195 全绿"
     },
     "T2.8": {
-      "status": "pending",
-      "last_commit": null,
-      "note": "D-05 立项: fastlane 接线(daemon 托管 worker), 条件依赖 T2.1; T2.1 延期则推 M4"
+      "status": "in_progress",
+      "last_commit": null
     },
     "D-06-fix": {
       "status": "done",
