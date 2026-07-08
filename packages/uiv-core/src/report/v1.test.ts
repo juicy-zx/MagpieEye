@@ -54,6 +54,19 @@ describe('report.json v1 校验器(扩展 v0)', () => {
     };
     expect(() => validateReportV1(r)).toThrow(/matchFailure/);
   });
+  it('D-06:matching_rate_low 携真实违规(matchFailure 非空)放行', () => {
+    const r: ReportV1 = {
+      ...validPass(), pass: false, reason: 'inconclusive', subReason: 'matching_rate_low',
+      structural: { matched: 3, untaggedCoverage: 1, matchRate: 0.75, matchedNodes: [], untagged: [],
+        missing: [{ figmaId: '1:104', name: 'CalibBadge', expectedBounds: null }],
+        diagnostics: { containerMissing: [], pixel: [] },
+        matchFailure: { figmaLeaves: [], semLeaves: [], unmatchedFigma: [], unmatchedSem: [] },
+        extra: [], violations: [{ judgePath: 'parity', testTag: 'fig:1:101', figmaName: 'CalibTitle',
+          property: 'position', expected: '(12,12)', actual: '(16,16)', severity: 'high', hint: 'x' }] },
+      score: 0,
+    };
+    expect(validateReportV1(r)).toEqual(r);
+  });
   it('tag_coverage_low 而 untagged=[] 抛错', () => {
     const r: ReportV1 = {
       ...validPass(), pass: false, reason: 'inconclusive', subReason: 'tag_coverage_low',

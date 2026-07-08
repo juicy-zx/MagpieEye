@@ -96,29 +96,30 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
   const pairedIds = new Set(m.pairs.map((p) => p.figma.id));
   const mr = matchRate(leafPairCount(N, pairedIds), nSize);
 
-  // 熔断:mr<0.8 → 不执行断言、不输出 violations(不强行断言);缺失叶子硬失败仅在非熔断态生成。
+  // 熔断(Codex D-06):mr<0.8 只抑制 joinSource==='text'|'lcs' 降级配对的属性断言;
+  // tag 配对(可信契约)照常执行全部断言;missing 硬失败不受熔断门控(与 structural.missing 同步生成,D4 检出稳定)。
   const fused = mr < MATCH_RATE_FUSE;
   const violations: Violation[] = [];
   let executed = 0;
   const pixelCtx: PixelSampleCtx | undefined = opts.pixelSource === undefined
     ? undefined : { png: opts.pixelSource.png, density: dump.density };
   const pixelDiagnostics: PixelDiagnostic[] = [];
-  if (!fused) {
-    // 逐属性断言(全 pair,含容器供 padding),hint 确定性填充;非文本叶子走像素通道(T2.7)。
-    for (const pair of m.pairs) {
-      const r = assertPair(pair, pixelCtx);
-      executed += r.executed;
-      for (const v of r.violations) violations.push({ ...v, hint: makeHint(v, pair.figma.name) });
-      for (const d of r.diagnostics) pixelDiagnostics.push(d);
-    }
-    // missing 叶子硬失败(Codex M2 审查裁定):每个 comparable missing 叶子计一条 high 违规。
-    for (const n of m.missingLeaves) {
-      violations.push({
-        judgePath: 'parity', testTag: `fig:${n.id}`, figmaName: n.name,
-        property: 'missing', expected: 'present', actual: 'missing', severity: 'high',
-        hint: `节点在语义树中缺失(Figma "${n.name}"):检查是否漏渲染或 testTag 未导出`,
-      });
-    }
+  // 逐属性断言(全 pair,含容器供 padding),hint 确定性填充;非文本叶子走像素通道(T2.7)。
+  // 熔断态下仅对 tag 配对断言,text/lcs 降级配对抑制(不因低配对率对降级样本强行断言)。
+  for (const pair of m.pairs) {
+    if (fused && pair.joinSource !== 'tag') continue;
+    const r = assertPair(pair, pixelCtx);
+    executed += r.executed;
+    for (const v of r.violations) violations.push({ ...v, hint: makeHint(v, pair.figma.name) });
+    for (const d of r.diagnostics) pixelDiagnostics.push(d);
+  }
+  // missing 叶子硬失败(Codex M2 审查裁定 + D-06 不受熔断门控):每个 comparable missing 叶子计一条 high 违规。
+  for (const n of m.missingLeaves) {
+    violations.push({
+      judgePath: 'parity', testTag: `fig:${n.id}`, figmaName: n.name,
+      property: 'missing', expected: 'present', actual: 'missing', severity: 'high',
+      hint: `节点在语义树中缺失(Figma "${n.name}"):检查是否漏渲染或 testTag 未导出`,
+    });
   }
   const sc = fused ? 0 : score(violations, executed);
 

@@ -117,9 +117,9 @@ export function validateReportV1(x: unknown): ReportV1 {
   const st = r['structural'];
   if (st !== null && typeof st === 'object') {
     const s = st as Record<string, unknown>;
-    if (r['subReason'] === 'matching_rate_low') {
-      if (s['matchFailure'] === null) fail('structural.matchFailure', 'non-null when subReason===matching_rate_low', s['matchFailure']);
-      if (Array.isArray(s['violations']) && s['violations'].length > 0) fail('structural.violations', 'empty when subReason===matching_rate_low', s['violations']);
+    // D-06:matching_rate_low ⇒ matchFailure 非空;不再要求 violations 为空(tag 配对真实违规 + missing 硬失败可共存)。
+    if (r['subReason'] === 'matching_rate_low' && s['matchFailure'] === null) {
+      fail('structural.matchFailure', 'non-null when subReason===matching_rate_low', s['matchFailure']);
     }
     if (r['subReason'] === 'tag_coverage_low' && Array.isArray(s['untagged']) && s['untagged'].length === 0) {
       fail('structural.untagged', 'non-empty when subReason===tag_coverage_low', s['untagged']);

@@ -111,12 +111,14 @@ describe('T2.5 验收六类', () => {
     const r = runL2(SPEC(), d, {});
     expect(r.pass).toBe(false);
     expect(r.subReason).toBe('tag_coverage_low');            // cov=0 优先于熔断
-    expect(r.structural?.violations).toEqual([]);            // 熔断吞 violations
+    // D-06:熔断只抑制 text/lcs 降级配对属性断言;5 叶全未配 → missing 硬失败照常生成(不受熔断门控)。
+    expect(r.structural?.violations).toHaveLength(5);
+    expect(r.structural?.violations.every((v) => v.property === 'missing')).toBe(true);
     expect(r.structural?.matchFailure?.unmatchedFigma).toHaveLength(5);
     const r2 = runL2(SPEC(), d, { untaggedCoverageThreshold: 0 });
     expect(r2.subReason).toBe('matching_rate_low');          // cov 门放开 → 熔断显形
     expect(r2.pass).toBe(false);
-    expect(() => validateReportV1(r2)).not.toThrow();        // matching_rate_low ⇒ matchFailure 非空且 violations 空
+    expect(() => validateReportV1(r2)).not.toThrow();        // D-06:matching_rate_low ⇒ matchFailure 非空(violations 可含 missing 硬失败)
   });
 
   it('⑥ missing 硬失败:N=20 缺 1 叶,cov/mr 均达标仍不得 pass(反例)', () => {

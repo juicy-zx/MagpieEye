@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { makeHint, runL2 } from './report.js';
+import { validateReportV1 } from '../report/v1.js';
 import type { FigmaNode, SemNode, SemanticsDump, Violation } from './types.js';
 
 // ---- 固定物料:Canonical Calibration Contract(绝对坐标,根在画布 (100,100)) ----
@@ -146,7 +147,9 @@ describe('runL2 组装(v1 结构块 + 顶层判定)', () => {
     expect(report.structural?.matchRate).toBe(0.5);          // swatch/badge 被 LCS 补配(几何全等、同 OTHER);TEXT 叶 sem 无文本、类型折 0.5<0.6 不配
     expect(report.reason).toBe('inconclusive');
     expect(report.subReason).toBe('tag_coverage_low');       // cov=0 优先于熔断
-    expect(report.structural?.violations).toEqual([]);       // mr=0.5<0.8 熔断吞 violations
+    // D-06:mr=0.5<0.8 熔断只抑制 lcs 降级配对属性断言;未被补配的 TEXT 叶(1:101/1:102)照常出 missing 硬失败。
+    expect(report.structural?.violations.map((v) => v.property)).toEqual(['missing', 'missing']);
+    expect(report.structural?.violations.map((v) => v.testTag).sort()).toEqual(['fig:1:101', 'fig:1:102']);
     expect(report.structural?.matchFailure).not.toBeNull();  // 熔断→失败报告
     expect(report.pass).toBe(false);
   });
@@ -156,5 +159,59 @@ describe('runL2 组装(v1 结构块 + 顶层判定)', () => {
     expect(r.reason).toBe('inconclusive');
     expect(r.subReason).toBe('render_harness_error');
     expect(r.pass).toBe(false);
+  });
+
+  // D-06 回归①(T2.7 同构):4 叶缺 1、其余 3 个全 tag 配对且各带偏差 → mr=0.75 熔断仍出全部 3 类违规 + missing。
+  // untaggedCoverageThreshold=0 关掉 coverage 门,使 subReason 落在 matching_rate_low,隔离熔断语义。
+  it('D-06①:mr=0.75 熔断态下 3 个 tag 配对照常出 position/fontSize/color,缺失叶出 missing', () => {
+    const bad: SemanticsDump = { density: 2.0, root: sem('fig:1:100', 0, 0, 720, 400, null, null, [
+      sem('fig:1:101', 24, 24, 400, 40, '#FFFFFF', 14),    // 字号 14 应 16 → fontSize(tag 配对)
+      sem('fig:1:102', 24, 72, 400, 32, '#000000', 12),    // 色 #000000 应 #CCE0FF → color(tag 配对)
+      sem('fig:1:103', 40, 120, 160, 80, '#FF9900', null), // x dp20 应 12(L1=8>2)→ position(tag 配对)
+      // 1:104 CalibBadge 缺失 → structural.missing + missing/high violation(不受熔断门控)
+    ]) };
+    const r = runL2(calibSpec(), bad, { untaggedCoverageThreshold: 0 });
+    expect(r.structural?.matchRate).toBe(0.75);                                        // 3/4<0.8 熔断
+    expect(r.subReason).toBe('matching_rate_low');
+    expect(r.structural?.matchedNodes.every((n) => n.joinSource === 'tag')).toBe(true);
+    expect(props(r.structural!.violations).sort()).toEqual(['color', 'fontSize', 'missing', 'position']);
+    expect(r.structural?.missing.map((m) => m.figmaId)).toEqual(['1:104']);
+    expect(r.structural?.matchFailure).not.toBeNull();
+    expect(r.structural?.violations.every((v) => v.hint.length > 0)).toBe(true);
+    expect(r.pass).toBe(false);
+    expect(() => validateReportV1(r)).not.toThrow();                                   // D-06 point 4:放宽后校验放行
+  });
+
+  // D-06 回归②:低 mr 且配对全靠 text/LCS 降级 → 降级配对的属性违规被抑制,只留 matchFailure + missing。
+  it('D-06②:低 mr 下 text/lcs 降级配对属性违规被抑制,只输出 missing', () => {
+    const spec: FigmaNode = {
+      id: '1:100', name: 'Card', type: 'FRAME',
+      absoluteBoundingBox: { x: 0, y: 0, width: 360, height: 200 },
+      fills: [{ type: 'SOLID', color: { r: 0.2, g: 0.4, b: 0.8, a: 1 } }],
+      children: [
+        { id: '1:301', name: 'DegradedText', type: 'TEXT', absoluteBoundingBox: { x: 10, y: 10, width: 200, height: 20 },
+          characters: 'Degraded Text', style: { fontSize: 16 }, fills: [{ type: 'SOLID', color: { r: 1, g: 1, b: 1, a: 1 } }] },
+        { id: '1:302', name: 'DegradedRect', type: 'RECTANGLE', absoluteBoundingBox: { x: 10, y: 40, width: 80, height: 40 } },
+        { id: '1:303', name: 'MissA', type: 'RECTANGLE', absoluteBoundingBox: { x: 10, y: 90, width: 80, height: 40 } },
+        { id: '1:304', name: 'MissB', type: 'RECTANGLE', absoluteBoundingBox: { x: 10, y: 140, width: 80, height: 40 } },
+        { id: '1:305', name: 'MissC', type: 'RECTANGLE', absoluteBoundingBox: { x: 200, y: 10, width: 80, height: 40 } },
+      ],
+    };
+    // text 降级(文本全等命中,但位置/字号/色全偏);lcs 降级(几何近 1:302,偏 3dp)。两者偏差在熔断态下均应被抑制。
+    const dump: SemanticsDump = { density: 2.0, root: sem('fig:1:100', 0, 0, 720, 400, null, null, [
+      { ...sem(null, 40, 40, 400, 40, '#000000', 10), text: 'Degraded Text' }, // → text 配对 1:301,偏差全被抑制
+      sem(null, 26, 80, 160, 80),                                              // → lcs 配对 1:302(dp13,40 vs 10,40),position 偏被抑制
+    ]) };
+    const r = runL2(spec, dump, { untaggedCoverageThreshold: 0 });
+    expect(r.structural?.matchRate).toBe(0.4);                                          // 叶配对 2/5<0.8 熔断(容器 tag 不计分子)
+    expect(r.subReason).toBe('matching_rate_low');
+    // 两叶均走降级配对(容器 1:100 走 tag 属结构层,不参与叶断言)。
+    expect(r.structural?.matchedNodes).toContainEqual({ figmaId: '1:301', name: 'DegradedText', joinSource: 'text' });
+    expect(r.structural?.matchedNodes).toContainEqual({ figmaId: '1:302', name: 'DegradedRect', joinSource: 'lcs' });
+    expect(r.structural?.violations.every((v) => v.property === 'missing')).toBe(true); // 降级配对属性违规被抑制
+    expect(r.structural?.violations.map((v) => v.testTag).sort()).toEqual(['fig:1:303', 'fig:1:304', 'fig:1:305']);
+    expect(r.structural?.matchFailure).not.toBeNull();
+    expect(r.pass).toBe(false);
+    expect(() => validateReportV1(r)).not.toThrow();
   });
 });
