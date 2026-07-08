@@ -23,7 +23,7 @@
  "t2_1_hot": {
   "task": "T2.1",
   "lane": "hot",
-  "protocol": "EOF-comment-toggle (M1: --rerun)",
+  "protocol": "--rerun",
   "warmupRounds": 1,
   "samples": [
    5321,
@@ -41,6 +41,11 @@
   "targetMs": 3100,
   "m1WarmMedianS": 5.1,
   "pass": true,
-  "measuredAt": "2026-07-08T19:04:38.910Z"
+  "measuredAt": "2026-07-08T19:04:38.910Z",
+  "coldP50": 10442,
+  "hotP50": 5838,
+  "savedMs": 4604,
+  "speedupRatio": 1.79,
+  "target_ms": 6000
  }
 }
