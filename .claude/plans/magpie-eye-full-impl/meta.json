@@ -5,7 +5,7 @@
   "codex": {
     "transport": "mcp",
     "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
-    "last_decisions": "D-05 approved 2026-07-09: fastlane adopted (static @Preview slot, T2.8 wiring, pinned-version hard gate); T2.2/T2.5 口径无异议"
+    "last_decisions": "D-06 approved: fuse only gates degraded pairs (text/lcs), tag pairs always assert; v1 validator relaxed; expect 4/4"
   },
   "consensus_reached": true,
   "current_milestone": "M2",
@@ -78,8 +78,9 @@
       "note": "Phase 0 北极星达成: 2轮/上限5, 修正者仅凭剥离版 report.json, 134s"
     },
     "T2.1": {
-      "status": "in_progress",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "5c689c4",
+      "note": "等价 EQUIVALENT/UDS 0600 过; P50 发现回 Codex(D-07): 真热渲染地板~5.8s vs 目标 3.1s, 226ms 系缓存跳过"
     },
     "T2.2": {
       "status": "awaiting_review",
@@ -151,9 +152,9 @@
       "last_commit": null
     },
     "T2.7": {
-      "status": "pending",
-      "last_commit": null,
-      "note": "等 T2.5 落地(diagnostics 结构先行)"
+      "status": "blocked",
+      "last_commit": "cb73335",
+      "note": "像素通道 100% 正确(192 全绿); 4/4 检出门被 T2.5 熔断语义阻塞(D4 致 mr=0.75<0.8 吞 violations); 待 D-06"
     },
     "T2.8": {
       "status": "pending",
