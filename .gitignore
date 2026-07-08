@@ -6,6 +6,7 @@ build/
 .ui-verify/state.json
 .ui-verify/renders/
 .ui-verify/reports/
+.ui-verify/phase0/
 local.properties
 .calib-tmp/
 demo-android/.robolectric-deps/

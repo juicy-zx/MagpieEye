@@ -1,0 +1,177 @@
+{
+  "specVersion": 0,
+  "fileKey": "FKEY",
+  "nodeId": "1:100",
+  "version": "T1_0A_V1",
+  "root": {
+    "id": "1:100",
+    "name": "CalibCard",
+    "type": "FRAME",
+    "visible": true,
+    "bbox": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 200
+    },
+    "layoutMode": "NONE",
+    "padding": {
+      "l": 0,
+      "t": 0,
+      "r": 0,
+      "b": 0
+    },
+    "itemSpacing": 0,
+    "cornerRadii": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "fills": [
+      {
+        "type": "SOLID",
+        "hex": "#3366CC",
+        "opacity": 1
+      }
+    ],
+    "text": null,
+    "children": [
+      {
+        "id": "1:101",
+        "name": "CalibTitle",
+        "type": "TEXT",
+        "visible": true,
+        "bbox": {
+          "x": 12,
+          "y": 12,
+          "w": 200,
+          "h": 20
+        },
+        "layoutMode": "NONE",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 0,
+        "cornerRadii": null,
+        "fills": [
+          {
+            "type": "SOLID",
+            "hex": "#FFFFFF",
+            "opacity": 1
+          }
+        ],
+        "text": {
+          "characters": "Calibration Card",
+          "fontSize": 16,
+          "fontWeight": 400,
+          "overrides": []
+        },
+        "children": []
+      },
+      {
+        "id": "1:102",
+        "name": "CalibSubtitle",
+        "type": "TEXT",
+        "visible": true,
+        "bbox": {
+          "x": 12,
+          "y": 36,
+          "w": 200,
+          "h": 16
+        },
+        "layoutMode": "NONE",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 0,
+        "cornerRadii": null,
+        "fills": [
+          {
+            "type": "SOLID",
+            "hex": "#CCE0FF",
+            "opacity": 1
+          }
+        ],
+        "text": {
+          "characters": "Known geometry fixture",
+          "fontSize": 12,
+          "fontWeight": 400,
+          "overrides": []
+        },
+        "children": []
+      },
+      {
+        "id": "1:103",
+        "name": "CalibSwatch",
+        "type": "RECTANGLE",
+        "visible": true,
+        "bbox": {
+          "x": 12,
+          "y": 60,
+          "w": 80,
+          "h": 40
+        },
+        "layoutMode": "NONE",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 0,
+        "cornerRadii": null,
+        "fills": [
+          {
+            "type": "SOLID",
+            "hex": "#FF9900",
+            "opacity": 1
+          }
+        ],
+        "text": null,
+        "children": []
+      },
+      {
+        "id": "1:104",
+        "name": "CalibBadge",
+        "type": "RECTANGLE",
+        "visible": true,
+        "bbox": {
+          "x": 296,
+          "y": 12,
+          "w": 52,
+          "h": 20
+        },
+        "layoutMode": "NONE",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 0,
+        "cornerRadii": [
+          10,
+          10,
+          10,
+          10
+        ],
+        "fills": [
+          {
+            "type": "SOLID",
+            "hex": "#FF3B30",
+            "opacity": 1
+          }
+        ],
+        "text": null,
+        "children": []
+      }
+    ]
+  }
+}
