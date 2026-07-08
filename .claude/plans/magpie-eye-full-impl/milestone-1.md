@@ -2307,7 +2307,7 @@ class SemanticsDumpRule(private val outDir: File = File("build/uiv")) : TestWatc
 
 | # | 偏差 | 写偏值 | 设计值(Canonical Contract) | 对应 L2 断言类 |
 |---|------|--------|---------------------------|----------------|
-| D1 | CalibTitle 位置 | `offset(x = 16.dp, y = 16.dp)` | `offset(x = 12.dp, y = 12.dp)` | position(±2dp) |
+| D1 | CalibTitle 位置 | `CHILD_POSITIONS` 表 title 项 `16.dp to 16.dp` | `CHILD_POSITIONS` 表 title 项 `12.dp to 12.dp`(合同值) | position(±2dp) |
 | D2 | CalibTitle 字号 | `fontSize = 14.sp` | `fontSize = 16.sp` | fontSize(±0.5sp) |
 | D3 | CalibSwatch 颜色 | `Color(0xFFFF6600)` | `Color(0xFFFF9900)` | color(ΔE00<3) |
 | D4 | CalibBadge 缺失 | 移除 `CalibBadge()` 调用行(不渲染) | 渲染 `fig:1:104`(52×20dp @ 卡内 (296,12)) | missing(`structural.missing` 含 `figmaId=1:104` + untaggedCoverage) |
@@ -2438,7 +2438,7 @@ fs.mkdirSync('scripts/fixtures', { recursive: true });
 fs.writeFileSync(cfg.backupSrc, src); // 验收前快照,验收可重现
 
 const subs = [
-  [/\.offset\(x = 12\.dp, y = 12\.dp\)/g, '.offset(x = 16.dp, y = 16.dp)', 'D1 CalibTitle 位置(position)'],
+  [/12\.dp to 12\.dp,(\s*\/\/ fig:1:101 CalibTitle)/g, '16.dp to 16.dp,$1', 'D1 CalibTitle 位置(position,CHILD_POSITIONS 表 title 项)'],
   [/fontSize = 16\.sp/g, 'fontSize = 14.sp', 'D2 CalibTitle 字号(fontSize)'],
   [/Color\(0xFFFF9900\)/g, 'Color(0xFFFF6600)', 'D3 CalibSwatch 颜色(color)'],
   [/^[ \t]*CalibBadge\(\)[ \t]*\n/gm, '', 'D4 CalibBadge 调用行移除(missing,不渲染)'],
@@ -2458,7 +2458,7 @@ node scripts/make-deviated-card.mjs
 diff scripts/fixtures/CalibCard.original.kt scripts/fixtures/CalibCard.deviated.kt
 ```
 
-预期:脚本输出"写偏副本已生成…";diff 恰好显示 4 处改动(offset 16,16 / 14.sp / 0xFFFF6600 / 删 `CalibBadge()` 一行;`private fun CalibBadge` 定义保留但不再被调用)。commit:
+预期:脚本输出"写偏副本已生成…";diff 恰好显示 4 处改动(CHILD_POSITIONS title 项 16,16 / 14.sp / 0xFFFF6600 / 删 `CalibBadge()` 一行;`private fun CalibBadge` 定义保留但不再被调用)。commit:
 
 ```bash
 git add scripts/make-deviated-card.mjs scripts/fixtures/
