@@ -197,7 +197,22 @@
     "odiff_720x1600_median_ms": 2228,
     "rest_cross_check": "pending-B1-PAT"
   },
-  "latency_baseline": {},
+  "latency_baseline": {
+    "task": "T1.1",
+    "scenario": "testDebugUnitTest --tests CalibCardScreenshotTest --rerun (record); cold=cold daemon(--no-daemon), not cold cache",
+    "warm_s": [
+      5.9,
+      5.1,
+      5
+    ],
+    "cold_s": [
+      11.2,
+      7.7,
+      7.4
+    ],
+    "median_warm_s": 5.1,
+    "measured_at": "2026-07-08"
+  },
   "environment": {
     "jdk": "Corretto 21.0.9",
     "node": "v26.3.0",
