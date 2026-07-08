@@ -19,7 +19,7 @@
       "subplan": "approved",
       "code_review": "in_progress",
       "review_rounds": 2,
-      "code_review_rounds": 0
+      "code_review_rounds": 1
     },
     "M2": {
       "subplan": "none",

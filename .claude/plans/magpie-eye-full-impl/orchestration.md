@@ -110,3 +110,4 @@
 - **D-03(2026-07-08)codegen 契约新增条款草案(M3 写进 loop 阶段 prompt,与 figmaTag/@Preview 契约并列)**:位置必须由参与测量/布局的手段表达(自定义 Layout、padding、align、Arrangement、约束布局等);`Modifier.offset` 不得作为 Figma 节点主几何定位——它是绘制期位移,positionInRoot/boundsInRoot/touchBoundsInRoot 均不可见,L2 位置断言整体失明且产生 (0,0) 违规噪声,coverage 指标拦不住。offset 仅可用于非验收关键的微调/视觉效果。
 
 - **D-04(2026-07-08)非文本节点颜色断言缺口**:Compose 语义树不含绘制信息,纯色块背景色 L2 不可得(colorHex 仅文本节点)。裁定:① 自声明语义属性方案**否决入反模式**——被验属性由被验代码自声明 = reward hacking 通道(可作调试 metadata,不得进 L2 门禁);② M2 新增 **T2.7 像素采样颜色断言**:非文本节点按 semantics bounds 在 rendered.png 内部安全区取中位/主色,与 spec fills ΔE00 比对,证据来自渲染真值;③ T2.7 落地后 T1.4 的 D3 回归 CalibSwatch 复验;④ harness 规则固化:修正循环开跑前必须 `--inject && --verify-detection` 全过,检出失败 exit 31 归工具链/L2 覆盖缺口,不进模型修正回路。
+- **M1 审查建议(2026-07-08,进 M2 待办)**:① missing 反馈默认过滤到 comparable leaves(容器缺失另列 diagnostics),减少修正者噪声——并入 T2.5;② CLI mapping 按 nodeId 取首条的唯一性规则在 M3 多页面/多版本前补 scope/file/version 消歧(D-02 已有记录)。
