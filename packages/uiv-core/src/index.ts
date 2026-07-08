@@ -6,3 +6,4 @@ export const UIV_CORE_VERSION = '0.0.1'
 
 export * from './figma/types.js'
 export * from './figma/normalize.js'
+export * from './figma/client.js'
