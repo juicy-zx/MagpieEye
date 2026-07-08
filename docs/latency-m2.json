@@ -19,5 +19,28 @@
   "median_server_ms": 5,
   "resultsIdentical": true,
   "measured_at": "2026-07-08"
+ },
+ "t2_1_hot": {
+  "task": "T2.1",
+  "lane": "hot",
+  "protocol": "EOF-comment-toggle (M1: --rerun)",
+  "warmupRounds": 1,
+  "samples": [
+   5321,
+   248,
+   225,
+   219,
+   225,
+   231,
+   226,
+   226,
+   228,
+   214
+  ],
+  "p50Ms": 226,
+  "targetMs": 3100,
+  "m1WarmMedianS": 5.1,
+  "pass": true,
+  "measuredAt": "2026-07-08T19:04:38.910Z"
  }
 }
