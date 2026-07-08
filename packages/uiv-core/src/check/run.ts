@@ -25,19 +25,19 @@ function extractCompileError(stderr: string): string | null {
   return lines === null ? null : lines.join('\n');
 }
 
-/** 递归找 dir 下文件名含 needle 的最新 .png;无 → null。 */
-function findNewestPng(dir: string, needle: string): string | null {
+/** 递归找 dir 下文件名含 needle 的最新 .png;无 → null。exclude 命中的文件名跳过(如 _compare.png 类比对产物)。 */
+function findNewestPng(dir: string, needle: string, exclude?: (name: string) => boolean): string | null {
   if (!existsSync(dir)) return null;
   let newest: { path: string; mtimeMs: number } | null = null;
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, entry.name);
     if (entry.isDirectory()) {
-      const sub = findNewestPng(p, needle);
+      const sub = findNewestPng(p, needle, exclude);
       if (sub !== null) {
         const m = statSync(sub).mtimeMs;
         if (newest === null || m > newest.mtimeMs) newest = { path: sub, mtimeMs: m };
       }
-    } else if (entry.isFile() && entry.name.endsWith('.png') && entry.name.includes(needle)) {
+    } else if (entry.isFile() && entry.name.endsWith('.png') && entry.name.includes(needle) && !(exclude?.(entry.name) ?? false)) {
       const m = statSync(p).mtimeMs;
       if (newest === null || m > newest.mtimeMs) newest = { path: p, mtimeMs: m };
     }
@@ -68,6 +68,7 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     artifacts: { baseline: baselineExists ? baselinePng : null, render: null, diff: null },
   };
 
+  const t0 = Date.now();
   const { exitCode, stderr } = await runner.run(opts.demoDir, [
     'testDebugUnitTest', '--tests', opts.testFqn, '-Proborazzi.test.compare=true',
   ]);
@@ -80,9 +81,16 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     return writeReport(opts.uiVerifyDir, nodeDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
   }
 
-  // exit 0:收集 rendered.png(测试类短名去 ScreenshotTest 后缀 = 组件短名)
+  // exit 0:收集 rendered.png(测试类短名去 ScreenshotTest 后缀 = 组件短名)。
+  // T2.6 三级优先+新鲜度门(章内设计):①本轮 _actual ②本轮非 _compare(旧 added 形态)③golden(unchanged 零产物);
+  // mtime 早于本轮 gradle 启动(t0)的候选一律拒收,防陈旧 _actual/_compare 被"最新含短名"误收。
   const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '');
-  const found = findNewestPng(join(opts.demoDir, 'app', 'build', 'outputs', 'roborazzi'), shortName);
+  const roboDir = join(opts.demoDir, 'app', 'build', 'outputs', 'roborazzi');
+  const goldenPath = join(opts.demoDir, 'app', 'src', 'test', 'snapshots', `${shortName}.png`);
+  const fresh = (p: string | null): string | null => (p !== null && statSync(p).mtimeMs >= t0 - 1000 ? p : null);
+  const found = fresh(findNewestPng(roboDir, `${shortName}_actual`))
+    ?? fresh(findNewestPng(roboDir, shortName, (n) => n.endsWith('_compare.png')))
+    ?? (existsSync(goldenPath) ? goldenPath : null);
   if (found === null) {
     return writeReport(opts.uiVerifyDir, nodeDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
   }
@@ -97,8 +105,14 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     // 产物目录口径:diff/report 归 reports/<nodeDir>/;rendered.png/semantics.json 归 renders/<nodeDir>/。
     const reportsDir = join(opts.uiVerifyDir, 'reports', nodeDir);
     mkdirSync(reportsDir, { recursive: true });
-    diffPng = join(reportsDir, 'diff.png');
-    pixel = await runL1(baselinePng, renderedPng, diffPng, loadIgnoreRegions(opts.uiVerifyDir, opts.nodeId));
+    const diffOut = join(reportsDir, 'diff.png');
+    try {
+      pixel = await runL1(baselinePng, renderedPng, diffOut, loadIgnoreRegions(opts.uiVerifyDir, opts.nodeId));
+      diffPng = diffOut;
+    } catch (e) {
+      // D-07(c):L1 是 advisory 通道,失败(server+spawn 双双不可用等)不得让已成功的渲染主链/L2 verdict 一并失败。
+      console.warn(`uiv: L1 advisory failed, continuing without pixel diff: ${(e as Error).message}`);
+    }
   }
 
   return writeReport(opts.uiVerifyDir, nodeDir, {

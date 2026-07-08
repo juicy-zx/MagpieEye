@@ -1,8 +1,9 @@
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
 import { describe, it, expect } from 'vitest';
+import { RecordRefusedError, runRecord } from './record.js';
 import { runCheck } from './run.js';
 import type { GradleRunner } from './run.js';
 
@@ -97,5 +98,57 @@ describe('runCheck (injectable gradle runner)', () => {
     expect(report.pass).toBe(false);
     expect(report.reason).toBe('inconclusive');
     expect(report.subReason).toBe('render_harness_error');
+  });
+});
+
+describe('T2.6: runRecord(check 全过后录 golden)', () => {
+  const rec: string[][] = [];
+  const okRunner: GradleRunner = {
+    async run(cwd: string, args: string[]) {
+      rec.push(args);
+      const s = join(cwd, 'app/src/test/snapshots');
+      mkdirSync(s, { recursive: true });
+      writeWhitePng(join(s, 'CalibCard.png'));
+      return { exitCode: 0, stderr: '' };
+    },
+  };
+  it('T2.6 runRecord: pass:false 拒绝不跑 gradle;pass:true 参数+golden 校验', async () => {
+    const r0 = new FakeRunner(0, '');
+    await expect(runRecord(r0, { demoDir: makeDirs().demoDir, testFqn: TEST_FQN }, false)).rejects.toBeInstanceOf(RecordRefusedError);
+    expect(r0.calls.length).toBe(0);
+    const { demoDir } = makeDirs();
+    const { goldenPath } = await runRecord(okRunner, { demoDir, testFqn: TEST_FQN }, true);
+    expect(rec[0]).toEqual(['testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.record=true', '--rerun']);
+    expect(goldenPath).toBe(join(demoDir, 'app/src/test/snapshots/CalibCard.png'));
+  });
+});
+
+describe('T2.6: 收集三级优先 + 新鲜度门(防 _compare/陈旧 _actual 误收)', () => {
+  const seed = (dir: string, name: string, w: number, ageMs = 0): void => {
+    mkdirSync(dir, { recursive: true });
+    const png = new PNG({ width: w, height: 64 });
+    png.data.fill(255);
+    const p = join(dir, name);
+    writeFileSync(p, PNG.sync.write(png));
+    if (ageMs > 0) {
+      const t = new Date(Date.now() - ageMs);
+      utimesSync(p, t, t);
+    }
+  };
+  const W = (p: string): number => PNG.sync.read(readFileSync(p)).width;
+
+  it('T2.6 收集: 新鲜 _actual 优先;陈旧 actual 回落 golden', async () => {
+    let { demoDir, uiVerifyDir } = makeDirs();
+    const robo = (dd: string): string => join(dd, 'app/build/outputs/roborazzi');
+    seed(robo(demoDir), 'CalibCard_actual.png', 64);
+    seed(robo(demoDir), 'CalibCard_compare.png', 128);
+    let r = await runCheck(new FakeRunner(0, ''), opts(demoDir, uiVerifyDir));
+    expect(W(r.report.artifacts.render!)).toBe(64);
+
+    ({ demoDir, uiVerifyDir } = makeDirs());
+    seed(robo(demoDir), 'CalibCard_actual.png', 128, 600_000);
+    seed(join(demoDir, 'app/src/test/snapshots'), 'CalibCard.png', 64);
+    r = await runCheck(new FakeRunner(0, ''), opts(demoDir, uiVerifyDir));
+    expect(W(r.report.artifacts.render!)).toBe(64);
   });
 });

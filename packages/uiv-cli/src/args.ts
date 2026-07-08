@@ -7,7 +7,7 @@ export class CliUsageError extends Error {}
 export interface CliIgnoreRegion { x: number; y: number; w: number; h: number }
 
 export interface BaselinePullCmd { kind: 'baseline-pull'; fixture: string; file: string; node: string }
-export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; ignoreRegion: CliIgnoreRegion | null }
+export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; ignoreRegion: CliIgnoreRegion | null; record: boolean }
 export type ParsedCommand = BaselinePullCmd | CheckCmd;
 
 /** 把 `--flag value` 序列收进表;重复 flag 取末次;非 --flag 开头或缺值即报错。 */
@@ -69,7 +69,10 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
     };
   }
   if (cmd === 'check') {
-    const flags = collectFlags(rest, ['--preview', '--node', '--demo', '--ignore-region']);
+    // --record 是无值布尔旗标(T2.6),先剔除再走 --flag value 成对解析。
+    const record = rest.includes('--record');
+    const rest2 = rest.filter((a) => a !== '--record');
+    const flags = collectFlags(rest2, ['--preview', '--node', '--demo', '--ignore-region']);
     const rawRegion = flags.get('--ignore-region');
     return {
       kind: 'check',
@@ -77,6 +80,7 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       node: required(flags, '--node'),
       demo: required(flags, '--demo'),
       ignoreRegion: rawRegion === undefined ? null : parseIgnoreRegion(rawRegion),
+      record,
     };
   }
   throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check)`);
