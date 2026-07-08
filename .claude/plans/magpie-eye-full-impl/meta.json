@@ -223,5 +223,20 @@
     },
     "tolerance_px": 2,
     "density_aligned": true
+  },
+  "text_metrics": {
+    "task": "T1.1",
+    "robolectric": "4.16",
+    "graphics_mode_pinned": "NATIVE",
+    "native": {
+      "hasVisualOverflow": true,
+      "textViewEllipsisCount": 488
+    },
+    "legacy": {
+      "hasVisualOverflow": false,
+      "textViewEllipsisCount": 0,
+      "errors": []
+    },
+    "text_overflow_invariant": "hard-gate"
   }
 }

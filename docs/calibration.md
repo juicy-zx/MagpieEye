@@ -42,3 +42,9 @@ runs=[2228,2404,2069]ms, median=**2228ms**(含 npx 转发开销,预热后;odiff 
 - 渲染环境:Robolectric 4.16 `@Config(qualifiers="w360dp-h800dp-xhdpi")`(density 2.0)+ `@GraphicsMode(NATIVE)`
 - CalibCard(360x200dp)node capture 实际像素 720x400,与期望值及 T1.0a Figma 2x 标定值均在 |Δ|<=2px 内(scripts/check-t10b.mjs exit 0;scripts/calibration/check-scale.mjs 360 200 2 → deltaPx=[0,0] pass)
 - 结论:渲染侧 density 2.0 与 Figma 侧 scale=2 对齐,"1 Figma 单位 = 1dp" 在渲染链路成立
+
+## NATIVE 文本度量钉版本(T1.1,CS1/CS2)
+
+- Robolectric 4.16 `@GraphicsMode(NATIVE)` sdk=36:Compose `hasVisualOverflow==true`(超长串+maxLines=1)、真 TextView measure+layout 后 `getEllipsisCount>0`(实测 488) —— 均实测通过
+- LEGACY 对照:探针值见 meta.json.text_metrics.legacy(hasVisualOverflow=false 假阴 / ellipsisCount=0,伪造测量,不可用)
+- 结论:文本溢出/截断两项 L2-invariant 可进硬门禁(text_overflow_invariant=hard-gate),约束条件:NATIVE + sdk>=26 钉死
