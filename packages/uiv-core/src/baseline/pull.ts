@@ -32,8 +32,8 @@ function upsertMapping(mappingPath: string, entry: MappingEntry): void {
 }
 
 export async function pullBaseline(client: FigmaClient, fileKey: string, nodeId: string,
-                                   uiVerifyDir: string): Promise<PullResult> {
-  const raw = await client.getNodes(fileKey, nodeId);
+                                   uiVerifyDir: string, version?: string): Promise<PullResult> {
+  const raw = await client.getNodes(fileKey, nodeId, version);
   const spec = normalizeNodesResponse(raw, fileKey, nodeId);
 
   const dir = join(uiVerifyDir, 'baselines', baselineDirName(nodeId, spec.version));

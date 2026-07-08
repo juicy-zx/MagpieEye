@@ -6,7 +6,7 @@
 import { readFile } from 'node:fs/promises';
 
 export interface FigmaClient {
-  getNodes(fileKey: string, nodeId: string): Promise<unknown>;   // GET /v1/files/:key/nodes 形状
+  getNodes(fileKey: string, nodeId: string, version?: string): Promise<unknown>;   // GET /v1/files/:key/nodes 形状
   getImages(fileKey: string, nodeIds: string[], scale: number): Promise<Record<string, string | null>>;
 }
 
