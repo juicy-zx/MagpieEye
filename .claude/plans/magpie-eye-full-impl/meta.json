@@ -17,8 +17,9 @@
     },
     "M1": {
       "subplan": "approved",
-      "code_review": "none",
-      "review_rounds": 2
+      "code_review": "in_progress",
+      "review_rounds": 2,
+      "code_review_rounds": 0
     },
     "M2": {
       "subplan": "none",
@@ -62,9 +63,9 @@
       "last_commit": "411e30a"
     },
     "T1.2": {
-      "status": "awaiting_review",
-      "last_commit": "e33132a",
-      "note": "core 44/44 绿; 留待: check e2e(等T1.1)+Step9b+baseline实图落盘(等Codex #B)+资产入库"
+      "status": "done",
+      "last_commit": "a4b40f1",
+      "note": "core+e2e+Step9b+资产入库全部完成; L1 advisory 铁证 diffRatio 0.008->0.99 pass不变"
     },
     "T1.3": {
       "status": "done",
