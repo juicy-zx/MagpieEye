@@ -32,3 +32,6 @@ T1.2 core 已完成(44/44 单测),两个子计划未指明处执行 agent 自决
 - D-02:两项同意。附加:T1.3/T1.4 报告体系目录语义收敛——rendered.png 归 renders/,report.json/diff/overlay 归 reports/(已转发 T1.3 agent);M3 同 nodeId 多 scope 时再升级消歧。
 - T1.1 两处非版本类修正无异议;NATIVE hard-gate 同意,约束已写死进 meta.json.text_metrics.hard_gate_constraints。
 队列清空。
+
+## D-03 决断结果(2026-07-08 21:5x)
+A/B/C 全同意:A 优先自定义 Layout(禁 offset 替代品绕行);B 契约条款加边界措辞(offset 仅限非验收关键微调);C T1.3 awaiting_review,修复后 pass:true 为收尾验收门。已固化 orchestration.md 第 5 节。

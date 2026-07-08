@@ -104,3 +104,7 @@
 不做:裸像素还原度门禁、VLM 直接打分、模拟器/真机路线、暖 daemon 秒级承诺、desktop MCP 免配额假设、Linux CI 像素 golden。
 推迟(入 pending_followups):PAT 到位后的 REST 交叉标定与 fixture 重录;真实远程 CI;provider 形态 vlm-judge(视 API key)。
 **Release Gate(Codex 裁定)**:"全量完成/生产可用"的定义包含 PAT 到位后的真实 Figma REST 通道闭环验证(交叉标定 + fixture 重录 + T1.2 验收复跑)。在此之前,即使 M0~M4 全部任务 done,状态只能标"fixture 驱动实现完成",不得宣称 REST 通道闭环。
+
+## 5. 经验与契约积累(执行中固化,M3 落地)
+
+- **D-03(2026-07-08)codegen 契约新增条款草案(M3 写进 loop 阶段 prompt,与 figmaTag/@Preview 契约并列)**:位置必须由参与测量/布局的手段表达(自定义 Layout、padding、align、Arrangement、约束布局等);`Modifier.offset` 不得作为 Figma 节点主几何定位——它是绘制期位移,positionInRoot/boundsInRoot/touchBoundsInRoot 均不可见,L2 位置断言整体失明且产生 (0,0) 违规噪声,coverage 指标拦不住。offset 仅可用于非验收关键的微调/视觉效果。

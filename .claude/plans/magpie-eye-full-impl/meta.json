@@ -67,8 +67,9 @@
       "note": "core 44/44 绿; 留待: check e2e(等T1.1)+Step9b+baseline实图落盘(等Codex #B)+资产入库"
     },
     "T1.3": {
-      "status": "pending",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "8484809",
+      "note": "132/132 绿; 收尾验收门 = CalibCard Layout 修复后 runL2 pass:true (D-03)"
     },
     "T1.4": {
       "status": "pending",
