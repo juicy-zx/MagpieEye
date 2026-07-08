@@ -2,8 +2,9 @@ import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
-import { beforeAll, describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
 import { runL1 } from './engine.js';
+import { _setOdiffBinary, stopOdiffServer } from './server.js';
 import { addIgnoreRegion, loadIgnoreRegions } from './ignore.js';
 
 let dir: string;
@@ -72,4 +73,33 @@ describe('ignore-regions 持久化', () => {
     const uiVerifyDir = mkdtempSync(join(tmpdir(), 'uiv-ignore-empty-'));
     expect(loadIgnoreRegions(uiVerifyDir, '1:100')).toEqual([]);
   });
+});
+
+it('T2.2: server=spawn 一致(含 ignoreRegions);坏二进制降级', async () => {
+  for (const ig of [[], [{ x: 0, y: 0, w: 16, h: 16 }]]) {
+    const a = await runL1(basePng, diffPng, join(dir, `sv${ig.length}.png`), ig, 'server');
+    expect(a).toEqual(await runL1(basePng, diffPng, join(dir, `sp${ig.length}.png`), ig, 'spawn'));
+  }
+  stopOdiffServer();
+  _setOdiffBinary('/nonexistent/odiff');
+  expect((await runL1(basePng, diffPng, join(dir, 'fb.png'), [], 'server')).diffCount).toBeGreaterThan(0);
+  _setOdiffBinary(undefined);
+});
+
+// T2.2 补充:上一测试未覆盖 UIV_ODIFF=spawn 这条退出/降级策略——验证设了该环境变量时
+// 直接跳过 server 分支(坏二进制也不触发 fallback warn),而非"先试 server 再降级"。
+it('T2.2: UIV_ODIFF=spawn 环境变量强制降级,跳过 server 分支(不告警)', async () => {
+  const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const prevEnv = process.env.UIV_ODIFF;
+  _setOdiffBinary('/nonexistent/odiff');
+  process.env.UIV_ODIFF = 'spawn';
+  try {
+    const r = await runL1(basePng, diffPng, join(dir, 'forced-spawn.png'), []);
+    expect(r.diffCount).toBeGreaterThan(0);
+    expect(warnSpy).not.toHaveBeenCalled();
+  } finally {
+    if (prevEnv === undefined) delete process.env.UIV_ODIFF; else process.env.UIV_ODIFF = prevEnv;
+    _setOdiffBinary(undefined);
+    warnSpy.mockRestore();
+  }
 });
