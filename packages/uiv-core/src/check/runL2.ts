@@ -15,7 +15,7 @@ import { runL2 } from '../l2/report.js';
 import { stepState } from '../l2/stability.js';
 import type { FigmaNode, SemanticsDump, StateFile, SubReason } from '../l2/types.js';
 import { validateReportV1 } from '../report/v1.js';
-import type { ReportV1 } from '../report/v1.js';
+import type { Lane, ReportV1 } from '../report/v1.js';
 import { runCheck } from './run.js';
 import type { CheckOpts, GradleRunner } from './run.js';
 
@@ -64,12 +64,19 @@ function readState(statePath: string): StateFile | null {
   return JSON.parse(readFileSync(statePath, 'utf8')) as StateFile;
 }
 
-export interface RunCheckL2Opts extends CheckOpts { minScore?: number; blockingSeverities?: readonly string[]; untaggedCoverageThreshold?: number }
+export interface RunCheckL2Opts extends CheckOpts {
+  minScore?: number; blockingSeverities?: readonly string[]; untaggedCoverageThreshold?: number;
+  /** T2.8:渲染来源车道标注,写入 report.lane(缺省 slow)。 */
+  lane?: Lane;
+  /** T2.8 快车道:worker 已产出的渲染产物;设置则跳过 gradle,PNG+语义树喂现有 L1/L2 管线。 */
+  preRendered?: { renderedPng: string; semanticsPath: string };
+}
 
 export async function runCheckL2(
   runner: GradleRunner, opts: RunCheckL2Opts,
 ): Promise<{ report: ReportV1; reportPath: string; statePath: string }> {
-  const v0 = await runCheck(runner, opts);   // gradle + rendered.png + L1(advisory)
+  // 快车道:worker PNG 经 preRenderedPng 短路 gradle,复用 runCheck 的 copy+L1+成功判定主链。
+  const v0 = await runCheck(runner, opts.preRendered ? { ...opts, preRenderedPng: opts.preRendered.renderedPng } : opts);
   const nodeDir = baselineDirName(opts.nodeId, opts.version);
   const reportsDir = join(opts.uiVerifyDir, 'reports', nodeDir);
   mkdirSync(reportsDir, { recursive: true });
@@ -77,6 +84,7 @@ export async function runCheckL2(
   const statePath = join(opts.uiVerifyDir, 'state.json');
 
   const write = (r: ReportV1): { report: ReportV1; reportPath: string; statePath: string } => {
+    r.lane = opts.lane ?? 'slow';   // T2.8:单一出口盖章车道来源
     const validated = validateReportV1(r);
     writeFileSync(reportPath, `${JSON.stringify(validated, null, 2)}\n`, 'utf8');
     return { report: validated, reportPath, statePath };
@@ -92,9 +100,10 @@ export async function runCheckL2(
   // 管线失败(编译/挽具/无 PNG):v1 携 v0 字段,不进 L2。
   if (!v0.report.pass) return write(base);
 
-  // semantics.json:SemanticsDumpRule 写在 demo build/uiv/<shortName>.semantics.json。
+  // semantics.json 来源:慢车道 = SemanticsDumpRule 落 demo build/uiv/<shortName>.semantics.json;
+  // 快车道 = worker 导出的同格式语义树(opts.preRendered.semanticsPath)。
   const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '').replace(/Test$/, '');
-  const semSrc = join(opts.demoDir, 'app', 'build', 'uiv', `${shortName}.semantics.json`);
+  const semSrc = opts.preRendered?.semanticsPath ?? join(opts.demoDir, 'app', 'build', 'uiv', `${shortName}.semantics.json`);
   if (!existsSync(semSrc)) {
     return write({ ...base, reason: 'inconclusive', subReason: 'semantics_export_failed' });
   }

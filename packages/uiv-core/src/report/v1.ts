@@ -6,6 +6,9 @@
 import type { PixelResult } from './v0.js';
 import type { PixelDiagnostic, SubReason, Violation } from '../l2/types.js';
 
+/** T2.8:渲染来源车道。fast=Paparazzi 快车道 worker;slow=Roborazzi 慢车道;fast-fallback-slow=快车道不可用/失败后回落慢车道。 */
+export type Lane = 'fast' | 'slow' | 'fast-fallback-slow';
+
 export interface MatchFailureV1 {
   figmaLeaves: string[]; semLeaves: string[];
   unmatchedFigma: Array<{ figmaId: string; name: string }>; unmatchedSem: string[];
@@ -36,12 +39,15 @@ export interface ReportV1 {
   score: number;
   regression: boolean;                 // 分层判定连续 2 轮停滞 → true
   regressionReason: string | null;     // regression 时必填
+  lane?: Lane;                         // T2.8:渲染来源车道;缺省(存量报告)语义等价 slow
 }
 
 const SUB_REASONS: readonly string[] = [
   'tag_coverage_low', 'matching_rate_low', 'semantics_export_failed',
   'render_harness_error', 'figma_spec_invalid', 'native_graphics_unverified', 'fixture_unavailable',
 ];
+
+const LANES: readonly string[] = ['fast', 'slow', 'fast-fallback-slow'];
 
 function fail(path: string, want: string, got: unknown): never {
   throw new Error(`report.json v1 invalid at ${path}: expected ${want}, got ${JSON.stringify(got)}`);
@@ -106,6 +112,10 @@ export function validateReportV1(x: unknown): ReportV1 {
   num(r['score'], 'score');
   if (typeof r['regression'] !== 'boolean') fail('regression', 'boolean', r['regression']);
   strOrNull(r['regressionReason'], 'regressionReason');
+  // T2.8:lane 缺省=slow 以兼容存量报告;非缺省须在枚举内。
+  if (r['lane'] !== undefined && !LANES.includes(r['lane'] as string)) {
+    fail('lane', `${LANES.join(' | ')} | (absent ⇒ slow)`, r['lane']);
+  }
 
   // 组合约束
   if (r['reason'] === 'inconclusive' && r['subReason'] === null) fail('subReason', "non-null when reason==='inconclusive'", r['subReason']);

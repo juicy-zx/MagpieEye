@@ -112,6 +112,53 @@ describe('runCheckL2(uiv check 接入 L2,fixture 级不跑 gradle)', () => {
     expect(report.structural?.violations).toHaveLength(0);
   });
 
+  it('T2.8 慢车道默认 report.lane=slow', async () => {
+    const { demoDir, uiVerifyDir } = await setup(goodDump());
+    const { report } = await runCheckL2(new FakeRunner(0, ''), opts(demoDir, uiVerifyDir));
+    expect(report.lane).toBe('slow');
+  });
+
+  it('T2.8 快车道 preRendered:跳过 gradle,worker PNG+语义树喂 L1/L2,lane=fast,L2 与慢车道等价', async () => {
+    const { demoDir, uiVerifyDir } = await setup(goodDump());
+    const stageDir = join(uiVerifyDir, 'renders');
+    mkdirSync(stageDir, { recursive: true });
+    const stagePng = join(stageDir, '.fast-stage.png');
+    const stageSem = join(stageDir, '.fast-stage.semantics.json');
+    writeWhitePng(stagePng);
+    writeFileSync(stageSem, JSON.stringify(goodDump()), 'utf8');
+    let gradleCalled = false;
+    const spyRunner: GradleRunner = { async run() { gradleCalled = true; return { exitCode: 0, stderr: '' }; } };
+    const { report } = await runCheckL2(spyRunner, {
+      ...opts(demoDir, uiVerifyDir), lane: 'fast', preRendered: { renderedPng: stagePng, semanticsPath: stageSem },
+    });
+    expect(report.lane).toBe('fast');
+    expect(report.pass).toBe(true);
+    expect(report.structural?.matchRate).toBe(1);
+    expect(report.structural?.untaggedCoverage).toBe(1);
+    expect(gradleCalled).toBe(false);   // 快车道不跑 gradle
+  });
+
+  it('T2.8 快车道写偏(字号 14 应 16)→ violations 与慢车道一致(fontSize)', async () => {
+    // 慢车道:同一写偏 dump 走 gradle 路径(FakeRunner + build/uiv)
+    const slow = await setup(goodDump(14));
+    const slowRes = await runCheckL2(new FakeRunner(0, ''), opts(slow.demoDir, slow.uiVerifyDir));
+    // 快车道:同一写偏 dump 走 preRendered 路径
+    const fast = await setup(goodDump(14));
+    const stageDir = join(fast.uiVerifyDir, 'renders');
+    mkdirSync(stageDir, { recursive: true });
+    const stagePng = join(stageDir, '.fast-stage.png');
+    const stageSem = join(stageDir, '.fast-stage.semantics.json');
+    writeWhitePng(stagePng);
+    writeFileSync(stageSem, JSON.stringify(goodDump(14)), 'utf8');
+    const fastRes = await runCheckL2(new FakeRunner(0, ''), {
+      ...opts(fast.demoDir, fast.uiVerifyDir), lane: 'fast', preRendered: { renderedPng: stagePng, semanticsPath: stageSem },
+    });
+    const key = (v: { property: string; testTag: string }): string => `${v.testTag}:${v.property}`;
+    expect(new Set((fastRes.report.structural?.violations ?? []).map(key)))
+      .toEqual(new Set((slowRes.report.structural?.violations ?? []).map(key)));
+    expect(fastRes.report.pass).toBe(slowRes.report.pass);
+  });
+
   it('编译失败 → v1 携 compileError, structural null, pass false', async () => {
     const { demoDir, uiVerifyDir } = await setup(goodDump());
     const runner = new FakeRunner(1, 'e: CalibCard.kt:5: unresolved reference\nFAILURE');

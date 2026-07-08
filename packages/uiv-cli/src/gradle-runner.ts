@@ -51,7 +51,7 @@ export class SpawnGradleRunner implements GradleRunner {
 }
 
 /** 单请求单连接:写一行 JSON,读到首个 \n 即完成;超时/错误按约定 reject。 */
-export function request(sockPath: string, req: { id: string; cmd: string; args: object }, timeoutMs: number): Promise<unknown> {
+export function request(sockPath: string, req: { id: string; cmd: string } & Record<string, unknown>, timeoutMs: number): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const sock = connect(sockPath);
     let buf = '';
@@ -86,6 +86,28 @@ export class UdsGradleRunner implements GradleRunner {
     }
     return payload as { exitCode: number; stderr: string };
   }
+}
+
+/**
+ * T2.8 快车道:请 daemon 托管的 Paparazzi worker 渲染 preview,产 PNG + 语义树到指定路径。
+ * daemon 不可达 / worker stale / worker 崩溃 / 渲染错 一律 reject —— 由调用方回落慢车道并标注 lane。
+ */
+export async function renderPreviewViaDaemon(
+  sockPath: string, previewFqn: string, outPng: string, outSemantics: string,
+): Promise<{ png: string; semantics: string; renderMs: number; semanticsMs: number }> {
+  const payload = await request(
+    sockPath,
+    { id: randomUUID(), cmd: 'renderPreview', render: { previewFqn, outPng, outSemantics } },
+    300_000,
+  );
+  if (
+    typeof payload !== 'object' || payload === null
+    || typeof (payload as { png?: unknown }).png !== 'string'
+    || typeof (payload as { semantics?: unknown }).semantics !== 'string'
+  ) {
+    throw new Error('renderPreview payload malformed');
+  }
+  return payload as { png: string; semantics: string; renderMs: number; semanticsMs: number };
 }
 
 /** 选路(降级只在此刻):sock 缺失/ping 失败 → cold(spawn --no-daemon,自给自足);ping 通 → hot。 */

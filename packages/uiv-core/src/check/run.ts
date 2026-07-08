@@ -15,7 +15,11 @@ import type { PixelResult, ReportV0 } from '../report/v0.js';
 export interface GradleRunner {          // 生产实现用 node:child_process.spawn
   run(cwd: string, args: string[]): Promise<{ exitCode: number; stderr: string }>;
 }
-export interface CheckOpts { demoDir: string; testFqn: string; nodeId: string; version: string; uiVerifyDir: string }
+export interface CheckOpts {
+  demoDir: string; testFqn: string; nodeId: string; version: string; uiVerifyDir: string;
+  /** T2.8 快车道:worker 已产出的 PNG 绝对路径;设置则跳过 gradle 与收集,直接进 L1/报告(与慢车道同一路径)。 */
+  preRenderedPng?: string;
+}
 
 const COMPILE_ERROR_RE = /^e: .*$|^.*Compilation error.*$/gm;
 
@@ -68,29 +72,35 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     artifacts: { baseline: baselineExists ? baselinePng : null, render: null, diff: null },
   };
 
-  const t0 = Date.now();
-  const { exitCode, stderr } = await runner.run(opts.demoDir, [
-    'testDebugUnitTest', '--tests', opts.testFqn, '-Proborazzi.test.compare=true',
-  ]);
+  // T2.8 快车道:worker 已产 PNG,跳过 gradle 与收集,直接复用下方 copy+L1+报告主链(与慢车道同一路径)。
+  let found: string | null;
+  if (opts.preRenderedPng !== undefined) {
+    found = existsSync(opts.preRenderedPng) ? opts.preRenderedPng : null;
+  } else {
+    const t0 = Date.now();
+    const { exitCode, stderr } = await runner.run(opts.demoDir, [
+      'testDebugUnitTest', '--tests', opts.testFqn, '-Proborazzi.test.compare=true',
+    ]);
 
-  if (exitCode !== 0) {
-    const compileError = extractCompileError(stderr);
-    if (compileError !== null) {
-      return writeReport(opts.uiVerifyDir, nodeDir, { ...base, compileError });
+    if (exitCode !== 0) {
+      const compileError = extractCompileError(stderr);
+      if (compileError !== null) {
+        return writeReport(opts.uiVerifyDir, nodeDir, { ...base, compileError });
+      }
+      return writeReport(opts.uiVerifyDir, nodeDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
     }
-    return writeReport(opts.uiVerifyDir, nodeDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
-  }
 
-  // exit 0:收集 rendered.png(测试类短名去 ScreenshotTest 后缀 = 组件短名)。
-  // T2.6 三级优先+新鲜度门(章内设计):①本轮 _actual ②本轮非 _compare(旧 added 形态)③golden(unchanged 零产物);
-  // mtime 早于本轮 gradle 启动(t0)的候选一律拒收,防陈旧 _actual/_compare 被"最新含短名"误收。
-  const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '');
-  const roboDir = join(opts.demoDir, 'app', 'build', 'outputs', 'roborazzi');
-  const goldenPath = join(opts.demoDir, 'app', 'src', 'test', 'snapshots', `${shortName}.png`);
-  const fresh = (p: string | null): string | null => (p !== null && statSync(p).mtimeMs >= t0 - 1000 ? p : null);
-  const found = fresh(findNewestPng(roboDir, `${shortName}_actual`))
-    ?? fresh(findNewestPng(roboDir, shortName, (n) => n.endsWith('_compare.png')))
-    ?? (existsSync(goldenPath) ? goldenPath : null);
+    // exit 0:收集 rendered.png(测试类短名去 ScreenshotTest 后缀 = 组件短名)。
+    // T2.6 三级优先+新鲜度门(章内设计):①本轮 _actual ②本轮非 _compare(旧 added 形态)③golden(unchanged 零产物);
+    // mtime 早于本轮 gradle 启动(t0)的候选一律拒收,防陈旧 _actual/_compare 被"最新含短名"误收。
+    const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '');
+    const roboDir = join(opts.demoDir, 'app', 'build', 'outputs', 'roborazzi');
+    const goldenPath = join(opts.demoDir, 'app', 'src', 'test', 'snapshots', `${shortName}.png`);
+    const fresh = (p: string | null): string | null => (p !== null && statSync(p).mtimeMs >= t0 - 1000 ? p : null);
+    found = fresh(findNewestPng(roboDir, `${shortName}_actual`))
+      ?? fresh(findNewestPng(roboDir, shortName, (n) => n.endsWith('_compare.png')))
+      ?? (existsSync(goldenPath) ? goldenPath : null);
+  }
   if (found === null) {
     return writeReport(opts.uiVerifyDir, nodeDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
   }

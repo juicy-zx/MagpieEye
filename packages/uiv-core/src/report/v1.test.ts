@@ -67,6 +67,17 @@ describe('report.json v1 校验器(扩展 v0)', () => {
     };
     expect(validateReportV1(r)).toEqual(r);
   });
+  it('T2.8 lane: 合法枚举原样返回', () => {
+    for (const lane of ['fast', 'slow', 'fast-fallback-slow'] as const) {
+      const r: ReportV1 = { ...validPass(), lane };
+      expect(validateReportV1(r)).toEqual(r);
+    }
+  });
+  it('T2.8 lane: 缺省(存量报告无 lane)放行', () =>
+    expect(() => validateReportV1(validPass())).not.toThrow());
+  it('T2.8 lane: 非法值抛错', () =>
+    expect(() => validateReportV1({ ...validPass(), lane: 'turbo' })).toThrow(/lane/));
+
   it('tag_coverage_low 而 untagged=[] 抛错', () => {
     const r: ReportV1 = {
       ...validPass(), pass: false, reason: 'inconclusive', subReason: 'tag_coverage_low',

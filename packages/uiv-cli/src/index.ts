@@ -8,6 +8,7 @@
  * check 的 exit code = report.pass ? 0 : 1(D-07(c):以 L2 report 为准,L1 advisory 失败不污染);
  * --record 在 check pass=false 时拒录 → exit 3;pull 恒 0(baseline.png 缺失仅 WARN);其余异常 exit 2。
  */
+import { mkdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -17,7 +18,15 @@ import type { MappingEntry } from '@magpie-eye/uiv-core';
 import { RecordRefusedError, runRecord } from '@magpie-eye/uiv-core/check/record.js';
 import { stopOdiffServer } from '@magpie-eye/uiv-core/l1/server.js';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
-import { selectGradleRunner } from './gradle-runner.js';
+import { renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
+
+/**
+ * T2.8:快车道适用的静态 @Preview 白名单(Codex D-05 定位钉死:仅静态 @Preview 组件级加速)。
+ * worker 目前钉死 CalibCardPreview(preview 发现机制属后续里程碑);名单外一律慢车道 lane='slow'。
+ */
+const FAST_LANE_PREVIEWS = new Set<string>(['com.magpie.uiv.demo.CalibCardPreview']);
+
+type Lane = 'fast' | 'slow' | 'fast-fallback-slow';
 
 /** check 的 version 取自 mapping.json(baseline pull 的 upsert 产物,source of truth)。 */
 async function readMappingEntry(uiVerifyDir: string, nodeId: string): Promise<MappingEntry> {
@@ -62,9 +71,30 @@ async function main(): Promise<void> {
     addIgnoreRegion(uiVerifyDir, cmd.node, cmd.ignoreRegion);   // 先持久化再执行
   }
   const entry = await readMappingEntry(uiVerifyDir, cmd.node);
+  // gradle runner 恒选路:快车道失败时的回落道,以及 --record 录 golden 均走它。
   const sel = await selectGradleRunner(uiVerifyDir);
-  console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
   const runner = sel.runner;
+
+  // T2.8 快车道:静态 preview 先试 fast(daemon 托管 worker);任何失败自动回落慢车道并如实标注 lane。
+  let lane: Lane = 'slow';
+  let preRendered: { renderedPng: string; semanticsPath: string } | undefined;
+  if (FAST_LANE_PREVIEWS.has(cmd.preview)) {
+    const stageDir = path.join(uiVerifyDir, 'renders');   // .ui-verify/renders 已被 .gitignore 忽略
+    mkdirSync(stageDir, { recursive: true });
+    const stagePng = path.join(stageDir, '.fast-stage.png');
+    const stageSem = path.join(stageDir, '.fast-stage.semantics.json');
+    try {
+      await renderPreviewViaDaemon(path.join(uiVerifyDir, 'daemon.sock'), cmd.preview, stagePng, stageSem);
+      preRendered = { renderedPng: stagePng, semanticsPath: stageSem };
+      lane = 'fast';
+      console.error('uiv: render lane=fast (daemon paparazzi worker)');
+    } catch (e) {
+      lane = 'fast-fallback-slow';
+      console.error(`uiv: fast lane unavailable (${(e as Error).message}); falling back to slow`);
+    }
+  }
+  if (lane !== 'fast') console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
+
   try {
     const { report, reportPath } = await runCheckL2(runner, {
       demoDir: path.resolve(cmd.demo),
@@ -73,6 +103,8 @@ async function main(): Promise<void> {
       version: entry.version,
       uiVerifyDir,
       minScore: entry.minScore,
+      lane,
+      ...(preRendered ? { preRendered } : {}),
     });
     process.exitCode = report.pass ? 0 : 1;   // D-07(c): exit code 以 L2 report pass/fail 为准
     if (cmd.record) {

@@ -3,7 +3,7 @@ import net from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { SpawnGradleRunner, UdsGradleRunner, selectGradleRunner } from './gradle-runner.js';
+import { SpawnGradleRunner, UdsGradleRunner, renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
 
 const dir = (): string => mkdtempSync(join(tmpdir(), 'uivd-'));   // 短路径守 AF_UNIX 104B
 const openServers = new Set<net.Server>();
@@ -64,5 +64,35 @@ describe('T2.1 双车道 runner', () => {
     writeFileSync(join(d, 'daemon.sock'), '');
     const s = await selectGradleRunner(d);
     expect(s.lane).toBe('cold');
+  });
+});
+
+describe('T2.8 renderPreviewViaDaemon(快车道 UDS 客户端)', () => {
+  it('成功回 png/semantics;render 参数透传', async () => {
+    const sock = join(dir(), 'daemon.sock');
+    let seen: { cmd: string; render?: unknown } | undefined;
+    await fakeDaemon(sock, (req) => {
+      seen = req as typeof seen;
+      return { id: req.id, ok: true, payload: { png: '/p.png', semantics: '/s.json', renderMs: 12, semanticsMs: 8 } };
+    });
+    await expect(renderPreviewViaDaemon(sock, 'com.x.FooPreview', '/p.png', '/s.json'))
+      .resolves.toMatchObject({ png: '/p.png', semantics: '/s.json', renderMs: 12 });
+    expect(seen).toMatchObject({ cmd: 'renderPreview', render: { previewFqn: 'com.x.FooPreview', outPng: '/p.png', outSemantics: '/s.json' } });
+  });
+
+  it('daemon ok:false(如 worker_stale)→ reject,供 CLI 回落', async () => {
+    const sock = join(dir(), 'daemon.sock');
+    await fakeDaemon(sock, (req) => ({ id: req.id, ok: false, error: 'worker_stale: rebuild required' }));
+    await expect(renderPreviewViaDaemon(sock, 'com.x.FooPreview', '/p.png', '/s.json')).rejects.toThrow(/worker_stale/);
+  });
+
+  it('无 daemon(sock 缺失)→ reject,供 CLI 回落', async () => {
+    await expect(renderPreviewViaDaemon(join(dir(), 'daemon.sock'), 'com.x.FooPreview', '/p.png', '/s.json')).rejects.toThrow();
+  });
+
+  it('payload 缺 png/semantics → reject', async () => {
+    const sock = join(dir(), 'daemon.sock');
+    await fakeDaemon(sock, (req) => ({ id: req.id, ok: true, payload: { renderMs: 1 } }));
+    await expect(renderPreviewViaDaemon(sock, 'com.x.FooPreview', '/p.png', '/s.json')).rejects.toThrow(/malformed/);
   });
 });
