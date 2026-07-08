@@ -58,8 +58,8 @@
       "last_commit": null
     },
     "T1.1": {
-      "status": "in_progress",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "411e30a"
     },
     "T1.2": {
       "status": "awaiting_review",
@@ -191,7 +191,7 @@
     },
     "figma_unit_eq_dp": {
       "figma_side": "pass",
-      "render_side": "pending-T1.0b"
+      "render_side": "pass"
     },
     "metadata_coord_system": "relative-to-parent",
     "odiff_720x1600_median_ms": 2228,
@@ -253,5 +253,10 @@
       "errors": []
     },
     "text_overflow_invariant": "hard-gate"
+  },
+  "native_text_metrics": {
+    "hasVisualOverflow": "pass",
+    "getEllipsisCount": "pass",
+    "verdict": "gate"
   }
 }
