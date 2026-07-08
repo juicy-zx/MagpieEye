@@ -20,7 +20,7 @@
   - `pending_followups[]` —— 延后补验项(如 PAT 到位后的 REST 交叉验证),防跨会话遗忘;
   - `calibration{}` / `latency_baseline{}` / `blockers[]`。
 - **验收即门禁**:每任务验收必须是命令 + exit code / 测试 / 产物 schema 校验,禁止"需要人看"的验收。
-- **提交纪律**:magpie_eye 每任务一 commit(带任务号);**mapping.json 与 baselines/\*\* 是提交资产必须入库**(baseline.png 体积大时评估 Git LFS),state.json/renders/reports 进 .gitignore;magpie_agent(M3)在分支 `feature/ui-visual-validation` 开发,不动 main。
+- **提交纪律**:magpie_eye 每任务至少一 commit(步骤级细粒度 commit 允许,message 一律带任务号);**mapping.json 与 baselines/\*\* 是提交资产必须入库**(baseline.png 体积大时评估 Git LFS),state.json/renders/reports 进 .gitignore;magpie_agent(M3)在分支 `feature/ui-visual-validation` 开发,不动 main。
 - **无人值守权限预配**:开跑前一次性在项目 settings 配好 Bash allowlist(sdkmanager/gradlew/npm/npx/node)与网络域名白名单(dl.google.com、services.gradle.org、repo.maven.apache.org、maven.google.com、plugins.gradle.org、registry.npmjs.org),避免中途挂起等人。
 - **Codex 协同节点**(单一 thread 贯穿):① 计划共识 → `consensus_reached: true`;② 里程碑子计划审查(开工前);③ 里程碑完成代码审查;每节点 ≤10 轮,超轮升级用户;决策链:设计文档 → Codex → 用户;Codex 决断优先。
 - **失败处理**:环境类失败自主重试/换源;口径类失败(标定与文档假设冲突)回 Codex 决断;已证伪方案(C4/C6/CS2/CS5/CS6 原假设)不得复用。

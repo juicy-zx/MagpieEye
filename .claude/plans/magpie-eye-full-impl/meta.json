@@ -7,11 +7,11 @@
     "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a"
   },
   "consensus_reached": true,
-  "current_milestone": "M0",
+  "current_milestone": "M1",
   "milestones": {
     "M0": {
       "subplan": "approved-inline",
-      "code_review": "none",
+      "code_review": "approved-inline",
       "review_rounds": 0
     },
     "M1": {
@@ -45,8 +45,8 @@
       "last_commit": "6cdd9ce"
     },
     "T0.2": {
-      "status": "in_progress",
-      "last_commit": null
+      "status": "done",
+      "last_commit": "66e1dd2"
     },
     "T0.3": {
       "status": "done",
@@ -172,7 +172,7 @@
     "jdk": "Corretto 21.0.9",
     "node": "v26.3.0",
     "codex_cli": "0.142.5",
-    "android_sdk": "installing (T0.2 background)",
+    "android_sdk": "installed: platform-tools 37.0.0 + android-36 + build-tools 36.0.0 @ ~/Library/Android/sdk",
     "figma_desktop_mcp": "port 3845 alive (B2 pending real-call check)",
     "figma_pat": "absent",
     "magpie_agent_drift": "8e0dcb2 -> HEAD ~129 commits, T3.0 required"
