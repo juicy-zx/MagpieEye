@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.magpie.uiv-render-daemon</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/zhuxi/AI/magpie_eye/daemon/build/install/uiv-render-daemon/bin/uiv-render-daemon</string>
+        <string>--workspace</string>
+        <string>/Users/zhuxi/AI/magpie_eye</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>JAVA_HOME</key>
+        <string>/Users/zhuxi/Library/Java/JavaVirtualMachines/corretto-21.0.9/Contents/Home</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/zhuxi/AI/magpie_eye/.ui-verify/daemon.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/zhuxi/AI/magpie_eye/.ui-verify/daemon.log</string>
+</dict>
+</plist>
