@@ -15,9 +15,9 @@
       "review_rounds": 0
     },
     "M1": {
-      "subplan": "none",
+      "subplan": "approved",
       "code_review": "none",
-      "review_rounds": 0
+      "review_rounds": 2
     },
     "M2": {
       "subplan": "none",
@@ -53,7 +53,7 @@
       "last_commit": "6744f39"
     },
     "T1.0a": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T1.1": {
