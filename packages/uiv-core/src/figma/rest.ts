@@ -26,4 +26,8 @@ export class RestFigmaClient implements FigmaClient {
     const raw = await this.get(`/v1/images/${fileKey}?ids=${encodeURIComponent(nodeIds.join(','))}&scale=${scale}&format=png&use_absolute_bounds=true`);
     return (raw as { images?: Record<string, string | null> }).images ?? {};
   }
+  /** T4.3:设计稿漂移哨兵输入通道。 */
+  getMeta(fileKey: string): Promise<unknown> {
+    return this.get(`/v1/files/${fileKey}/meta`);
+  }
 }

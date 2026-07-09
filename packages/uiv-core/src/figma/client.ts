@@ -4,10 +4,12 @@
  * baseline.png 来源通道待 Codex 决断(pending-codex-decisions #B),此处只留接口。
  */
 import { readFile } from 'node:fs/promises';
+import { L2Error } from '../l2/types.js';
 
 export interface FigmaClient {
   getNodes(fileKey: string, nodeId: string, version?: string): Promise<unknown>;   // GET /v1/files/:key/nodes 形状
   getImages(fileKey: string, nodeIds: string[], scale: number): Promise<Record<string, string | null>>;
+  getMeta(fileKey: string): Promise<unknown>;   // T4.3:GET /v1/files/:key/meta 形状(设计稿漂移哨兵输入)
 }
 
 export class FigmaImageNullError extends Error {}
@@ -19,11 +21,16 @@ export function pickImageUrl(images: Record<string, string | null>, nodeId: stri
 }
 
 export class FixtureFigmaClient implements FigmaClient {
-  constructor(private fixturePath: string) {}
+  constructor(private fixturePath: string, private metaFixturePath?: string) {}
   async getNodes(): Promise<unknown> {
     return JSON.parse(await readFile(this.fixturePath, 'utf8'));
   }
   async getImages(): Promise<Record<string, string | null>> {
     return {};   // fixture 模式无 images 通道;baseline.png 走 MCP 落盘约定
+  }
+  /** T4.3:未配 metaFixturePath 而被调 → fixture_unavailable(B1 期 fixture 驱动的哨兵单测契约)。 */
+  async getMeta(): Promise<unknown> {
+    if (this.metaFixturePath === undefined) throw new L2Error('fixture_unavailable');
+    return JSON.parse(await readFile(this.metaFixturePath, 'utf8'));
   }
 }

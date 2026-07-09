@@ -23,4 +23,9 @@ export class CachedFigmaClient implements FigmaClient {   // 口径 1
     this.stats.networkCalls++;
     return this.inner.getImages(fileKey, nodeIds, scale);
   }
+  // T4.3:getMeta 恒直通不缓存 —— 哨兵语义是"问最新",缓存会使漂移检测永远读到陈旧答案。
+  async getMeta(fileKey: string): Promise<unknown> {
+    this.stats.networkCalls++;
+    return this.inner.getMeta(fileKey);
+  }
 }

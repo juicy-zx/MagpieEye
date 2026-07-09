@@ -15,6 +15,7 @@ const cs = (): FixtureFigmaClient => new FixtureFigmaClient(csPath);
 const multi = (m: Record<string, unknown>): FigmaClient => ({
   getNodes: async (_f: string, id: string) => m[id],
   getImages: async () => ({}),
+  getMeta: async () => ({}),   // T4.3:FigmaClient 接口新增方法,本 fixture 不消费,占位满足类型
 });
 const now = (): Date => new Date('2026-07-09T00:00:00Z');
 

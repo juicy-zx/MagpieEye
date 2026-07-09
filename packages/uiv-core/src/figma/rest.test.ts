@@ -26,3 +26,11 @@ it('RestFigmaClient:URL/null 透传(C3)/env 兜底/PAT/预算接线', async () =
   await expect(b.getNodes('F', '1:1')).rejects.toBeInstanceOf(QuotaExceededError);
   expect(h.urls).toHaveLength(1);   // 被拒不发请求
 });
+
+it('T4.3:RestFigmaClient.getMeta URL/头(设计稿漂移哨兵输入)', async () => {
+  const f = fakeFetch({ version: 'LATEST' });
+  const c = new RestFigmaClient({ pat: 'P', fetchFn: f.fn });
+  expect(await c.getMeta('FKEY')).toEqual({ version: 'LATEST' });
+  expect(f.urls[0]).toBe('https://api.figma.com/v1/files/FKEY/meta');
+  expect(f.headers()).toEqual({ 'X-Figma-Token': 'P' });
+});
