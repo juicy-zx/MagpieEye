@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -166,5 +166,24 @@ describe('runCheckL2(uiv check 接入 L2,fixture 级不跑 gradle)', () => {
     expect(report.compileError).toContain('unresolved');
     expect(report.structural).toBeNull();
     expect(report.pass).toBe(false);
+  });
+
+  // T3.3 复用面:semanticsMinMtimeMs(陈旧 dump 门)+ disableState(逐格不参与防震荡)。
+  it('T3.3 semanticsMinMtimeMs:semantics.json 早于门 → semantics_export_failed(防上一格陈旧 dump 复用)', async () => {
+    const { demoDir, uiVerifyDir } = await setup(goodDump());
+    const semPath = join(demoDir, 'app', 'build', 'uiv', 'CalibCard.semantics.json');
+    const old = new Date(Date.now() - 600_000);
+    utimesSync(semPath, old, old);
+    const { report } = await runCheckL2(new FakeRunner(0, ''), { ...opts(demoDir, uiVerifyDir), semanticsMinMtimeMs: Date.now() });
+    expect(report.reason).toBe('inconclusive');
+    expect(report.subReason).toBe('semantics_export_failed');
+  });
+
+  it('T3.3 disableState:不写 state.json,regression false', async () => {
+    const { demoDir, uiVerifyDir } = await setup(goodDump());
+    const { report, statePath } = await runCheckL2(new FakeRunner(0, ''), { ...opts(demoDir, uiVerifyDir), disableState: true });
+    expect(existsSync(statePath)).toBe(false);
+    expect(report.regression).toBe(false);
+    expect(report.pass).toBe(true);
   });
 });

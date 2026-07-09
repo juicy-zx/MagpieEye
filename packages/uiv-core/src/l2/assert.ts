@@ -30,13 +30,15 @@ function sortedChildren(sem: SemDp): SemDp[] {
 export interface PixelSampleCtx { png: DecodedPng; density: number; insetRatio?: number }
 
 export function assertPair(
-  p: Pair, pixel?: PixelSampleCtx,
+  p: Pair, pixel?: PixelSampleCtx, excludeProperties?: readonly string[],
 ): { violations: Violation[]; executed: number; diagnostics: PixelDiagnostic[] } {
   const violations: Violation[] = [];
   let executed = 0;
   const diagnostics: PixelDiagnostic[] = [];
   const testTag = `fig:${p.figma.id}`;
   const figmaName = p.figma.name;
+  // T3.3:命中 excludeProperties 的属性整体跳过(不产 violation、不计 executed)。
+  const excluded = (property: string): boolean => excludeProperties?.includes(property) ?? false;
   const add = (property: string, expected: string, actual: string, severity: Severity): void => {
     violations.push({ judgePath: 'parity', testTag, figmaName, property, expected, actual, severity, hint: '' });
   };
@@ -45,7 +47,7 @@ export function assertPair(
   const sem = p.sem;
 
   // position(L1 距离≤2dp)
-  if (fb !== null) {
+  if (fb !== null && !excluded('position')) {
     executed++;
     const l1 = Math.abs(fb.x - sem.positionDp.x) + Math.abs(fb.y - sem.positionDp.y);
     if (l1 > TOL_POS_DP) {
@@ -54,7 +56,7 @@ export function assertPair(
   }
 
   // size(各轴≤2dp)
-  if (fb !== null) {
+  if (fb !== null && !excluded('size')) {
     executed++;
     const dw = Math.abs(fb.width - sem.sizeDp.width);
     const dh = Math.abs(fb.height - sem.sizeDp.height);
@@ -64,20 +66,20 @@ export function assertPair(
   }
 
   // fontSize(≤0.5sp,不换算)
-  if (p.figma.style?.fontSize !== undefined && sem.fontSizeSp !== null) {
+  if (p.figma.style?.fontSize !== undefined && sem.fontSizeSp !== null && !excluded('fontSize')) {
     executed++;
     if (Math.abs(p.figma.style.fontSize - sem.fontSizeSp) > TOL_FONT_SP) {
       add('fontSize', `${p.figma.style.fontSize}sp`, `${sem.fontSizeSp}sp`, 'high');
     }
   }
 
-  // color:文本节点语义通道;非文本叶子像素通道(T2.7);其余值不可得跳过
+  // color:文本节点语义通道;非文本叶子像素通道(T2.7);其余值不可得跳过。excluded('color') 时两分支均跳过。
   const firstFill = p.figma.fills?.[0];
-  if (firstFill?.color !== undefined && sem.colorHex !== null) {
+  if (!excluded('color') && firstFill?.color !== undefined && sem.colorHex !== null) {
     executed++;
     const figHex = rgbToHex(firstFill.color);
     if (ciede2000(figHex, sem.colorHex) >= TOL_DELTA_E) add('color', figHex, sem.colorHex, 'high');
-  } else if (sem.colorHex === null && (p.figma.fills?.length ?? 0) > 0 && pixel !== undefined) {
+  } else if (!excluded('color') && sem.colorHex === null && (p.figma.fills?.length ?? 0) > 0 && pixel !== undefined) {
     const skip = (code: PixelDiagnostic['code'], detail: string): void => {
       diagnostics.push({ code, testTag, detail });
     };
@@ -103,7 +105,7 @@ export function assertPair(
   }
 
   // cornerRadius(0.5dp 网格;sem 恒 null 时跳过)
-  if (p.figma.cornerRadius !== undefined && sem.cornerRadiusDp !== null) {
+  if (p.figma.cornerRadius !== undefined && sem.cornerRadiusDp !== null && !excluded('cornerRadius')) {
     executed++;
     if (!gridEqual(p.figma.cornerRadius, sem.cornerRadiusDp)) {
       add('cornerRadius', `${p.figma.cornerRadius}`, `${sem.cornerRadiusDp}`, 'medium');
@@ -129,7 +131,7 @@ export function assertPair(
     };
     for (const key of Object.keys(derived) as Array<keyof typeof derived>) {
       const fig = figPad[key];
-      if (fig !== undefined) {
+      if (fig !== undefined && !excluded(key)) {
         executed++;
         if (!gridEqual(fig, derived[key])) add(key, `${fig}`, `${derived[key]}`, 'medium');
       }
@@ -137,7 +139,7 @@ export function assertPair(
   }
 
   // itemSpacing(相邻子间距,需 ≥2 子)
-  if (p.figma.itemSpacing !== undefined && kids.length >= 2) {
+  if (p.figma.itemSpacing !== undefined && kids.length >= 2 && !excluded('itemSpacing')) {
     const a = kids[0];
     const b = kids[1];
     if (a !== undefined && b !== undefined) {

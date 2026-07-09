@@ -19,6 +19,12 @@ export interface CheckOpts {
   demoDir: string; testFqn: string; nodeId: string; version: string; uiVerifyDir: string;
   /** T2.8 快车道:worker 已产出的 PNG 绝对路径;设置则跳过 gradle 与收集,直接进 L1/报告(与慢车道同一路径)。 */
   preRenderedPng?: string;
+  /** T3.3:baseline 存在也不跑 L1(逐格页验证:非 base 设备尺寸/配色不同,L1 纯噪声)。 */
+  skipL1?: boolean;
+  /** T3.3:拼在 compare 参数后的额外 gradle 参数(-Puiv.device/state、--rerun)。 */
+  extraGradleArgs?: string[];
+  /** T3.3:仅 renders/reports 路径变 <nodeDir>/cells/<sub>(baselines 仍 <nodeDir>);逐格产物隔离。 */
+  artifactSubdir?: string;
 }
 
 const COMPILE_ERROR_RE = /^e: .*$|^.*Compilation error.*$/gm;
@@ -63,17 +69,20 @@ function pruneRoborazziArtifacts(dir: string, needle: string): void {
   }
 }
 
-function writeReport(uiVerifyDir: string, nodeDir: string, report: ReportV0): { report: ReportV0; reportPath: string } {
+function writeReport(reportsDir: string, report: ReportV0): { report: ReportV0; reportPath: string } {
   const validated = validateReportV0(report);
-  const reportDir = join(uiVerifyDir, 'reports', nodeDir);
-  mkdirSync(reportDir, { recursive: true });
-  const reportPath = join(reportDir, 'report.json');
+  mkdirSync(reportsDir, { recursive: true });
+  const reportPath = join(reportsDir, 'report.json');
   writeFileSync(reportPath, `${JSON.stringify(validated, null, 2)}\n`, 'utf8');
   return { report: validated, reportPath };
 }
 
 export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{ report: ReportV0; reportPath: string }> {
   const nodeDir = baselineDirName(opts.nodeId, opts.version);
+  // T3.3:逐格产物隔离——renders/reports 追加 cells/<sub>;baselines 恒 <nodeDir>。
+  const cellSeg = opts.artifactSubdir !== undefined ? ['cells', opts.artifactSubdir] : [];
+  const reportsDir = join(opts.uiVerifyDir, 'reports', nodeDir, ...cellSeg);
+  const renderDir = join(opts.uiVerifyDir, 'renders', nodeDir, ...cellSeg);
   const baselinePng = join(opts.uiVerifyDir, 'baselines', nodeDir, 'baseline.png');
   const baselineExists = existsSync(baselinePng);
   const base: ReportV0 = {
@@ -105,15 +114,15 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     // (默认不追加,不影响正常 check 的增量构建性能)。
     const rerunArgs = process.env.UIV_RERUN === '1' ? ['--rerun'] : [];
     const { exitCode, stderr } = await runner.run(opts.demoDir, [
-      'testDebugUnitTest', '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs,
+      'testDebugUnitTest', '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs, ...(opts.extraGradleArgs ?? []),
     ]);
 
     if (exitCode !== 0) {
       const compileError = extractCompileError(stderr);
       if (compileError !== null) {
-        return writeReport(opts.uiVerifyDir, nodeDir, { ...base, compileError });
+        return writeReport(reportsDir, { ...base, compileError });
       }
-      return writeReport(opts.uiVerifyDir, nodeDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
+      return writeReport(reportsDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
     }
 
     // exit 0:收集 rendered.png(测试类短名去 ScreenshotTest 后缀 = 组件短名)。
@@ -126,18 +135,16 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
       ?? (existsSync(goldenPath) ? goldenPath : null);
   }
   if (found === null) {
-    return writeReport(opts.uiVerifyDir, nodeDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
+    return writeReport(reportsDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });
   }
-  const renderDir = join(opts.uiVerifyDir, 'renders', nodeDir);
   mkdirSync(renderDir, { recursive: true });
   const renderedPng = join(renderDir, 'rendered.png');
   copyFileSync(found, renderedPng);
 
   let pixel: PixelResult | null = null;
   let diffPng: string | null = null;
-  if (baselineExists) {
-    // 产物目录口径:diff/report 归 reports/<nodeDir>/;rendered.png/semantics.json 归 renders/<nodeDir>/。
-    const reportsDir = join(opts.uiVerifyDir, 'reports', nodeDir);
+  if (baselineExists && opts.skipL1 !== true) {
+    // 产物目录口径:diff/report 归 reports/<nodeDir>[/cells/<sub>];rendered.png/semantics.json 归 renders/。
     mkdirSync(reportsDir, { recursive: true });
     const diffOut = join(reportsDir, 'diff.png');
     try {
@@ -149,7 +156,7 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     }
   }
 
-  return writeReport(opts.uiVerifyDir, nodeDir, {
+  return writeReport(reportsDir, {
     ...base,
     pass: true,
     pixel,

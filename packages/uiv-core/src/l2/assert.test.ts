@@ -111,6 +111,16 @@ describe('assertPair 逐属性断言(±2dp/精确/±0.5sp/ΔE<3)', () => {
     const r = assertPair(mkPair({ name: 'Title', style: { fontSize: 16 } }, { fontSizeSp: 14 }));
     expect(r.violations[0]).toMatchObject({ judgePath: 'parity', testTag: 'fig:1:101', figmaName: 'Title' });
   });
+
+  // T3.3:excludeProperties(geometry-only 排除 color)—— 命中属性不产 violation、不计 executed。
+  it('T3.3 excludeProperties=[color]:无 color 违规且 executed 减少', () => {
+    const pair = mkPair({ fills: [{ type: 'SOLID', color: { r: 1, g: 0, b: 0, a: 1 } }] }, { colorHex: '#0000FF' });
+    const full = assertPair(pair);
+    const noColor = assertPair(pair, undefined, ['color']);
+    expect(has(full, 'color', 'high')).toBe(true);
+    expect(noColor.violations.some((v) => v.property === 'color')).toBe(false);
+    expect(noColor.executed).toBe(full.executed - 1);   // 少一次 color 断言
+  });
 });
 
 describe('assertPair 像素采样颜色通道(T2.7)', () => {

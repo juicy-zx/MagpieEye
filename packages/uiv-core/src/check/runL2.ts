@@ -5,7 +5,7 @@
  * 产物目录口径:semantics.json 复制到 renders/<nodeDir>/;report.json/diff 归 reports/<nodeDir>/。
  * core 全测;CLI 层薄壳只接线。
  */
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
 import { baselineDirName } from '../baseline/pull.js';
@@ -72,6 +72,12 @@ export interface RunCheckL2Opts extends CheckOpts {
   lane?: Lane;
   /** T2.8 快车道:worker 已产出的渲染产物;设置则跳过 gradle,PNG+语义树喂现有 L1/L2 管线。 */
   preRendered?: { renderedPng: string; semanticsPath: string };
+  /** T3.3:不读写 state.json(逐格页验证不参与防震荡),prevState 恒 null、regression 恒 false。 */
+  disableState?: boolean;
+  /** T3.3:semantics.json mtime 早于此值 → semantics_export_failed(防上一格陈旧 dump 复用)。 */
+  semanticsMinMtimeMs?: number;
+  /** T3.3:排除属性(geometry-only 排除 color)透传 runL2→assertPair:命中属性不产 violation、不计 executed。 */
+  excludeProperties?: readonly string[];
 }
 
 export async function runCheckL2(
@@ -80,7 +86,9 @@ export async function runCheckL2(
   // 快车道:worker PNG 经 preRenderedPng 短路 gradle,复用 runCheck 的 copy+L1+成功判定主链。
   const v0 = await runCheck(runner, opts.preRendered ? { ...opts, preRenderedPng: opts.preRendered.renderedPng } : opts);
   const nodeDir = baselineDirName(opts.nodeId, opts.version);
-  const reportsDir = join(opts.uiVerifyDir, 'reports', nodeDir);
+  // T3.3:逐格产物隔离——renders/reports 追加 cells/<sub>;baselines 恒 <nodeDir>。
+  const cellSeg = opts.artifactSubdir !== undefined ? ['cells', opts.artifactSubdir] : [];
+  const reportsDir = join(opts.uiVerifyDir, 'reports', nodeDir, ...cellSeg);
   mkdirSync(reportsDir, { recursive: true });
   const reportPath = join(reportsDir, 'report.json');
   const statePath = join(opts.uiVerifyDir, 'state.json');
@@ -106,10 +114,12 @@ export async function runCheckL2(
   // 快车道 = worker 导出的同格式语义树(opts.preRendered.semanticsPath)。
   const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '').replace(/Test$/, '');
   const semSrc = opts.preRendered?.semanticsPath ?? join(opts.demoDir, 'app', 'build', 'uiv', `${shortName}.semantics.json`);
-  if (!existsSync(semSrc)) {
+  // T3.3:mtime 门——semantics.json 早于本格 gradle 启动即判陈旧 dump 复用(防上一格残留冒充本格)。
+  if (!existsSync(semSrc)
+    || (opts.semanticsMinMtimeMs !== undefined && statSync(semSrc).mtimeMs < opts.semanticsMinMtimeMs)) {
     return write({ ...base, reason: 'inconclusive', subReason: 'semantics_export_failed' });
   }
-  const renderDir = join(opts.uiVerifyDir, 'renders', nodeDir);
+  const renderDir = join(opts.uiVerifyDir, 'renders', nodeDir, ...cellSeg);
   mkdirSync(renderDir, { recursive: true });
   copyFileSync(semSrc, join(renderDir, 'semantics.json'));
 
@@ -123,12 +133,13 @@ export async function runCheckL2(
     return write({ ...base, reason: 'inconclusive', subReason });
   }
 
-  const prevState = readState(statePath);
+  const prevState = opts.disableState === true ? null : readState(statePath);   // T3.3:disableState 不读 state
   const l2Opts: Parameters<typeof runL2>[2] = { prevState };
   if (opts.minScore !== undefined) l2Opts.minScore = opts.minScore;
   if (opts.blockingSeverities !== undefined) l2Opts.blockingSeverities = opts.blockingSeverities;
   if (opts.untaggedCoverageThreshold !== undefined) l2Opts.untaggedCoverageThreshold = opts.untaggedCoverageThreshold;
   if (opts.invariant !== undefined) l2Opts.invariant = opts.invariant;
+  if (opts.excludeProperties !== undefined) l2Opts.excludeProperties = opts.excludeProperties;
   // T2.7:同轮渲染的 rendered.png 喂像素通道;不可读则跳过
   const renderPath = v0.report.artifacts.render;
   if (renderPath !== null) {
@@ -139,11 +150,13 @@ export async function runCheckL2(
   }
   const l2 = runL2(figmaRoot, dump, l2Opts);
 
-  // persist state.json(与 runL2 内部同参 stepState,结果一致)。
-  const blockingSeverities = opts.blockingSeverities ?? ['blocking', 'high'];
-  const blockingHits = (l2.structural?.violations ?? []).filter((v) => blockingSeverities.includes(v.severity)).length;
-  const state = stepState(prevState, { blockingHits, score: l2.score, pass: l2.pass });
-  writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+  // persist state.json(与 runL2 内部同参 stepState,结果一致)。T3.3:disableState 时跳过(逐格不参与防震荡)。
+  if (opts.disableState !== true) {
+    const blockingSeverities = opts.blockingSeverities ?? ['blocking', 'high'];
+    const blockingHits = (l2.structural?.violations ?? []).filter((v) => blockingSeverities.includes(v.severity)).length;
+    const state = stepState(prevState, { blockingHits, score: l2.score, pass: l2.pass });
+    writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+  }
 
   return write({ ...l2, compileError: null, pixel: v0.report.pixel, artifacts: v0.report.artifacts });
 }

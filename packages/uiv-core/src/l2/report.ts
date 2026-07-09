@@ -65,6 +65,7 @@ export interface RunL2Opts {
   untaggedCoverageThreshold?: number;
   pixelSource?: { png: DecodedPng };
   invariant?: boolean;   // T3.4:L2-invariant 免基准套件,默认 true;违规不入 score 分母,经 high 阻断
+  excludeProperties?: readonly string[];   // T3.3:命中属性跳过 assertPair(geometry-only 排除 color:不产 violation、不计 executed)
 }
 
 function inconclusiveReport(subReason: SubReason, structural: StructuralV1 | null, sc: number): ReportV1 {
@@ -111,7 +112,7 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
   // 熔断态下仅对 tag 配对断言,text/lcs 降级配对抑制(不因低配对率对降级样本强行断言)。
   for (const pair of m.pairs) {
     if (fused && pair.joinSource !== 'tag') continue;
-    const r = assertPair(pair, pixelCtx);
+    const r = assertPair(pair, pixelCtx, opts.excludeProperties);
     executed += r.executed;
     for (const v of r.violations) violations.push({ ...v, hint: makeHint(v, pair.figma.name) });
     for (const d of r.diagnostics) pixelDiagnostics.push(d);
