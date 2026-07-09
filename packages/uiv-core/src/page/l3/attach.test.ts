@@ -96,6 +96,13 @@ describe('attachL3Verdicts(T4.2)', () => {
     expect(report.l3Verdicts[0].evidence).toHaveLength(1);
   });
 
+  it('pass verdict 的 evidence 字段非数组(形状非法)→ throw,与"数组内未锚定项净化"区分', () => {
+    const { reportPath, packPath } = setup();
+    const passWithBadShape = { item: 'color', verdict: 'pass',
+      evidence: 'not-an-array', severity: null, suggestion: null };
+    expect(() => attachL3Verdicts(reportPath, [passWithBadShape], packPath)).toThrow(/evidence/);
+  });
+
   it('fail 项 evidence 锚定但 severity=null(结构非法)→ throw(与 drop 区分)', () => {
     const { reportPath, packPath } = setup();
     const anchoredButIllegal = { item: 'color', verdict: 'fail',

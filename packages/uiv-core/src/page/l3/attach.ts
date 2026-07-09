@@ -44,6 +44,11 @@ export function attachL3Verdicts(pageReportPath: string, verdicts: unknown, pack
     const evidence = Array.isArray(evRaw) ? evRaw as unknown[] : [];
 
     if (verdict === 'pass') {
+      // evidence 字段形状非法(存在但非数组)= 数据错误,直接 throw(与 l3-attach CLI 的 exit 1
+      // 数据错误分层一致,§2.3);只有"数组内的未锚定项"才是净化对象 —— 剔除该项但保留 verdict(§2.1)。
+      if (evRaw !== undefined && !Array.isArray(evRaw)) {
+        throw new Error(`l3Verdicts[${kept.length}].evidence must be an array, got ${JSON.stringify(evRaw)}`);
+      }
       // 净化:剔除未锚定 evidence,verdict 保留(§2.1 pass 分支)。
       const item = { ...v, evidence: evidence.filter((e) => isAnchored(e, clustersByCell)) };
       checkL3Verdict(item, `l3Verdicts[${kept.length}]`);
