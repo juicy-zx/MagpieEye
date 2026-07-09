@@ -56,7 +56,30 @@ L1/L2 结构断言(门 A,像素无关),禁止裸像素 golden 门禁。门 A 本
 `scripts/ci-gate.sh` → 将 `.ui-verify/reports/ci/junit.xml` 交给 CI 平台的 JUnit 报告插件
 展示;golden 仅 mac 铁律(§3)意味着门 B 这一步若要在 Linux runner 上跑,需先按 §3 降级。
 
-## 6. 验收
+## 6. demo 全量测试集与 advisory 测试
+
+`scripts/ci-gate.sh` 门 B 已刻意窄 scope 到 `--tests '*CalibCardScreenshotTest'`(§0),不会
+触发 demo-android 模块的其余测试类,本节与 ci-gate.sh 自身无关。但如果远程 CI(§5)在
+ci-gate.sh 之外**另外**跑一遍 demo 模块的全量单测(如 `./gradlew :app:testDebugUnitTest`
+不带 `--tests` 过滤,常见于通用"跑全部测试"步骤),该全量测试集里有两个 advisory 性质的
+测试类,红了不代表真回归:
+
+| 测试类 | 性质 | 说明 |
+|---|---|---|
+| `ContrastCheckTest` | advisory,不进任何门禁 | WCAG 对比度检查(ATF),Codex 裁定的最小版仅供可见性,尚未接入 report/门禁(backlog) |
+| `UseRealAniRegressionTest` | 环境敏感的一次性回归钉子 | 复用 `@GraphicsMode(NATIVE)` 语义导出,与 golden 像素比对同源(§3)受平台原生渲染细节影响 |
+
+若 CI 需要跑这份全量测试集,建议二选一:
+- 比照门 B 的做法,用 `--tests` 显式限定需要门禁的测试范围(不含上述两类);Gradle 的
+  `--tests` 本身是"包含"语义,没有排除单个类的命令行写法,如需精确排除需在
+  `demo-android/app/build.gradle.kts` 的 test task 里加 `filter { excludeTestsMatching(...) }`;
+- 或者更省事:不改测试范围,把该 CI 步骤在平台层标记为不阻断(如 GitHub Actions
+  `continue-on-error: true`、Jenkins "unstable" 阈值),让它的红只作为提示。
+
+两者选一即可,但不要对它们的红默认阻断——那会把 T4.5 交付时明确的 advisory 定位,在 CI 平台
+的默认"测试红即失败"规则下被动升级成硬门禁。
+
+## 7. 验收
 
 `node scripts/m4-t43/check-t43.mjs`(红绿四场景 a-d;写偏类验收,改 `CalibCard.kt` 与
 golden PNG,与其他写偏任务排他串行;运行前后 `git status --short` 护栏,结束时工作树须与
