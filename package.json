@@ -7,8 +7,8 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "build": "tsc -b packages/uiv-core packages/uiv-cli",
-    "typecheck": "tsc -b packages/uiv-core packages/uiv-cli --noEmit false --dry"
+    "build": "tsc -b packages/uiv-core packages/uiv-cli packages/ui-verify-mcp",
+    "typecheck": "tsc -b packages/uiv-core packages/uiv-cli packages/ui-verify-mcp --noEmit false --dry"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
