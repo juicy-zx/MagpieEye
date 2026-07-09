@@ -4,6 +4,7 @@
  * 子命令:
  *   baseline pull --fixture <path> --file <fileKey> --node <nodeId>
  *   check --preview <PreviewFQN> --node <nodeId> --demo <dir> [--ignore-region x,y,w,h] [--record]
+ *   pin --file <fileKey> --node <nodeId> --test <FQN> --demo <dir> [--source <doc>] [--state name=<nodeId>]... [--min-score <n>] [--matrix <m>] [--fixture <path>]
  * 约定:输出根 = cwd/.ui-verify;stdout 最后一行 = spec.json(pull)/report.json(check)绝对路径;
  * check 的 exit code = report.pass ? 0 : 1(D-07(c):以 L2 report 为准,L1 advisory 失败不污染);
  * --record 在 check pass=false 时拒录 → exit 3;pull 恒 0(baseline.png 缺失仅 WARN);其余异常 exit 2。
@@ -12,9 +13,10 @@ import { mkdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  FixtureFigmaClient, RecordRefusedError, UIV_CORE_VERSION, addIgnoreRegion, pullBaseline, runCheckL2, runRecord, stopOdiffServer,
+  CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
+  addIgnoreRegion, pinBaseline, pullBaseline, runCheckL2, runRecord, stopOdiffServer,
 } from '@magpie-eye/uiv-core';
-import type { MappingEntry } from '@magpie-eye/uiv-core';
+import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
 import { isFastLaneEnabled } from './fastlane.js';
 import { renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
@@ -55,6 +57,35 @@ async function main(): Promise<void> {
       console.log(`WARN baseline.png missing: ${r.baselinePngPath}`);
     }
     console.log(r.specPath);   // 最后一行 = spec.json 绝对路径;pull 恒 exit 0
+    return;
+  }
+
+  if (cmd.kind === 'pin') {
+    // 口径 4:--fixture→Fixture,否则 FIGMA_PAT→Rest,双缺→usage error(B1);统一经 CachedFigmaClient 缓存。
+    let inner: FigmaClient;
+    if (cmd.fixture !== null) inner = new FixtureFigmaClient(path.resolve(cmd.fixture));
+    else if (process.env.FIGMA_PAT) inner = new RestFigmaClient();
+    else throw new CliUsageError('pin needs --fixture or FIGMA_PAT (B1)');
+    const client = new CachedFigmaClient(inner, path.resolve(process.cwd(), '.uiv-cache'));
+    const sourceDoc = cmd.source ?? process.env.UIV_SOURCE_DOC;   // scope 来源:--source ?? UIV_SOURCE_DOC(loop 注入)
+    const r = await pinBaseline(client, process.cwd(), {
+      fileKey: cmd.file,
+      nodeId: cmd.node,
+      testFqn: cmd.test,
+      demoDir: cmd.demo,
+      explicitStates: cmd.states,
+      ...(sourceDoc !== undefined ? { sourceDoc } : {}),
+      ...(cmd.minScore !== null ? { minScore: cmd.minScore } : {}),
+      ...(cmd.matrix !== null ? { matrix: cmd.matrix } : {}),
+    });
+    for (const p of r.pulled) {
+      if (!p.baselinePngExists) console.log(`WARN baseline.png missing: ${path.dirname(p.specPath)}`);
+    }
+    for (const w of r.warnings) console.error(`WARN ${w}`);
+    console.error(r.repersistRequested
+      ? 'uiv: re-persist requested (.magpie/uiv-repersist.json)'
+      : r.entry.scope ? 'uiv: scoped pin' : 'uiv: standalone pin');
+    console.log(r.mappingPath);   // 最后一行 = mapping.json 绝对路径;成功 exit 0
     return;
   }
 

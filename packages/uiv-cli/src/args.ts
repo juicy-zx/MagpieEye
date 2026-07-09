@@ -8,7 +8,16 @@ export interface CliIgnoreRegion { x: number; y: number; w: number; h: number }
 
 export interface BaselinePullCmd { kind: 'baseline-pull'; fixture: string; file: string; node: string }
 export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; ignoreRegion: CliIgnoreRegion | null; record: boolean }
-export type ParsedCommand = BaselinePullCmd | CheckCmd;
+export interface PinStateArg { name: string; judgePath: 'parity'; figmaVariantNodeId: string }
+export interface PinCmd {
+  kind: 'pin';
+  file: string; node: string; test: string; demo: string;
+  fixture: string | null; source: string | null;
+  states: PinStateArg[]; minScore: number | null; matrix: string | null;
+}
+export type ParsedCommand = BaselinePullCmd | CheckCmd | PinCmd;
+
+const PIN_MATRIX_RE = /^(l-shape|full|custom:.+)$/;
 
 /** 把 `--flag value` 序列收进表;重复 flag 取末次;非 --flag 开头或缺值即报错。 */
 function collectFlags(rest: string[], allowed: readonly string[]): Map<string, string> {
@@ -31,6 +40,32 @@ function required(flags: Map<string, string>, flag: string): string {
   const v = flags.get(flag);
   if (v === undefined) throw new CliUsageError(`missing required flag: ${flag}`);
   return v;
+}
+
+/** 先剥离 repeatable `--flag value` 对(收集全部,非取末次);remaining 交 collectFlags 走成对解析。 */
+function extractRepeatable(rest: string[], flag: string): { values: string[]; remaining: string[] } {
+  const values: string[] = [];
+  const remaining: string[] = [];
+  for (let i = 0; i < rest.length; i += 1) {
+    if (rest[i] === flag) {
+      const v = rest[i + 1];
+      if (v === undefined || v.startsWith('--')) throw new CliUsageError(`flag ${flag} requires a value`);
+      values.push(v);
+      i += 1;   // 跳过已消费的值
+    } else {
+      remaining.push(rest[i]!);
+    }
+  }
+  return { values, remaining };
+}
+
+/** `--state name=<nodeId>`:首个 '=' 切分,空 name/id 报错;恒补 judgePath:'parity'(声明有具体 Figma 变体节点的态,同 CS6 自动枚举)。 */
+function parsePinState(s: string): PinStateArg {
+  const idx = s.indexOf('=');
+  const name = idx < 0 ? '' : s.slice(0, idx).trim();
+  const figmaVariantNodeId = idx < 0 ? '' : s.slice(idx + 1).trim();
+  if (!name || !figmaVariantNodeId) throw new CliUsageError(`--state expects "name=nodeId", got: ${s}`);
+  return { name, judgePath: 'parity', figmaVariantNodeId };
 }
 
 /** `--ignore-region x,y,w,h` 四元组解析。 */
@@ -83,5 +118,33 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       record,
     };
   }
-  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check)`);
+  if (cmd === 'pin') {
+    // --state 可重复(取全部);先剥离再走成对解析。--file/--node/--test/--demo 必填;fixture/source/min-score/matrix 可选。
+    const { values: stateValues, remaining } = extractRepeatable(rest, '--state');
+    const flags = collectFlags(remaining, ['--file', '--node', '--test', '--demo', '--fixture', '--source', '--min-score', '--matrix']);
+    const minScoreRaw = flags.get('--min-score');
+    const matrixRaw = flags.get('--matrix');
+    let minScore: number | null = null;
+    if (minScoreRaw !== undefined) {
+      const n = Number(minScoreRaw);
+      if (!Number.isFinite(n) || n <= 0 || n > 1) throw new CliUsageError(`--min-score expects a number in (0,1], got: ${minScoreRaw}`);
+      minScore = n;
+    }
+    if (matrixRaw !== undefined && !PIN_MATRIX_RE.test(matrixRaw)) {
+      throw new CliUsageError(`--matrix expects l-shape|full|custom:<name>, got: ${matrixRaw}`);
+    }
+    return {
+      kind: 'pin',
+      file: required(flags, '--file'),
+      node: required(flags, '--node'),
+      test: required(flags, '--test'),
+      demo: required(flags, '--demo'),
+      fixture: flags.get('--fixture') ?? null,
+      source: flags.get('--source') ?? null,
+      states: stateValues.map(parsePinState),
+      minScore,
+      matrix: matrixRaw ?? null,
+    };
+  }
+  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, pin)`);
 }

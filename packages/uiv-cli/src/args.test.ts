@@ -36,6 +36,33 @@ describe('parseCliArgs: check', () => {
   });
 });
 
+describe('parseCliArgs: pin', () => {
+  it('pin argv:repeatable --state/--min-score 域/--matrix 白名单', () => {
+    expect(parseCliArgs(['pin', '--file', 'F', '--node', '9:100', '--test', 'com.magpie.uiv.demo.CalibCardTest',
+      '--demo', 'demo-android', '--fixture', 'f.json', '--source', 'docs/req.md',
+      '--state', 'empty=9:101', '--state', 'error=9:103', '--min-score', '0.95', '--matrix', 'full']))
+      .toEqual({ kind: 'pin', file: 'F', node: '9:100', test: 'com.magpie.uiv.demo.CalibCardTest', demo: 'demo-android',
+        fixture: 'f.json', source: 'docs/req.md',
+        states: [{ name: 'empty', judgePath: 'parity', figmaVariantNodeId: '9:101' },
+          { name: 'error', judgePath: 'parity', figmaVariantNodeId: '9:103' }],
+        minScore: 0.95, matrix: 'full' });
+  });
+  it('可选旗标缺省:fixture/source/min-score/matrix 为 null,states 空数组', () => {
+    expect(parseCliArgs(['pin', '--file', 'F', '--node', '9:100', '--test', 'T', '--demo', 'd'])).toEqual({
+      kind: 'pin', file: 'F', node: '9:100', test: 'T', demo: 'd',
+      fixture: null, source: null, states: [], minScore: null, matrix: null,
+    });
+  });
+  it('反例各抛 CliUsageError:无=/越域/非白名单/缺 --test/缺 --demo', () => {
+    const b = ['pin', '--file', 'F', '--node', '9:100', '--test', 'T', '--demo', 'd'];
+    expect(() => parseCliArgs([...b, '--state', 'empty'])).toThrow(CliUsageError);
+    expect(() => parseCliArgs([...b, '--min-score', '1.2'])).toThrow(CliUsageError);
+    expect(() => parseCliArgs([...b, '--matrix', 'diag'])).toThrow(CliUsageError);
+    expect(() => parseCliArgs(['pin', '--file', 'F', '--node', '9:100', '--demo', 'd'])).toThrow(CliUsageError);
+    expect(() => parseCliArgs(['pin', '--file', 'F', '--node', '9:100', '--test', 'T'])).toThrow(CliUsageError);
+  });
+});
+
 describe('parseCliArgs: 非法输入', () => {
   it('未知子命令抛 CliUsageError', () => {
     expect(() => parseCliArgs(['frobnicate'])).toThrow(CliUsageError);
