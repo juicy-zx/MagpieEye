@@ -2193,6 +2193,8 @@ it('2.4-条件1短路: inconclusive时即便零违规满分也fail', () =>
 #### Step 10 — 确定性 hint + report.json v1 组装
 
 `makeHint(v, figmaName)` 纯模板:`` `${property} 应为 ${expected}(Figma "${figmaName}"),当前 ${actual};检查 ${FIX_MAP[property]}` ``,FIX_MAP 写死:position→`布局排列/Modifier.offset`、size→`Modifier.size/width/height`、padding*→`Modifier.padding`、itemSpacing→`Arrangement.spacedBy`、fontSize→`TextStyle.fontSize`、color→`Color 参数或 token`、cornerRadius→`RoundedCornerShape`。测试:同输入两次调用字符串全等(确定性);fontSize 违规 hint 含 "TextStyle.fontSize" 与 "16sp"。
+
+> ⚠ 历史文本(2026-07-10 补注):上文 FIX_MAP 的 `position→布局排列/Modifier.offset` 描述已被 D-03(2026-07-08,见 orchestration.md §5)取代——`Modifier.offset` 不得作 Figma 节点主几何定位(positionInRoot/boundsInRoot 均不可见),position 违规的修复提示以布局排列/padding/align 为准。
 `runL2(spec, dump, opts)` 串起 Step 2–9 产出 v1 `structural` 块 `{matched, untaggedCoverage, matchRate, missing, extra, violations}` + 顶层 `{pass, reason, subReason, score, regression, regressionReason}`;`untaggedCoverage<0.9 → subReason 'tag_coverage_low'`、`matchRate<0.8 → 'matching_rate_low'`(均 `reason:'inconclusive'`,coverage 判定优先)。测试:合格 fixture → pass true;去掉 3 个 tag → inconclusive;写偏字号 → violations 恰 1 条。
 
 另加**反例单测(完整代码,钉死"容器命中不虚高")**——容器有 tag、4 个叶子全缺 tag 时,coverage/matchRate 必须为 0:
