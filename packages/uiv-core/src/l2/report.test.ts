@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeHint, runL2 } from './report.js';
+import { makeHint, runInvariantOnly, runL2 } from './report.js';
 import { validateReportV1 } from '../report/v1.js';
 import type { FigmaNode, SemNode, SemanticsDump, Violation } from './types.js';
 
@@ -213,5 +213,61 @@ describe('runL2 组装(v1 结构块 + 顶层判定)', () => {
     expect(r.structural?.matchFailure).not.toBeNull();
     expect(r.pass).toBe(false);
     expect(() => validateReportV1(r)).not.toThrow();
+  });
+});
+
+describe('T3.4 invariant 集成 + invariant-only 路径', () => {
+  // swatch(fig:1:103)注入 clickable + 触控 40×40dp(px 80×80,left/right/top/bottom 见下)。
+  function injectSmallTouch(): SemanticsDump {
+    const d = goodDump();
+    const swatch = d.root.children[2]!;                       // fig:1:103
+    swatch.clickable = true;
+    swatch.contentDescription = '色板';                       // 避免 missingCd 干扰,隔离 touchTarget
+    swatch.touchBoundsInRoot = { left: 48, top: 240, right: 128, bottom: 320 }; // dp (24,120)-(64,160)=40×40
+    return d;
+  }
+
+  it('① swatch 注入 clickable+触控40×40 → violations 含 touchTargetTooSmall、pass false;score 与未注入相等(invariant 不入分母)', () => {
+    const base = runL2(calibSpec(), goodDump(), {});           // 未注入
+    const r = runL2(calibSpec(), injectSmallTouch(), {});      // 默认 invariant 开
+    expect(r.structural?.violations.some((v) => v.property === 'touchTargetTooSmall')).toBe(true);
+    expect(r.structural?.violations.some((v) => v.judgePath === 'invariant')).toBe(true);
+    expect(r.pass).toBe(false);                                // 条件 2:high invariant 违规阻断
+    expect(r.score).toBe(base.score);                          // invariant 不入 score 分母(审查点 1)
+    expect(r.score).toBe(1);
+    expect(r.structural?.invariant?.executed).toBeGreaterThan(0);
+    expect(() => validateReportV1(r)).not.toThrow();
+  });
+
+  it('② 同 fixture opts.invariant:false → invariant 违规消失、pass true', () => {
+    const r = runL2(calibSpec(), injectSmallTouch(), { invariant: false });
+    expect(r.structural?.violations.some((v) => v.judgePath === 'invariant')).toBe(false);
+    expect(r.pass).toBe(true);
+    expect(r.structural?.invariant).toEqual({ executed: 0, advisories: [] });
+  });
+
+  it('③ runInvariantOnly:良构 dump → pass true/judgePath/parityUnavailable/matched 0;overflow(NATIVE)→fail;density≠2→render_harness_error', () => {
+    const good = runInvariantOnly(goodDump(), {});
+    expect(good.pass).toBe(true);
+    expect(good.judgePath).toBe('invariant-only');
+    expect(good.parityUnavailable).toBe(true);
+    expect(good.structural?.matched).toBe(0);
+    expect(good.structural?.untaggedCoverage).toBe(1);
+    expect(good.structural?.matchRate).toBe(1);
+    expect(good.structural?.invariant?.executed).toBeGreaterThan(0);
+    expect(() => validateReportV1(good)).not.toThrow();
+
+    const overflow: SemanticsDump = { density: 2.0, graphicsMode: 'NATIVE', root: sem('fig:1:100', 0, 0, 720, 400, null, null, [
+      { ...sem('fig:1:101', 24, 24, 400, 40, '#FFFFFF', 16), text: 'X', hasVisualOverflow: true },
+    ]) };
+    const bad = runInvariantOnly(overflow, {});
+    expect(bad.pass).toBe(false);
+    expect(bad.structural?.violations.some((v) => v.property === 'textOverflow')).toBe(true);
+    expect(() => validateReportV1(bad)).not.toThrow();
+
+    const dens = runInvariantOnly({ density: 1.0, root: sem(null, 0, 0, 1, 1) }, {});
+    expect(dens.reason).toBe('inconclusive');
+    expect(dens.subReason).toBe('render_harness_error');
+    expect(dens.pass).toBe(false);
   });
 });

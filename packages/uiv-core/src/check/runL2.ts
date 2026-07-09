@@ -66,6 +66,8 @@ function readState(statePath: string): StateFile | null {
 
 export interface RunCheckL2Opts extends CheckOpts {
   minScore?: number; blockingSeverities?: readonly string[]; untaggedCoverageThreshold?: number;
+  /** T3.4:L2-invariant 免基准套件开关,同名透传 runL2(默认 true;--state 编排归 T3.3)。 */
+  invariant?: boolean;
   /** T2.8:渲染来源车道标注,写入 report.lane(缺省 slow)。 */
   lane?: Lane;
   /** T2.8 快车道:worker 已产出的渲染产物;设置则跳过 gradle,PNG+语义树喂现有 L1/L2 管线。 */
@@ -126,6 +128,7 @@ export async function runCheckL2(
   if (opts.minScore !== undefined) l2Opts.minScore = opts.minScore;
   if (opts.blockingSeverities !== undefined) l2Opts.blockingSeverities = opts.blockingSeverities;
   if (opts.untaggedCoverageThreshold !== undefined) l2Opts.untaggedCoverageThreshold = opts.untaggedCoverageThreshold;
+  if (opts.invariant !== undefined) l2Opts.invariant = opts.invariant;
   // T2.7:同轮渲染的 rendered.png 喂像素通道;不可读则跳过
   const renderPath = v0.report.artifacts.render;
   if (renderPath !== null) {

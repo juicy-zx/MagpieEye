@@ -87,4 +87,27 @@ describe('report.json v1 校验器(扩展 v0)', () => {
     };
     expect(() => validateReportV1(r)).toThrow(/untagged/);
   });
+
+  // T3.4:invariant-only 报告(judgePath + parityUnavailable + structural.invariant 块)。
+  function validInvariantOnly(): ReportV1 {
+    return {
+      ...validPass(), judgePath: 'invariant-only', parityUnavailable: true,
+      structural: { matched: 0, untaggedCoverage: 1, matchRate: 1, matchedNodes: [], untagged: [],
+        missing: [], diagnostics: { containerMissing: [], pixel: [] }, matchFailure: null, extra: [], violations: [],
+        invariant: { executed: 6, advisories: [] } },
+    };
+  }
+  it('T3.4 invariant-only 合法件原样返回', () => {
+    const r = validInvariantOnly();
+    expect(validateReportV1(r)).toEqual(r);
+  });
+  it('T3.4 judgePath 非法值抛错', () =>
+    expect(() => validateReportV1({ ...validPass(), judgePath: 'bogus' })).toThrow(/judgePath/));
+  it('T3.4 judgePath=invariant-only 而 parityUnavailable≠true 抛错', () =>
+    expect(() => validateReportV1({ ...validInvariantOnly(), parityUnavailable: false })).toThrow(/parityUnavailable/));
+  it('T3.4 structural.invariant.advisories 非数组抛错', () => {
+    const r = validInvariantOnly();
+    (r.structural!.invariant as Record<string, unknown>)['advisories'] = 'nope';
+    expect(() => validateReportV1(r)).toThrow(/advisories/);
+  });
 });

@@ -4,10 +4,12 @@
  * runL2:串起 rebase→N→join→逐属性断言→指标→verdict→防震荡,产出 v1 结构块与顶层判定。
  */
 import {
-  DEFAULT_BLOCKING_SEVERITIES, DEFAULT_MIN_SCORE, MATCH_RATE_FUSE, UNTAGGED_COVERAGE_THRESHOLD,
+  DEFAULT_BLOCKING_SEVERITIES, DEFAULT_MIN_SCORE, DENSITY, MATCH_RATE_FUSE, UNTAGGED_COVERAGE_THRESHOLD,
 } from './constants.js';
 import { assertPair } from './assert.js';
 import type { PixelSampleCtx } from './assert.js';
+import { runInvariants } from './invariant.js';
+import type { InvariantResult } from './invariant.js';
 import { matchThreeTier } from './match.js';
 import type { MatchResult } from './match.js';
 import { leafPairCount, leafTagHits, matchRate, score, untaggedCoverage } from './metrics.js';
@@ -62,6 +64,7 @@ export interface RunL2Opts {
   prevState?: StateFile | null;
   untaggedCoverageThreshold?: number;
   pixelSource?: { png: DecodedPng };
+  invariant?: boolean;   // T3.4:L2-invariant 免基准套件,默认 true;违规不入 score 分母,经 high 阻断
 }
 
 function inconclusiveReport(subReason: SubReason, structural: StructuralV1 | null, sc: number): ReportV1 {
@@ -123,6 +126,14 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
   }
   const sc = fused ? 0 : score(violations, executed);
 
+  // T3.4:invariant 免基准套件默认开。sc 已按 parity violations/executed 先行算得(存量 score 零漂移);
+  // invariant 违规只进 verdict 条件 2(high 阻断)与 structural,不入 score 分母。
+  let inv: InvariantResult = { violations: [], executed: 0, advisories: [] };
+  if (opts.invariant !== false) {
+    inv = runInvariants(dump);
+    for (const v of inv.violations) violations.push(v);
+  }
+
   const structural: StructuralV1 = {
     matched: m.pairs.length, untaggedCoverage: cov, matchRate: mr,
     matchedNodes: m.pairs.map((p) => ({ ...idName(p.figma), joinSource: p.joinSource })),
@@ -134,6 +145,7 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
       unmatchedFigma: m.missingLeaves.map(idName), unmatchedSem: m.unmatchedSem.slice(0, 50).map(semLine),
     } : null,
     extra: m.extra, violations,
+    invariant: { executed: inv.executed, advisories: inv.advisories },
   };
 
   // subReason:coverage 判定优先于 matchRate 熔断;熔断行为与该优先级无关。
@@ -152,5 +164,54 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
     compileError: null, pixel: null, structural,
     artifacts: { baseline: null, render: null, diff: null },
     score: sc, regression: state.regression, regressionReason: state.regressionReason,
+  };
+}
+
+/**
+ * invariant-only 判定(T3.4,口径裁定①③)。无 Figma 基准的内容态:只跑 L2-invariant。
+ * pass 只按条件 2(存在 high/blocking severity violation ⇒ fail),不走条件 1(score<minScore);
+ * score = 1 − Σweight/executed(executed=0⇒1)仅 informational 展示,不参与 pass 判定。
+ * structural.untaggedCoverage/matchRate 置 1(无基准无 tag 契约,免误触 coverage 门禁),
+ * structural.invariant.executed 如实暴露本轮执行数(供审计);顶层标 judgePath:'invariant-only'+parityUnavailable:true。
+ */
+export function runInvariantOnly(
+  dump: SemanticsDump,
+  opts: { minScore?: number; blockingSeverities?: readonly string[]; prevState?: StateFile | null },
+): ReportV1 {
+  const blockingSeverities = opts.blockingSeverities ?? DEFAULT_BLOCKING_SEVERITIES;
+  const prevState = opts.prevState ?? null;
+
+  // density 守卫:runInvariants 遇 density≠2 会抛 L2Error,此处先转 inconclusive(仍标 invariant-only)。
+  if (dump.density !== DENSITY) {
+    return {
+      schemaVersion: 1, pass: false, reason: 'inconclusive', subReason: 'render_harness_error',
+      compileError: null, pixel: null, structural: null,
+      artifacts: { baseline: null, render: null, diff: null },
+      score: 0, regression: false, regressionReason: null,
+      judgePath: 'invariant-only', parityUnavailable: true,
+    };
+  }
+
+  const inv = runInvariants(dump);
+  const sc = inv.executed === 0 ? 1 : score(inv.violations, inv.executed);   // informational,不参与 pass
+  const blockingHits = inv.violations.filter((v) => blockingSeverities.includes(v.severity)).length;
+  const pass = blockingHits === 0;                                           // 只按条件 2(口径裁定①)
+
+  const structural: StructuralV1 = {
+    matched: 0, untaggedCoverage: 1, matchRate: 1,
+    matchedNodes: [], untagged: [], missing: [],
+    diagnostics: { containerMissing: [], pixel: [] },
+    matchFailure: null, extra: [], violations: inv.violations,
+    invariant: { executed: inv.executed, advisories: inv.advisories },
+  };
+
+  const state = stepState(prevState, { blockingHits, score: sc, pass });
+
+  return {
+    schemaVersion: 1, pass, reason: null, subReason: null,
+    compileError: null, pixel: null, structural,
+    artifacts: { baseline: null, render: null, diff: null },
+    score: sc, regression: state.regression, regressionReason: state.regressionReason,
+    judgePath: 'invariant-only', parityUnavailable: true,
   };
 }

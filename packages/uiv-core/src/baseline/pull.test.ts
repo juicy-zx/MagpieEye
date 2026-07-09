@@ -4,7 +4,9 @@ import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { FixtureFigmaClient } from '../figma/client.js';
-import { baselineDirName, pullBaseline } from './pull.js';
+import { baselineDirName, pullBaseline, stateJudgePath } from './pull.js';
+import { L2Error } from '../l2/types.js';
+import type { MappingEntry, MappingStateRef } from './mapping.js';
 
 const fixturePath = fileURLToPath(new URL('../../fixtures/rest-nodes-card.json', import.meta.url));
 
@@ -45,5 +47,27 @@ describe('pullBaseline (fixture mode)', () => {
     expect(mapping[0]).toEqual({
       fileKey: 'FKEY', nodeId: '1:100', version: 'T1_0A_V1', minScore: 0.9, matrix: 'default5',
     });
+  });
+});
+
+// T3.4:states[] 路由读取器(跨章契约第 5 条),运行期不猜,未声明/parity 缺 variant 即抛。
+describe('stateJudgePath(states[] 路由)', () => {
+  const entry = (states?: MappingStateRef[]): MappingEntry =>
+    ({ fileKey: 'FKEY', nodeId: '1:100', version: 'V1', minScore: 0.9, matrix: 'default5', ...(states ? { states } : {}) });
+
+  it('未声明该 state 名 → 抛 L2Error(figma_spec_invalid)', () => {
+    expect(() => stateJudgePath(entry([{ name: 'typical', judgePath: 'invariant-only' }]), 'rtl')).toThrow(L2Error);
+    try { stateJudgePath(entry(), 'rtl'); } catch (e) { expect((e as L2Error).subReason).toBe('figma_spec_invalid'); }
+  });
+  it('声明 parity 却缺 figmaVariantNodeId → 抛 L2Error(figma_spec_invalid)', () => {
+    expect(() => stateJudgePath(entry([{ name: 'hover', judgePath: 'parity' }]), 'hover')).toThrow(L2Error);
+    try { stateJudgePath(entry([{ name: 'hover', judgePath: 'parity' }]), 'hover'); }
+    catch (e) { expect((e as L2Error).subReason).toBe('figma_spec_invalid'); }
+  });
+  it('合法声明原样返回(invariant-only 无需 variant;parity 带 variant)', () => {
+    const ref: MappingStateRef = { name: 'rtl', judgePath: 'invariant-only' };
+    expect(stateJudgePath(entry([ref]), 'rtl')).toEqual(ref);
+    const pref: MappingStateRef = { name: 'hover', judgePath: 'parity', figmaVariantNodeId: '2:200' };
+    expect(stateJudgePath(entry([pref]), 'hover')).toEqual(pref);
   });
 });

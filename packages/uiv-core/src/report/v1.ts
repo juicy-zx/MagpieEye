@@ -5,6 +5,7 @@
  */
 import type { PixelResult } from './v0.js';
 import type { PixelDiagnostic, SubReason, Violation } from '../l2/types.js';
+import type { InvariantAdvisory } from '../l2/invariant.js';
 
 /** T2.8:渲染来源车道。fast=Paparazzi 快车道 worker;slow=Roborazzi 慢车道;fast-fallback-slow=快车道不可用/失败后回落慢车道。 */
 export type Lane = 'fast' | 'slow' | 'fast-fallback-slow';
@@ -25,6 +26,7 @@ export interface StructuralV1 {
   matchFailure: MatchFailureV1 | null;
   extra: string[];
   violations: Violation[];
+  invariant?: { executed: number; advisories: InvariantAdvisory[] };  // T3.4:L2-invariant 执行数 + advisory(供审计,不参与门禁);缺省=未跑 invariant
 }
 
 export interface ReportV1 {
@@ -40,6 +42,8 @@ export interface ReportV1 {
   regression: boolean;                 // 分层判定连续 2 轮停滞 → true
   regressionReason: string | null;     // regression 时必填
   lane?: Lane;                         // T2.8:渲染来源车道;缺省(存量报告)语义等价 slow
+  judgePath?: 'parity' | 'invariant-only';  // T3.4:缺省⇒parity(存量兼容);invariant-only 报告顶层标注
+  parityUnavailable?: boolean;         // T3.4:缺省⇒false;invariant-only 报告恒 true(无 parity 基准)
 }
 
 const SUB_REASONS: readonly string[] = [
@@ -91,6 +95,14 @@ function checkStructural(v: unknown, path: string): void {
       if (!Array.isArray(m[k])) fail(`${path}.matchFailure.${k}`, 'array', m[k]);
     }
   }
+  // T3.4:structural.invariant 块(可选);存在则 executed number + advisories array。
+  const inv = s['invariant'];
+  if (inv !== undefined) {
+    if (inv === null || typeof inv !== 'object') fail(`${path}.invariant`, 'object', inv);
+    const iv = inv as Record<string, unknown>;
+    num(iv['executed'], `${path}.invariant.executed`);
+    if (!Array.isArray(iv['advisories'])) fail(`${path}.invariant.advisories`, 'array', iv['advisories']);
+  }
 }
 
 export function validateReportV1(x: unknown): ReportV1 {
@@ -115,6 +127,16 @@ export function validateReportV1(x: unknown): ReportV1 {
   // T2.8:lane 缺省=slow 以兼容存量报告;非缺省须在枚举内。
   if (r['lane'] !== undefined && !LANES.includes(r['lane'] as string)) {
     fail('lane', `${LANES.join(' | ')} | (absent ⇒ slow)`, r['lane']);
+  }
+  // T3.4:judgePath 缺省⇒parity;parityUnavailable 布尔。
+  if (r['judgePath'] !== undefined && r['judgePath'] !== 'parity' && r['judgePath'] !== 'invariant-only') {
+    fail('judgePath', "'parity' | 'invariant-only' | (absent ⇒ parity)", r['judgePath']);
+  }
+  if (r['parityUnavailable'] !== undefined && typeof r['parityUnavailable'] !== 'boolean') {
+    fail('parityUnavailable', 'boolean', r['parityUnavailable']);
+  }
+  if (r['judgePath'] === 'invariant-only' && r['parityUnavailable'] !== true) {
+    fail('parityUnavailable', 'true when judgePath===invariant-only', r['parityUnavailable']);
   }
 
   // 组合约束
