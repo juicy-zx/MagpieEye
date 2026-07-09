@@ -49,6 +49,7 @@ dependencies {
     testImplementation(libs.roborazzi.compose)
     testImplementation(libs.roborazzi.preview.scanner.support)
     testImplementation(libs.composable.preview.scanner)
+    testImplementation(libs.roborazzi.accessibility.check) // T4.5:ATF ContrastCheck advisory(不进门禁)
     testImplementation(libs.coil.test)   // T3.4:FakeImageLoaderEngine 确定性图片注入
 
     testImplementation(libs.androidx.compose.ui.test.junit4)

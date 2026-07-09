@@ -20,7 +20,9 @@ class UivScreenshotConventionPlugin : Plugin<Project> {
             doFirst { tmpDir.mkdirs() }
             // 关键:gradlew 命令行 -D 只落在 Gradle daemon JVM 上,
             // 必须显式透传给 fork 出来的 test worker JVM,离线验收才真正生效
-            listOf("robolectric.offline", "robolectric.dependency.dir").forEach { key ->
+            // T4.5:对比度 ATF 检查须 robolectric.useRealAni(4.15+)才能查到真实 Compose 渲染内容;
+            // 转发能力全局可用,但属性本身默认未设,仅显式 -D 调用时生效(局部/advisory,不改变默认测试行为)。
+            listOf("robolectric.offline", "robolectric.dependency.dir", "robolectric.useRealAni").forEach { key ->
                 providers.systemProperty(key).orNull?.let { systemProperty(key, it) }
             }
             // T3.3:verify-page 逐格 -Puiv.device/-Puiv.state(gradle property)转发为 test worker JVM system property。
