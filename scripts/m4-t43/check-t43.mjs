@@ -7,6 +7,11 @@
  * 自己的改动(且逐步复原 CalibCard.kt / golden PNG);任一写偏段落用 try/finally 保证复原 —— 即便
  * 中途断言失败也不留手;脚本末尾比对前后两份快照必须完全一致,否则判定为护栏违规(可能是本脚本
  * 自身 bug,也可能是与并发改动混淆,一律先视为红)。
+ *
+ * 写偏前置断言(Codex 复审修复,必守):每处写偏前先断言目标路径与 HEAD 完全一致
+ * (`git diff --quiet HEAD -- path`),脏则立即 exit 2 且不碰该文件——防止用户运行前已有的
+ * 未提交改动被写偏/复原流程覆盖或掩盖。复原不再借助 `git checkout`(会把未暂存的宿主改动一并
+ * 丢弃),改为运行前保存原始 Buffer、复原时按原字节写回。
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -31,9 +36,29 @@ const ok = (msg) => console.log(`[check-t43] OK: ${msg}`);
 function gitStatusShort() {
   return execFileSync('git', ['status', '--short'], { cwd: ROOT, encoding: 'utf8' });
 }
-/** 恢复单一路径并当场核验其确已回到干净态(不等脚本收尾才发现复原失败)。execFileSync 不经 shell,免注入面。 */
-function gitRestore(path, label) {
-  execFileSync('git', ['checkout', '--', path], { cwd: ROOT, stdio: 'inherit' });
+/**
+ * 写偏前置断言(Codex 复审修复,必守):目标路径须与 HEAD 完全一致 —— `git diff --quiet HEAD -- path`
+ * 同时覆盖已暂存与未暂存的偏离,比裸 `git diff --quiet`(仅未暂存 vs 索引)更贴合"与 HEAD 一致"的意图。
+ * 脏则立即 exit 2 且不碰该文件:一是防止用户运行前已有的未提交改动被下面的写偏/复原流程覆盖或掩盖;
+ * 二是本脚本的写偏断言(如 D1 恰好 1 处匹配)本身也假设起点是已知的 HEAD 干净态,脏树会让断言结果失真。
+ * exit 2 与 CheckFailure 默认的 exit 1 区分:2 = 前置条件/用法错误,1 = 场景断言失败。
+ */
+function assertCleanAgainstHead(path, label) {
+  try {
+    execFileSync('git', ['diff', '--quiet', 'HEAD', '--', path], { cwd: ROOT, stdio: 'pipe' });
+  } catch (e) {
+    if (e.status !== 1) throw e; // 非"存在差异"的其它失败(如路径不存在)照常抛出,不吞
+    const status = execFileSync('git', ['status', '--short', '--', path], { cwd: ROOT, encoding: 'utf8' });
+    die(2, `${label}: 目标文件运行前已与 HEAD 不一致,拒绝写偏(防止后续复原覆盖/掩盖这些未提交改动):\n${status}`);
+  }
+}
+
+/**
+ * 按运行前保存的原始字节写回,不再借助 `git checkout` 做复原手段(避免把宿主未提交改动一并抹掉)。
+ * 写回后当场核验路径确已回到与运行前一致的状态(不等脚本收尾才发现复原失败)。
+ */
+function restoreOriginal(path, originalBuffer, label) {
+  writeFileSync(path, originalBuffer);
   const residual = execFileSync('git', ['status', '--short', '--', path], { cwd: ROOT, encoding: 'utf8' });
   if (residual.trim() !== '') die(1, `${label}: 复原后仍有残留改动:\n${residual}`);
 }
@@ -102,8 +127,9 @@ async function main() {
 
     // ── b. 门 A 红:CalibCard.kt 写偏(D1 位置,try/finally 保证复原)──────────
     {
-      const original = readFileSync(CALIB_CARD, 'utf8');
-      writeFileSync(CALIB_CARD, applyD1(original));
+      assertCleanAgainstHead(CALIB_CARD, 'b.门A红(写偏前置)');
+      const original = readFileSync(CALIB_CARD);
+      writeFileSync(CALIB_CARD, applyD1(original.toString('utf8')));
       try {
         const r = runCiGate();
         assertExitCode(r.code, 1, 'b.门A红');
@@ -113,11 +139,13 @@ async function main() {
         ok('b. 门 A 红:CalibCard.kt 写偏(D1)→ ci-gate exit 1,FAIL [gate-A],junit.xml 含 <failure');
         summary.push('b. 门A红        exit=1  FAIL [gate-A] ✓  junit.xml 含 <failure ✓');
       } finally {
-        gitRestore(CALIB_CARD, 'b.门A红');
+        restoreOriginal(CALIB_CARD, original, 'b.门A红');
       }
     }
 
     // ── c/d. 门 B(golden 篡改一次,c/d 共用,try/finally 保证复原)────────────
+    assertCleanAgainstHead(GOLDEN, 'c/d.门B(写偏前置)');
+    const goldenOriginal = readFileSync(GOLDEN);
     tamperGolden();
     try {
       // c. 默认(无阻断开关):WARN,不影响 exit
@@ -143,7 +171,7 @@ async function main() {
         summary.push('d. 门B开关红    有容差仍超 exit=1 ✓  无容差(用法错误) exit=2 ✓');
       }
     } finally {
-      gitRestore(GOLDEN, 'c/d.门B');
+      restoreOriginal(GOLDEN, goldenOriginal, 'c/d.门B');
     }
   } finally {
     const after = gitStatusShort();
