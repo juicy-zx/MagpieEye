@@ -35,9 +35,9 @@
       "code_review_rounds": 2
     },
     "M4": {
-      "subplan": "draft",
+      "subplan": "approved",
       "code_review": "none",
-      "review_rounds": 0
+      "review_rounds": 1
     }
   },
   "plan_review": {
@@ -136,7 +136,7 @@
       "note": "北极星验收 PASS: demo exit 0(半程1 verify-page 5格全绿 + 半程2 收官E2E + 回归门 3394/3397); magpie 侧 6 commit(S1~S7) + uiv 侧 3 commit"
     },
     "T4.1": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T4.2": {
@@ -148,12 +148,14 @@
       "last_commit": null
     },
     "T4.4": {
-      "status": "pending",
-      "last_commit": null
+      "status": "done",
+      "last_commit": null,
+      "note": "Codex 裁定入 backlog(最多 inflate 探针零 L2), M4 不做完整接入"
     },
     "T4.5": {
       "status": "pending",
-      "last_commit": null
+      "last_commit": null,
+      "note": "Codex 批准最小 advisory 版(ATF+useRealAni+关键UI红绿+回归护栏); report注入/声明面/阻断入 backlog"
     },
     "T2.7": {
       "status": "done",
@@ -219,7 +221,9 @@
     "M2 审查建议: fast-stage 文件名改 request/pid 级防并发覆盖(T2.8 后续)",
     "M2 审查建议: fastlane worker 命令协议改 JSON line/长度前缀(含空格路径稳健性)",
     "M2 审查建议: fused 态 score 固定 0 使防震荡趋势信号变粗(延后优化)",
-    "M3 执行注意(Codex 非阻塞): testFqn/demoDir/sessionId/reportPath 加 command-arg 安全断言/转义 helper(交 T3.1b 顺带)"
+    "M3 执行注意(Codex 非阻塞): testFqn/demoDir/sessionId/reportPath 加 command-arg 安全断言/转义 helper(交 T3.1b 顺带)",
+    "backlog: T4.4 XML View 完整接入(字段语义对齐+CS2 重钉), 真实 XML 消费者出现时驱动",
+    "backlog: T4.5 对比度 report 注入+关键 UI 声明面+阻断门禁"
   ],
   "calibration": {
     "channel": "mcp-only",
