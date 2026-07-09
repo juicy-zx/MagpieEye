@@ -4,7 +4,7 @@
  * v0 pass 语义:pass = 渲染管线成功(gradle exit 0 且 rendered.png 收集到);
  * L1 结果只进 pixel 字段(advisory),不参与判定。
  */
-import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { baselineDirName } from '../baseline/pull.js';
 import { runL1 } from '../l1/engine.js';
@@ -49,6 +49,20 @@ function findNewestPng(dir: string, needle: string, exclude?: (name: string) => 
   return newest === null ? null : newest.path;
 }
 
+/** 跑前清理:递归删除 roboDir 下属于本组件的上一轮 roborazzi 比对产物(名含 needle 且以 _actual.png / _compare.png 结尾)。 */
+function pruneRoborazziArtifacts(dir: string, needle: string): void {
+  if (!existsSync(dir)) return;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      pruneRoborazziArtifacts(p, needle);
+    } else if (entry.isFile() && entry.name.includes(needle)
+      && (entry.name.endsWith('_actual.png') || entry.name.endsWith('_compare.png'))) {
+      rmSync(p, { force: true });
+    }
+  }
+}
+
 function writeReport(uiVerifyDir: string, nodeDir: string, report: ReportV0): { report: ReportV0; reportPath: string } {
   const validated = validateReportV0(report);
   const reportDir = join(uiVerifyDir, 'reports', nodeDir);
@@ -77,6 +91,15 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
   if (opts.preRenderedPng !== undefined) {
     found = existsSync(opts.preRenderedPng) ? opts.preRenderedPng : null;
   } else {
+    // 跑前清理上一轮遗留的比对产物(<short>_actual/_compare.png)。roborazzi 在 compare 通过时不重写
+    // _actual,遗留的旧 _actual(mtime 可能因 gradle 缓存恢复/快速迭代而贴近本轮 t0)会绕过下方新鲜度门被
+    // 误选,对旧帧采样报假阳性(用户实证:正确卡片却报幻影 color 违规)。清理后 run 结束时凡在场的
+    // _actual/_compare 必属本轮,采集口径无歧义;新鲜度门作为二道防线保留。record 链路(runRecord 写
+    // snapshots/ golden,不读 _actual)在独立 gradle 调用中执行,不受此清理影响。
+    const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '');
+    const roboDir = join(opts.demoDir, 'app', 'build', 'outputs', 'roborazzi');
+    pruneRoborazziArtifacts(roboDir, shortName);
+
     const t0 = Date.now();
     // T2.1(D-07):UIV_RERUN=1 追加 --rerun,供测量脚本强制忽略 up-to-date/build cache 真实重跑
     // (默认不追加,不影响正常 check 的增量构建性能)。
@@ -95,9 +118,7 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
 
     // exit 0:收集 rendered.png(测试类短名去 ScreenshotTest 后缀 = 组件短名)。
     // T2.6 三级优先+新鲜度门(章内设计):①本轮 _actual ②本轮非 _compare(旧 added 形态)③golden(unchanged 零产物);
-    // mtime 早于本轮 gradle 启动(t0)的候选一律拒收,防陈旧 _actual/_compare 被"最新含短名"误收。
-    const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '');
-    const roboDir = join(opts.demoDir, 'app', 'build', 'outputs', 'roborazzi');
+    // 叠加跑前清理后,①②只可能命中本轮产物;mtime 早于本轮 gradle 启动(t0)的候选仍一律拒收(二道防线)。
     const goldenPath = join(opts.demoDir, 'app', 'src', 'test', 'snapshots', `${shortName}.png`);
     const fresh = (p: string | null): string | null => (p !== null && statSync(p).mtimeMs >= t0 - 1000 ? p : null);
     found = fresh(findNewestPng(roboDir, `${shortName}_actual`))
