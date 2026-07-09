@@ -221,14 +221,14 @@
     }
   ],
   "pending_followups": [
-    "真实远程 CI 接入(用户侧)",
-    "provider 形态 vlm-judge(视 API key)",
-    "M3 verify-page 整页基准优先 REST /v1/images?scale=2(PAT 后); exportAsync base64 大图分块仅兜底",
-    "M2 审查建议: fast-stage 文件名改 request/pid 级防并发覆盖(T2.8 后续)",
-    "M2 审查建议: fastlane worker 命令协议改 JSON line/长度前缀(含空格路径稳健性)",
-    "M2 审查建议: fused 态 score 固定 0 使防震荡趋势信号变粗(延后优化)",
-    "backlog: T4.4 XML View 完整接入(字段语义对齐+CS2 重钉), 真实 XML 消费者出现时驱动",
-    "backlog: T4.5 对比度 report 注入+关键 UI 声明面+阻断门禁"
+    "真实远程 CI 接入(用户侧)。触发: 用户侧接入远程 CI 平台时",
+    "provider 形态 vlm-judge(L3 自动调视觉模型打分)。触发: 提供 anthropic/openai/gemini 视觉模型 API key + 需无人值守自动 L3 评审(当前轻量形态已交付, 零 key 即可用, L3 仅建议不阻断)",
+    "verify-page 整页基准接 REST /v1/images?scale=2(收窄口径: 仅 baseline.png 缺失时自动下载单节点、不覆盖已核验资产、失败静默降级; 落地前过 Codex)。触发: magpie loop 自主 pin 新组件建基准且无人工落盘 baseline.png 的场景(2026-07-10 侦查: 手工 baseline 仍全程可用, 720x1600 大 Frame 超限场景从未出现, effort M/risk medium)",
+    "M2 审查建议: fast-stage 文件名改 request/pid 级防并发覆盖。触发: 真实并发调用 uiv check(CI 并行矩阵 / 多 loop session 同仓库并跑)",
+    "M2 审查建议: fastlane worker 命令协议改 JSON line/长度前缀。触发: 工作区或 CI 路径出现空格",
+    "M2 审查建议: fused 态 score 固定 0 使防震荡趋势信号变粗(D-06 延后优化, 改门禁口径需 Codex)。触发: fused 态实测造成停滞误判的真实案例",
+    "backlog: T4.4 XML View 完整接入(字段语义对齐+CS2 重钉)。触发: demo-android 或 loop 侧出现真实 XML 页面验收需求(2026-07-10 侦查: demo 纯 Compose 无 XML 消费者, YAGNI 不成立, Codex 推迟裁定仍有效, effort XL/risk high)",
+    "backlog: T4.5 对比度 report 注入+关键 UI 声明面+阻断门禁(三层, 需 Codex 复议 + 关键UI声明面口径先拍板 + useRealAni 全局扰动标定防误杀)。触发: 下游明确要求对比度阻断关键页面的真实需求(2026-07-10 侦查: Codex 已裁定 B/C 层推迟, 无真实消费者, effort L/risk high)"
   ],
   "calibration": {
     "channel": "mcp+rest",
