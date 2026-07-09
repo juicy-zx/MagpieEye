@@ -29,8 +29,9 @@
     },
     "M3": {
       "subplan": "approved",
-      "code_review": "none",
-      "review_rounds": 3
+      "code_review": "in_progress",
+      "review_rounds": 3,
+      "code_review_rounds": 0
     },
     "M4": {
       "subplan": "none",
@@ -113,26 +114,25 @@
       "last_commit": null,
       "note": "只读核验完成: 3 承重发现驱动 D-09 方案重写; magpie HEAD 4d86bbc5; 测试基线 3346/3349(3 failed=Go 缺失环境性)"
     },
-    "T3.1": {
-      "status": "pending",
-      "last_commit": null
-    },
     "T3.2": {
       "status": "awaiting_review",
       "last_commit": "44478a9",
       "note": "226/33 绿; CS6 冒烟过; sig/sha1/canonical states 契约落地; build 待 barrel 集成恢复"
     },
     "T3.3": {
-      "status": "pending",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "69fa9ad",
+      "note": "+29 绿; E2E 两格 23.5s; page-report 契约全落; barrel 独立 commit 52e29c4 按先例"
     },
     "T3.4": {
-      "status": "in_progress",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "5cd4d51",
+      "note": "+20 uiv/+demo 23 绿; 五不变量实证; 接口冻结 stateJudgePath/runInvariantOnly/opts.invariant"
     },
     "T3.5": {
-      "status": "pending",
-      "last_commit": null
+      "status": "done",
+      "last_commit": null,
+      "note": "北极星验收 PASS: demo exit 0(半程1 verify-page 5格全绿 + 半程2 收官E2E + 回归门 3394/3397); magpie 侧 6 commit(S1~S7) + uiv 侧 3 commit"
     },
     "T4.1": {
       "status": "pending",
