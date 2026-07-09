@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { validatePageReport } from './report.js';
 import type { PageCell, PageReport } from './report.js';
+import type { L3Verdict } from './l3/types.js';
 
 function validCell(over: Partial<PageCell> = {}): PageCell {
   return {
@@ -47,5 +48,58 @@ describe('validatePageReport', () => {
     const cell = validCell() as Record<string, unknown>;
     delete cell['cellId'];
     expect(() => validatePageReport({ ...validReport(), perCell: [cell] })).toThrow(/cellId/);
+  });
+});
+
+/** 合法 fail L3Verdict(全字段);override 覆盖具体字段造反例。 */
+function failVerdict(over: Partial<L3Verdict> = {}): L3Verdict {
+  return {
+    item: 'color', verdict: 'fail', evidence: [{ cellId: 'base__typical', x: 1, y: 2, w: 3, h: 4 }],
+    severity: 'high', suggestion: '修颜色', ...over,
+  };
+}
+
+describe('validatePageReport: l3Verdicts schema(T4.2)', () => {
+  it('合法 fail 项(全字段)通过', () => {
+    const r = validReport({ l3Verdicts: [failVerdict()] });
+    expect(validatePageReport(r)).toEqual(r);
+  });
+  it("verdict:'fail' 且 evidence:[] → throw /evidence/", () => {
+    expect(() => validatePageReport(validReport({ l3Verdicts: [failVerdict({ evidence: [] })] }))).toThrow(/evidence/);
+  });
+  it('fail 且 severity:null → throw', () => {
+    expect(() => validatePageReport(validReport({ l3Verdicts: [failVerdict({ severity: null })] }))).toThrow(/severity/);
+  });
+  it('fail 且 suggestion:null → throw', () => {
+    expect(() => validatePageReport(validReport({ l3Verdicts: [failVerdict({ suggestion: null })] }))).toThrow(/suggestion/);
+  });
+  it("item:'contrast'(非法量规项)→ throw", () => {
+    const bad = { ...failVerdict(), item: 'contrast' } as unknown as L3Verdict;
+    expect(() => validatePageReport(validReport({ l3Verdicts: [bad] }))).toThrow(/item/);
+  });
+  it("verdict:'maybe'(非法)→ throw", () => {
+    const bad = { ...failVerdict(), verdict: 'maybe' } as unknown as L3Verdict;
+    expect(() => validatePageReport(validReport({ l3Verdicts: [bad] }))).toThrow(/verdict/);
+  });
+  it('pass 且 evidence:[]、severity/suggestion 均 null → 通过(裁定注:pass 允许无证据)', () => {
+    const r = validReport({ l3Verdicts: [{ item: 'color', verdict: 'pass', evidence: [], severity: null, suggestion: null }] });
+    expect(validatePageReport(r)).toEqual(r);
+  });
+  it('uncertain 且 evidence 非空、severity/suggestion 均 null → 通过(§2.2:uncertain 不按 fail 强度校验)', () => {
+    const r = validReport({ l3Verdicts: [{ item: 'spacing', verdict: 'uncertain',
+      evidence: [{ cellId: 'base__typical', x: 0, y: 0, w: 5, h: 5 }], severity: null, suggestion: null }] });
+    expect(validatePageReport(r)).toEqual(r);
+  });
+  it('uncertain 且 evidence:[] → throw /evidence/(fail/uncertain 均强制证据锚定)', () => {
+    const bad = { item: 'spacing', verdict: 'uncertain', evidence: [], severity: null, suggestion: null } as L3Verdict;
+    expect(() => validatePageReport(validReport({ l3Verdicts: [bad] }))).toThrow(/evidence/);
+  });
+  it('evidence 缺 cellId → throw', () => {
+    const bad = { ...failVerdict(), evidence: [{ x: 1, y: 2, w: 3, h: 4 }] } as unknown as L3Verdict;
+    expect(() => validatePageReport(validReport({ l3Verdicts: [bad] }))).toThrow(/cellId/);
+  });
+  it('evidence 坐标非 number → throw', () => {
+    const bad = { ...failVerdict(), evidence: [{ cellId: 'base__typical', x: 'nope', y: 2, w: 3, h: 4 }] } as unknown as L3Verdict;
+    expect(() => validatePageReport(validReport({ l3Verdicts: [bad] }))).toThrow(/x/);
   });
 });
