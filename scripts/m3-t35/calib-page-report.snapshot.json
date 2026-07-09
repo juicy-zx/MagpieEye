@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "kind": "page-report",
+  "pass": true,
+  "test": "com.magpie.uiv.demo.CalibPageScreenshotTest",
+  "sessionId": "standalone",
+  "nodeId": "1:100",
+  "version": "T1_0A_V1",
+  "matrix": "l-shape",
+  "states": [
+    "typical"
+  ],
+  "perCell": [
+    {
+      "cellId": "base__typical",
+      "device": "base",
+      "state": "typical",
+      "qualifiers": "w360dp-h800dp-xhdpi",
+      "judgePath": "parity",
+      "assertionScope": "full",
+      "pass": true,
+      "reason": null,
+      "subReason": null,
+      "score": 1,
+      "failureClasses": [],
+      "topViolations": [],
+      "reportPath": "/Users/zhuxi/AI/magpie_eye/.ui-verify/reports/1-100@T1_0A_V1/cells/base__typical/report.json"
+    },
+    {
+      "cellId": "pixel5-dark__typical",
+      "device": "pixel5-dark",
+      "state": "typical",
+      "qualifiers": "w360dp-h800dp-night-xhdpi",
+      "judgePath": "parity",
+      "assertionScope": "geometry-only",
+      "pass": true,
+      "reason": null,
+      "subReason": null,
+      "score": 1,
+      "failureClasses": [],
+      "topViolations": [],
+      "reportPath": "/Users/zhuxi/AI/magpie_eye/.ui-verify/reports/1-100@T1_0A_V1/cells/pixel5-dark__typical/report.json"
+    },
+    {
+      "cellId": "fontScale1.3__typical",
+      "device": "fontScale1.3",
+      "state": "typical",
+      "qualifiers": "w360dp-h800dp-xhdpi",
+      "judgePath": "render-only",
+      "assertionScope": "render-only",
+      "pass": true,
+      "reason": null,
+      "subReason": null,
+      "score": 1,
+      "failureClasses": [],
+      "topViolations": [],
+      "reportPath": "/Users/zhuxi/AI/magpie_eye/.ui-verify/reports/1-100@T1_0A_V1/cells/fontScale1.3__typical/report.json"
+    },
+    {
+      "cellId": "smallPhone__typical",
+      "device": "smallPhone",
+      "state": "typical",
+      "qualifiers": "w320dp-h640dp-xhdpi",
+      "judgePath": "render-only",
+      "assertionScope": "render-only",
+      "pass": true,
+      "reason": null,
+      "subReason": null,
+      "score": 1,
+      "failureClasses": [],
+      "topViolations": [],
+      "reportPath": "/Users/zhuxi/AI/magpie_eye/.ui-verify/reports/1-100@T1_0A_V1/cells/smallPhone__typical/report.json"
+    },
+    {
+      "cellId": "tablet__typical",
+      "device": "tablet",
+      "state": "typical",
+      "qualifiers": "w800dp-h1280dp-xhdpi",
+      "judgePath": "render-only",
+      "assertionScope": "render-only",
+      "pass": true,
+      "reason": null,
+      "subReason": null,
+      "score": 1,
+      "failureClasses": [],
+      "topViolations": [],
+      "reportPath": "/Users/zhuxi/AI/magpie_eye/.ui-verify/reports/1-100@T1_0A_V1/cells/tablet__typical/report.json"
+    }
+  ],
+  "l3Verdicts": [],
+  "unresolvedKnownDeviations": [],
+  "classification": {
+    "classes": [],
+    "actionable": false,
+    "retryNoteCandidate": null,
+    "environmentCells": []
+  },
+  "durationMs": 58570
+}
