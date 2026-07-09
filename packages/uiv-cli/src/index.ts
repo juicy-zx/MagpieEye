@@ -152,8 +152,14 @@ async function main(): Promise<void> {
  */
 function flushAndExit(): void {
   const code = process.exitCode ?? 0;
-  if (process.stdout.writableLength === 0) process.exit(code);
-  else process.stdout.write('', () => process.exit(code));
+  const hardExit = (): void => { process.exit(code); };
+  if (process.stdout.writableLength === 0) { hardExit(); return; }
+  // 末行(report/spec 路径契约)best-effort flush 后即退;但绝不把退出寄托于 drain 回调:冷道下
+  // stdout 读端若已亡、或 spawn 链条/odiff server 的悬置句柄堵住事件循环,该回调可能永不触发。
+  // 故补一枚 unref 兜底定时器——事件循环一旦仍被占住(未自然排空)即强制收尾,杜绝无限悬挂
+  // (实证冷道 22+ 分钟未退;D-07/D-08 退出治理同旨)。
+  process.stdout.write('', hardExit);
+  setTimeout(hardExit, 250).unref();
 }
 
 main().then(flushAndExit, (e: unknown) => {
