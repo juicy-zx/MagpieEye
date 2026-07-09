@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * uiv: 鹊眼薄验收客户端(T1.2 Step 9 接线;core 承载全部逻辑)。
+ * uiv: 鹊眼薄验收客户端(T1.2 Step 9 接线;裁判逻辑在 core,三段命令编排在 commands.ts)。
  * 子命令:
  *   baseline pull --fixture <path> --file <fileKey> --node <nodeId>
  *   check --preview <PreviewFQN> --node <nodeId> --demo <dir> [--ignore-region x,y,w,h] [--record]
@@ -8,35 +8,18 @@
  * 约定:输出根 = cwd/.ui-verify;stdout 最后一行 = spec.json(pull)/report.json(check)绝对路径;
  * check 的 exit code = report.pass ? 0 : 1(D-07(c):以 L2 report 为准,L1 advisory 失败不污染);
  * --record 在 check pass=false 时拒录 → exit 3;pull 恒 0(baseline.png 缺失仅 WARN);其余异常 exit 2。
+ * 本入口只负责 argv 解析 / IO 呈现(末行路径、--json、WARN 打印)/ exitCode / 退出治理;
+ * check/verify-page/baseline-pull 的实际编排复用 commands.ts(与 MCP server 同源)。
  */
-import { mkdirSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
-  addIgnoreRegion, pinBaseline, pullBaseline, runCheckL2, runRecord, stopOdiffServer, verifyPage,
+  pinBaseline, runRecord,
 } from '@magpie-eye/uiv-core';
-import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
+import type { FigmaClient } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
-import { selectMappingEntry } from './mapping-entry.js';
-import { isFastLaneEnabled } from './fastlane.js';
-import { renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
-
-type Lane = 'fast' | 'slow' | 'fast-fallback-slow';
-
-/** check/verify-page 的 version/minScore/states 取自 mapping.json(baseline pull 的 upsert 产物,source of truth)。
- *  version 可选:给定时按 nodeId+version 唯一命中消歧(D-02/M3),否则按 nodeId 取首条。选取纯逻辑见 mapping-entry.ts。 */
-async function readMappingEntry(uiVerifyDir: string, nodeId: string, version?: string): Promise<MappingEntry> {
-  const mappingPath = path.join(uiVerifyDir, 'mapping.json');
-  let text: string;
-  try {
-    text = await readFile(mappingPath, 'utf8');
-  } catch {
-    throw new CliUsageError(`mapping.json not found at ${mappingPath}; run \`uiv baseline pull\` first`);
-  }
-  const entries = JSON.parse(text) as MappingEntry[];
-  return selectMappingEntry(entries, nodeId, version);
-}
+import { selectGradleRunner } from './gradle-runner.js';
+import { runBaselinePullCommand, runCheckCommand, runVerifyPageCommand } from './commands.js';
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
@@ -46,11 +29,11 @@ async function main(): Promise<void> {
   }
 
   const cmd = parseCliArgs(argv);
-  const uiVerifyDir = path.resolve(process.cwd(), '.ui-verify');
+  const cwd = process.cwd();
+  const uiVerifyDir = path.resolve(cwd, '.ui-verify');
 
   if (cmd.kind === 'baseline-pull') {
-    const client = new FixtureFigmaClient(path.resolve(cmd.fixture));
-    const r = await pullBaseline(client, cmd.file, cmd.node, uiVerifyDir);
+    const r = await runBaselinePullCommand({ fixture: cmd.fixture, file: cmd.file, node: cmd.node }, cwd);
     if (!r.baselinePngExists) {
       console.log(`WARN baseline.png missing: ${r.baselinePngPath}`);
     }
@@ -88,85 +71,35 @@ async function main(): Promise<void> {
   }
 
   if (cmd.kind === 'verify-page') {
-    // 统一调用契约(跨章第 1 条):--test/--node/--demo/--session/--json --out。version/minScore/states 取自 mapping entry。
-    const entry = await readMappingEntry(uiVerifyDir, cmd.node, cmd.version ?? undefined);
-    const states = cmd.states.length > 0 ? cmd.states : (entry.states?.map((s) => s.name) ?? []);
-    const sel = await selectGradleRunner(uiVerifyDir);
-    console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
-    try {
-      const { report, reportPath } = await verifyPage(sel.runner, {
-        demoDir: path.resolve(cmd.demo),
-        testFqn: cmd.test,
-        nodeId: cmd.node,
-        version: entry.version,
-        uiVerifyDir,
-        sessionId: cmd.session,
-        matrix: cmd.matrix,
-        states,
-        minScore: entry.minScore,
-        ...(entry.states ? { pinnedStates: entry.states } : {}),
-        ...(cmd.out !== null ? { outPath: path.resolve(cmd.out) } : {}),
-      });
-      process.exitCode = report.pass ? 0 : 1;   // UI 违规非零,report 必已落盘
-      if (cmd.json) console.log(JSON.stringify(report, null, 2));
-      console.log(reportPath);   // 最后一行恒为 page-report 绝对路径
-    } finally {
-      stopOdiffServer();   // D-07(a):释放 odiff server 子进程
-    }
+    const { report, reportPath } = await runVerifyPageCommand({
+      test: cmd.test, node: cmd.node, demo: cmd.demo, session: cmd.session,
+      states: cmd.states, matrix: cmd.matrix,
+      ...(cmd.version !== null ? { version: cmd.version } : {}),
+      ...(cmd.out !== null ? { out: cmd.out } : {}),
+    }, cwd);
+    process.exitCode = report.pass ? 0 : 1;   // UI 违规非零,report 必已落盘
+    if (cmd.json) console.log(JSON.stringify(report, null, 2));
+    console.log(reportPath);   // 最后一行恒为 page-report 绝对路径
     return;
   }
 
   // check
-  const testFqn = previewToTestFqn(cmd.preview);
-  if (cmd.ignoreRegion !== null) {
-    addIgnoreRegion(uiVerifyDir, cmd.node, cmd.ignoreRegion);   // 先持久化再执行
+  const { report, reportPath } = await runCheckCommand({
+    preview: cmd.preview, node: cmd.node, demo: cmd.demo,
+    ...(cmd.version !== null ? { version: cmd.version } : {}),
+    ...(cmd.ignoreRegion !== null ? { ignoreRegion: cmd.ignoreRegion } : {}),
+  }, cwd);
+  process.exitCode = report.pass ? 0 : 1;   // D-07(c): exit code 以 L2 report pass/fail 为准
+  if (cmd.record) {
+    // --record 罕用(T2.6 录 golden),不入 MCP 工具面;抽取后 runCheckCommand 不回传 runner,
+    // record 分支就地重选一次(选路确定性,行为等价:cold=纯 SpawnGradleRunner 构造,hot=一次 500ms ping)。
+    const sel = await selectGradleRunner(uiVerifyDir);
+    const { goldenPath } = await runRecord(
+      sel.runner, { demoDir: path.resolve(cwd, cmd.demo), testFqn: previewToTestFqn(cmd.preview) }, report.pass,
+    );
+    console.log(`golden recorded: ${goldenPath}\nhint: git add ${goldenPath} && git commit`);
   }
-  const entry = await readMappingEntry(uiVerifyDir, cmd.node, cmd.version ?? undefined);
-  // gradle runner 恒选路:快车道失败时的回落道,以及 --record 录 golden 均走它。
-  const sel = await selectGradleRunner(uiVerifyDir);
-  const runner = sel.runner;
-
-  // T2.8 快车道:静态 preview 先试 fast(daemon 托管 worker);任何失败自动回落慢车道并如实标注 lane。
-  let lane: Lane = 'slow';
-  let preRendered: { renderedPng: string; semanticsPath: string } | undefined;
-  if (isFastLaneEnabled(cmd.preview)) {
-    const stageDir = path.join(uiVerifyDir, 'renders');   // .ui-verify/renders 已被 .gitignore 忽略
-    mkdirSync(stageDir, { recursive: true });
-    const stagePng = path.join(stageDir, '.fast-stage.png');
-    const stageSem = path.join(stageDir, '.fast-stage.semantics.json');
-    try {
-      await renderPreviewViaDaemon(path.join(uiVerifyDir, 'daemon.sock'), cmd.preview, stagePng, stageSem);
-      preRendered = { renderedPng: stagePng, semanticsPath: stageSem };
-      lane = 'fast';
-      console.error('uiv: render lane=fast (daemon paparazzi worker)');
-    } catch (e) {
-      lane = 'fast-fallback-slow';
-      console.error(`uiv: fast lane unavailable (${(e as Error).message}); falling back to slow`);
-    }
-  }
-  if (lane !== 'fast') console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
-
-  try {
-    const { report, reportPath } = await runCheckL2(runner, {
-      demoDir: path.resolve(cmd.demo),
-      testFqn,
-      nodeId: cmd.node,
-      version: entry.version,
-      uiVerifyDir,
-      minScore: entry.minScore,
-      lane,
-      ...(preRendered ? { preRendered } : {}),
-    });
-    process.exitCode = report.pass ? 0 : 1;   // D-07(c): exit code 以 L2 report pass/fail 为准
-    if (cmd.record) {
-      const { goldenPath } = await runRecord(runner, { demoDir: path.resolve(cmd.demo), testFqn }, report.pass);
-      console.log(`golden recorded: ${goldenPath}\nhint: git add ${goldenPath} && git commit`);
-    }
-    console.log(reportPath);   // 最后一行 = report.json v1 绝对路径
-  } finally {
-    // D-07(a): check 完成(含失败/异常)后释放 odiff server 子进程,防其 idle 悬挂拖住进程退出(实证 idle 7 分钟)。
-    stopOdiffServer();
-  }
+  console.log(reportPath);   // 最后一行 = report.json v1 绝对路径
 }
 
 /**

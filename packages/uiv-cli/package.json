@@ -6,6 +6,9 @@
   "bin": {
     "uiv": "dist/index.js"
   },
+  "exports": {
+    "./commands": "./dist/commands.js"
+  },
   "dependencies": {
     "@magpie-eye/uiv-core": "*"
   }
