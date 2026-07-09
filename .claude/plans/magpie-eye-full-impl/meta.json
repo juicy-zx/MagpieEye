@@ -36,8 +36,9 @@
     },
     "M4": {
       "subplan": "approved",
-      "code_review": "none",
-      "review_rounds": 1
+      "code_review": "in_progress",
+      "review_rounds": 1,
+      "code_review_rounds": 0
     }
   },
   "plan_review": {
@@ -136,16 +137,19 @@
       "note": "北极星验收 PASS: demo exit 0(半程1 verify-page 5格全绿 + 半程2 收官E2E + 回归门 3394/3397); magpie 侧 6 commit(S1~S7) + uiv 侧 3 commit"
     },
     "T4.1": {
-      "status": "in_progress",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "bf7f2ee",
+      "note": "298/47 绿; stdio e2e 过; commands.ts 四约束; 双保险注释"
     },
     "T4.2": {
-      "status": "pending",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "3a93aca",
+      "note": "358/54 绿; 触发前置强断言(真产clusters仍零调用); 两处自决留审(pass证据剔除/exit分层)"
     },
     "T4.3": {
-      "status": "pending",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "1f3e9ce",
+      "note": "324/50 绿; 四场景 exit0+git 护栏; junit xsd 机判; 修复 ci-gate bash $? 陷阱"
     },
     "T4.4": {
       "status": "done",
@@ -153,9 +157,9 @@
       "note": "Codex 裁定入 backlog(最多 inflate 探针零 L2), M4 不做完整接入"
     },
     "T4.5": {
-      "status": "pending",
-      "last_commit": null,
-      "note": "Codex 批准最小 advisory 版(ATF+useRealAni+关键UI红绿+回归护栏); report注入/声明面/阻断入 backlog"
+      "status": "awaiting_review",
+      "last_commit": "4ebfbfb",
+      "note": "demo 27/27; ATF 红绿实证(1.02 检出/11:1 静默); useRealAni 零扰动护栏; 边界严守"
     },
     "T2.7": {
       "status": "done",
