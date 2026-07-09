@@ -7,6 +7,7 @@ export class CliUsageError extends Error {}
 export interface CliIgnoreRegion { x: number; y: number; w: number; h: number }
 
 export interface BaselinePullCmd { kind: 'baseline-pull'; fixture: string; file: string; node: string }
+export interface BaselineCheckVersionCmd { kind: 'baseline-check-version'; file: string; metaFixture: string | null }
 export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; version: string | null; ignoreRegion: CliIgnoreRegion | null; record: boolean }
 export interface PinStateArg { name: string; judgePath: 'parity'; figmaVariantNodeId: string }
 export interface PinCmd {
@@ -22,7 +23,7 @@ export interface VerifyPageCmd {
   states: string[]; matrix: string; json: boolean; out: string | null;
 }
 export interface ReportCmd { kind: 'report'; junit: boolean; in: string; out: string | null; suite: string | null }
-export type ParsedCommand = BaselinePullCmd | CheckCmd | PinCmd | VerifyPageCmd | ReportCmd;
+export type ParsedCommand = BaselinePullCmd | BaselineCheckVersionCmd | CheckCmd | PinCmd | VerifyPageCmd | ReportCmd;
 
 const PIN_MATRIX_RE = /^(l-shape|full|custom:.+)$/;
 
@@ -101,7 +102,18 @@ export function previewToTestFqn(previewFqn: string): string {
 export function parseCliArgs(argv: string[]): ParsedCommand {
   const [cmd, ...rest] = argv;
   if (cmd === 'baseline' && rest[0] === 'pull') {
-    const flags = collectFlags(rest.slice(1), ['--fixture', '--file', '--node']);
+    const rest1 = rest.slice(1);
+    // T4.3:--check-version 是无值布尔旗标,切到设计稿漂移哨兵模式(与常规 pull 互斥,先剔除再分派)。
+    if (rest1.includes('--check-version')) {
+      const rest2 = rest1.filter((a) => a !== '--check-version');
+      const flags = collectFlags(rest2, ['--file', '--meta-fixture']);
+      return {
+        kind: 'baseline-check-version',
+        file: required(flags, '--file'),
+        metaFixture: flags.get('--meta-fixture') ?? null,
+      };
+    }
+    const flags = collectFlags(rest1, ['--fixture', '--file', '--node']);
     // T1.2 仅 fixture 模式;REST 通道待 B1 PAT
     return {
       kind: 'baseline-pull',

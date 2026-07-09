@@ -16,6 +16,22 @@ describe('parseCliArgs: baseline pull', () => {
   });
 });
 
+describe('parseCliArgs: baseline pull --check-version(T4.3 哨兵,与 baseline-pull 分离)', () => {
+  it('解析 --file(--meta-fixture 缺省 null)', () => {
+    expect(parseCliArgs(['baseline', 'pull', '--check-version', '--file', 'FKEY'])).toEqual({
+      kind: 'baseline-check-version', file: 'FKEY', metaFixture: null,
+    });
+  });
+  it('解析可选 --meta-fixture', () => {
+    expect(parseCliArgs(['baseline', 'pull', '--check-version', '--file', 'FKEY', '--meta-fixture', 'p.json'])).toEqual({
+      kind: 'baseline-check-version', file: 'FKEY', metaFixture: 'p.json',
+    });
+  });
+  it('缺 --file 抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['baseline', 'pull', '--check-version'])).toThrow(/--file/);
+  });
+});
+
 describe('parseCliArgs: check', () => {
   it('解析 --preview/--node/--demo(无 ignore-region 时为 null,缺省 record=false,version=null)', () => {
     expect(parseCliArgs(['check', '--preview', 'com.magpie.uiv.demo.CalibCardPreview', '--node', '1:100', '--demo', 'demo-android'])).toEqual({

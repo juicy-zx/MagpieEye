@@ -5,6 +5,8 @@
  *   baseline pull --fixture <path> --file <fileKey> --node <nodeId>
  *   check --preview <PreviewFQN> --node <nodeId> --demo <dir> [--ignore-region x,y,w,h] [--record]
  *   pin --file <fileKey> --node <nodeId> --test <FQN> --demo <dir> [--source <doc>] [--state name=<nodeId>]... [--min-score <n>] [--matrix <m>] [--fixture <path>]
+ *   baseline pull --check-version --file <fileKey> [--meta-fixture <path>]   （T4.3 设计稿漂移哨兵,只告警不阻断,exit 恒 0）
+ *   report --junit --in <report.json> [--out <path>] [--suite <name>]        （T4.3 report.json/page-report.json → JUnit XML,纯转换,exit 恒 0）
  * 约定:输出根 = cwd/.ui-verify;stdout 最后一行 = spec.json(pull)/report.json(check)绝对路径;
  * check 的 exit code = report.pass ? 0 : 1(D-07(c):以 L2 report 为准,L1 advisory 失败不污染);
  * --record 在 check pass=false 时拒录 → exit 3;pull 恒 0(baseline.png 缺失仅 WARN);其余异常 exit 2。
@@ -15,9 +17,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
-  pinBaseline, runRecord, toJUnitXml, validatePageReport, validateReportV1,
+  detectVersionDrift, extractMetaVersion, pinBaseline, runRecord, toJUnitXml, validatePageReport, validateReportV1,
 } from '@magpie-eye/uiv-core';
-import type { FigmaClient } from '@magpie-eye/uiv-core';
+import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
 import { selectGradleRunner } from './gradle-runner.js';
 import { runBaselinePullCommand, runCheckCommand, runVerifyPageCommand } from './commands.js';
@@ -39,6 +41,33 @@ async function main(): Promise<void> {
       console.log(`WARN baseline.png missing: ${r.baselinePngPath}`);
     }
     console.log(r.specPath);   // 最后一行 = spec.json 绝对路径;pull 恒 exit 0
+    return;
+  }
+
+  if (cmd.kind === 'baseline-check-version') {
+    // T4.3 哨兵:钉住 version 是否落后 Figma /meta 最新;只告警不阻断(设计文档 5.3),exit 恒 0。
+    let client: FigmaClient;
+    if (cmd.metaFixture !== null) {
+      // getNodes 不在本命令路径上,首参(nodes fixture)不适用,占位空串。
+      client = new FixtureFigmaClient('', path.resolve(cmd.metaFixture));
+    } else if (process.env.FIGMA_PAT) {
+      client = new RestFigmaClient();
+    } else {
+      throw new CliUsageError('check-version needs --meta-fixture or FIGMA_PAT (B1)');
+    }
+    const mappingPath = path.join(uiVerifyDir, 'mapping.json');
+    let entries: MappingEntry[];
+    try {
+      entries = JSON.parse(await readFile(mappingPath, 'utf8'));
+    } catch {
+      throw new CliUsageError(`mapping.json not found at ${mappingPath}; run \`uiv baseline pull\` first`);
+    }
+    const latest = extractMetaVersion(await client.getMeta(cmd.file));
+    const drifts = detectVersionDrift(entries, cmd.file, latest);
+    for (const d of drifts) {
+      console.log(`WARN version drift: node ${d.nodeId} pinned ${d.pinned} latest ${d.latest}`);
+    }
+    if (drifts.length === 0) console.log(`OK versions match latest (${latest})`);
     return;
   }
 
