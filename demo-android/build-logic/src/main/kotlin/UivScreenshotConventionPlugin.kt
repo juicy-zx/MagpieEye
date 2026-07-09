@@ -26,7 +26,8 @@ class UivScreenshotConventionPlugin : Plugin<Project> {
                 providers.systemProperty(key).orNull?.let { systemProperty(key, it) }
             }
             // T3.3:verify-page 逐格 -Puiv.device/-Puiv.state(gradle property)转发为 test worker JVM system property。
-            listOf("uiv.device", "uiv.state").forEach { key ->
+            // T4.3:门 B 阻断通道容差 -Puiv.ci.threshold(ci-gate.sh 显式声明才附加,同款转发,一行追加)。
+            listOf("uiv.device", "uiv.state", "uiv.ci.threshold").forEach { key ->
                 providers.gradleProperty(key).orNull?.let { systemProperty(key, it) }
             }
             maxHeapSize = "2g"
