@@ -50,3 +50,10 @@ export * from './page/matrix.js'
 export * from './page/classify.js'
 export * from './page/report.js'
 export * from './page/verifyPage.js'
+
+// T4.2:vlm-judge L3(轻量形态必交付 + provider 接口,B3 受限)
+export * from './page/l3/types.js'
+export * from './page/l3/triptych.js'
+export * from './page/l3/inputPack.js'
+export * from './page/l3/attach.js'
+export * from './page/l3/provider.js'
