@@ -23,6 +23,10 @@ class UivScreenshotConventionPlugin : Plugin<Project> {
             listOf("robolectric.offline", "robolectric.dependency.dir").forEach { key ->
                 providers.systemProperty(key).orNull?.let { systemProperty(key, it) }
             }
+            // T3.3:verify-page 逐格 -Puiv.device/-Puiv.state(gradle property)转发为 test worker JVM system property。
+            listOf("uiv.device", "uiv.state").forEach { key ->
+                providers.gradleProperty(key).orNull?.let { systemProperty(key, it) }
+            }
             maxHeapSize = "2g"
         }
     }

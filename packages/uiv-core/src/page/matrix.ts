@@ -2,7 +2,7 @@
 export const DEVICES = ['base', 'pixel5-dark', 'fontScale1.3', 'smallPhone', 'tablet'] as const;
 export type Device = (typeof DEVICES)[number];
 export const DEVICE_QUALIFIERS: Record<Device, string> = {
-  'base': 'w360dp-h800dp-xhdpi', 'pixel5-dark': 'w360dp-h800dp-xhdpi-night',
+  'base': 'w360dp-h800dp-xhdpi', 'pixel5-dark': 'w360dp-h800dp-night-xhdpi',
   'fontScale1.3': 'w360dp-h800dp-xhdpi', 'smallPhone': 'w320dp-h640dp-xhdpi',
   'tablet': 'w800dp-h1280dp-xhdpi',
 };
