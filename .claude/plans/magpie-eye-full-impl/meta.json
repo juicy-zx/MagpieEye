@@ -11,7 +11,7 @@
   "consensus_reached": true,
   "current_milestone": "complete",
   "completed": "2026-07-09",
-  "release_gate_note": "orchestration.md §4: PAT 真实 REST 闭环验证前, 状态=fixture 驱动实现完成, 不得宣称 REST 通道闭环",
+  "release_gate_note": "2026-07-09 REST 通道闭环验证通过(遗留项1完成, Codex 口径C): 交叉标定 PASS + cross-calib.test.ts 常驻回归 + /v1/images scale=2 = 720x400; 项目状态从'fixture 驱动实现完成'升级为'REST 通道闭环验证通过'",
   "milestones": {
     "M0": {
       "subplan": "approved-inline",
@@ -204,7 +204,8 @@
       "id": "B1",
       "desc": "FIGMA_PAT (file_content:read + file_metadata:read, Dev/Full seat)",
       "mitigation": "手工 REST-shape fixture 先行; PAT 到位后走 pending_followups",
-      "blocking": false
+      "blocking": false,
+      "resolved": "2026-07-09 PAT 到位(共享 uiv-calibration 给 PAT 账户解锁 404); REST 交叉标定完成(口径C); Release Gate 升级为 REST 通道闭环验证通过"
     },
     {
       "id": "B2",
@@ -220,7 +221,6 @@
     }
   ],
   "pending_followups": [
-    "PAT 到位后: T1.0a③ MCP<->REST 坐标交叉标定 + 重录 REST fixture + 复跑 T1.2 验收",
     "真实远程 CI 接入(用户侧)",
     "provider 形态 vlm-judge(视 API key)",
     "M3 verify-page 整页基准优先 REST /v1/images?scale=2(PAT 后); exportAsync base64 大图分块仅兜底",
@@ -233,8 +233,8 @@
     "backlog: T4.5 对比度 report 注入+关键 UI 声明面+阻断门禁"
   ],
   "calibration": {
-    "channel": "mcp-only",
-    "tolerances_provisional": true,
+    "channel": "mcp+rest",
+    "tolerances_provisional": false,
     "b2_verified": true,
     "figma_file_key": "a3EzhvJtAuEzTpM0bxzYjT",
     "calib_frame_node_id": "1:2",
@@ -258,7 +258,10 @@
     },
     "metadata_coord_system": "relative-to-parent",
     "odiff_720x1600_median_ms": 2228,
-    "rest_cross_check": "pending-B1-PAT",
+    "rest_cross_check": "confirmed",
+    "rest_cross_check_detail": "2026-07-09 PAT 到位(共享文件解锁账户不一致 404); 真实 REST(1:2/1:3~1:6) 经 normalizeNodesResponse 与 canonical(1:100系) 抹标签后全树全等; cross-calib.test.ts 常驻(篡改必 FAIL 经对抗验证); Codex 口径C 保留 1:100 稳定别名不迁移",
+    "figma_real_version": "2373767505772482544",
+    "rest_images_scale2_px": [720, 400],
     "get_screenshot_scale2": "refuted",
     "exportAsync_scale2": "confirmed"
   },
@@ -294,7 +297,7 @@
     "codex_cli": "0.142.5",
     "android_sdk": "installed: platform-tools 37.0.0 + android-36 + build-tools 36.0.0 @ ~/Library/Android/sdk",
     "figma_desktop_mcp": "port 3845 alive (B2 pending real-call check)",
-    "figma_pat": "absent",
+    "figma_pat": "present (共享文件访问 a3Ezhv...; scopes file_content:read+file_metadata:read; 存 .figma-pat gitignored)",
     "magpie_agent_drift": "8e0dcb2 -> HEAD ~129 commits, T3.0 required"
   },
   "calibration_render": {

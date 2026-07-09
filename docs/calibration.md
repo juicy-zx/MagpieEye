@@ -1,7 +1,7 @@
 # T1.0a Figma 侧口径标定结论
 
-- 通道: **channel=mcp-only**(Figma MCP;REST 交叉标定待 B1 PAT,已在 pending_followups)
-- 本文所有容差常量在 PAT 交叉对比完成前 **视为暂定**。
+- 通道: **channel=mcp+rest**(Figma MCP 标定 + REST 交叉标定已完成,2026-07-09;B1 PAT 到位后经共享文件闭环)
+- 容差常量经 REST 交叉标定 **已转正(不再暂定)**——见下"REST 交叉标定"节。
 - 标定文件: uiv-calibration, fileKey `a3EzhvJtAuEzTpM0bxzYjT`, CalibCard nodeId `1:2`(设计值见子计划 Canonical Calibration Contract 节点表;运行期 nodeId 1:2~1:6 不进 fixture)
 - 技能加载记录: figma-create-new-file / figma-use 的 MCP resource 均不可用(server 不支持 resources),按预案裸调,建稿返回几何与合同逐项一致。
 
@@ -27,14 +27,33 @@ check-coords.mjs verdict: **relative-to-parent**(frame@(100,100),swatch 报告 x
 ⇒ figma-spec-cache 适配层对 get_metadata 通道 **无须** 做减父原点 re-base;
 REST absoluteBoundingBox 恒为绝对坐标、恒须 re-base(设计文档 C5),两通道口径在适配层统一为"相对目标 Frame"。
 
+## REST 交叉标定(2026-07-09,B1 PAT 到位,Codex 口径 C)
+
+- **触发与解锁**:FIGMA_PAT 到位。过程发现 PAT 账户 ≠ 标定文件归属账户(uiv-calibration 建于 zhuxi8518@gmail.com,PAT 来自另一账户 → REST 404 Not found)。经 zhuxi8518 将文件共享给 PAT 账户解锁;`/v1/files/{key}/meta` 与 `/nodes?ids=1:2` 均 200,`file_content:read`+`file_metadata:read` 生效。
+- **真实 REST 结构**:page `0:1` 顶层仅 frame `1:2` CalibCard(children `1:3~1:6`);真实 fileKey `a3EzhvJtAuEzTpM0bxzYjT`,version `2373767505772482544`。
+- **交叉标定判定:PASS** —— 真实 REST 响应经产品 `normalizeNodesResponse` 归一化后,与 canonical 手工 fixture(`rest-nodes-card.json`,1:100 体系)抹除 id/fileKey/version 标签后 root 树逐字段全等(bbox 相对坐标 / cornerRadii / fills{hex,opacity} / text{fontSize 16/12} / padding)。CalibSwatch re-base 相对坐标 `(12,60)` == 断言③ MCP 侧记录值,C5 re-base 口径实证一致。
+- **节点映射(真实↔canonical;口径 C 保留稳定别名,不迁 nodeId 体系)**:
+
+  | 名称 | 真实 nodeId | canonical nodeId |
+  |---|---|---|
+  | CalibCard | 1:2 | 1:100 |
+  | CalibTitle | 1:3 | 1:101 |
+  | CalibSubtitle | 1:4 | 1:102 |
+  | CalibSwatch | 1:5 | 1:103 |
+  | CalibBadge | 1:6 | 1:104 |
+
+- **常驻回归**:`packages/uiv-core/src/figma/cross-calib.test.ts`(4 项,篡改几何必 FAIL 经对抗验证);真实 fixture 留存 `packages/uiv-core/fixtures/rest-nodes-card.real.json`(字节级原样)。
+- **REST `/v1/images?scale=2` 通道**:拉 `1:2` 的 2x PNG,images API HTTP 200 + PNG 下载 200,PNG IHDR 与 sips 双验尺寸 **720×400** ✓(独立最小闭环,不替换现有 baseline)。
+- **Codex 口径 C 裁定**:`1:100` 保留为标定合同稳定内部别名,不迁 nodeId 体系(A/B 账目对齐收益 < 工程扰动);`rest-nodes-componentset.json` 保持合成 fixture(真实文件无 COMPONENT_SET,CS6 验的是 variant 枚举与 re-base,不依赖真实组件集)。
+
 ## odiff 2x 整页耗时(720×1600, 本地合成, 零 Figma 依赖)
 
 runs=[2228,2404,2069]ms, median=**2228ms**(含 npx 转发开销,预热后;odiff exit 22 正确检出 100×100 差异块)。T1.2 集成时改用解析后的二进制直调,预期显著低于此值。
 
 ## 遗留
 
-- REST(`/v1/files/:key/nodes` absoluteBoundingBox / `/v1/images scale=2`)交叉标定: 待 PAT(pending_followups)。
-- **exportAsync base64 大小边界**:卡片级(720×400)14.7k 字符无压力;整页(720×1600)估 100~300KB base64,可能超 use_figma 返回限制——M3 verify-page 整页基准优先走 REST `/v1/images?scale=2`(PAT 后),exportAsync 分块仅兜底(pending_followups)。
+- ~~REST 交叉标定: 待 PAT~~ **已完成(2026-07-09)**——见"REST 交叉标定"节;`/v1/files/:key/nodes` absoluteBoundingBox re-base 与 `/v1/images scale=2` 720×400 均实证通过。
+- **exportAsync base64 大小边界**:卡片级(720×400)14.7k 字符无压力;整页(720×1600)估 100~300KB base64,可能超 use_figma 返回限制——M3 verify-page 整页基准优先走 REST `/v1/images?scale=2`(现 PAT 已到位、通道已验证 720×400),exportAsync 分块仅兜底。
 - get_screenshot 降为快速预览用途,不再承担基准 PNG 职责(已经 Codex D-01 裁定确认(2026-07-08))。
 
 ## T1.0b 渲染侧标定(T1.1)
