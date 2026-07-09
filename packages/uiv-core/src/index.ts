@@ -42,3 +42,9 @@ export * from './check/record.js'
 export * from './baseline/mapping.js'
 export * from './baseline/pin.js'
 export * from './baseline/repersist.js'
+
+// T3.3:整页外循环(verify-page)。page/ 四模块 value + type export(source-attr 为 verifyPage 内部依赖,不透出)。
+export * from './page/matrix.js'
+export * from './page/classify.js'
+export * from './page/report.js'
+export * from './page/verifyPage.js'
