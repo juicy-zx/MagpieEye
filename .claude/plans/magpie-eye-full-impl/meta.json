@@ -4,8 +4,9 @@
   "created": "2026-07-08",
   "codex": {
     "transport": "mcp",
-    "thread_id": "019f4082-3d47-77e3-a6d0-b060aa41f41a",
-    "last_decisions": "D-09: M3 dual-insurance plan (adapter hard gate + evidence unit), verify-page at implementation, narrow .ui-verify exemption"
+    "thread_id": "019f4572-6e87-7762-9518-83dbdd278e46",
+    "last_decisions": "D-09: M3 dual-insurance plan (adapter hard gate + evidence unit), verify-page at implementation, narrow .ui-verify exemption",
+    "note": "原线程随进程异常丢失, 2026-07-09 续接新线程(决断史经 orchestration.md 注入)"
   },
   "consensus_reached": true,
   "current_milestone": "M3",
@@ -31,7 +32,7 @@
       "subplan": "approved",
       "code_review": "in_progress",
       "review_rounds": 3,
-      "code_review_rounds": 0
+      "code_review_rounds": 1
     },
     "M4": {
       "subplan": "none",
