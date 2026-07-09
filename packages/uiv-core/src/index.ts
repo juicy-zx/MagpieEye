@@ -38,3 +38,7 @@ export * from './l2/similarity.js'
 export * from './l2/lcs.js'
 export * from './l2/match.js'
 export * from './check/record.js'
+
+export * from './baseline/mapping.js'
+export * from './baseline/pin.js'
+export * from './baseline/repersist.js'
