@@ -184,9 +184,9 @@
       "note": "+29 零回归; 九分支/窄豁免两面/repersist 落地; matrix 不 gate(T3.3 知悉); T3.5 四注入入口"
     },
     "HOTFIX-cold-exit": {
-      "status": "in_progress",
-      "last_commit": null,
-      "note": "扩范围两案合并: ①冷道悬挂(22+min) ②findNewestPng 误选陈旧 _actual(幻影 color 违规); 共同回归分析: T2.6 两修复为何失效"
+      "status": "done",
+      "last_commit": "0e03cc9",
+      "note": "两案修复+回归测试钉死; 教训固化: 一次性实测≠常驻护栏"
     }
   },
   "blockers": [
