@@ -121,7 +121,7 @@ async function main(): Promise<void> {
   if (cmd.ignoreRegion !== null) {
     addIgnoreRegion(uiVerifyDir, cmd.node, cmd.ignoreRegion);   // 先持久化再执行
   }
-  const entry = await readMappingEntry(uiVerifyDir, cmd.node);
+  const entry = await readMappingEntry(uiVerifyDir, cmd.node, cmd.version ?? undefined);
   // gradle runner 恒选路:快车道失败时的回落道,以及 --record 录 golden 均走它。
   const sel = await selectGradleRunner(uiVerifyDir);
   const runner = sel.runner;
