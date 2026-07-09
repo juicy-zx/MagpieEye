@@ -35,6 +35,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.coil.compose)   // T3.4:内容态 fixture 图片(FakeImageLoaderEngine/model=null,零网络)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // ui-test-manifest 须 debugImplementation:Robolectric unit test 的 merged manifest
     // 只吃 variant 依赖,testImplementation 的 AndroidManifest 不参与 merge,
@@ -48,6 +49,8 @@ dependencies {
     testImplementation(libs.roborazzi.compose)
     testImplementation(libs.roborazzi.preview.scanner.support)
     testImplementation(libs.composable.preview.scanner)
+    testImplementation(libs.coil.test)   // T3.4:FakeImageLoaderEngine 确定性图片注入
+
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
