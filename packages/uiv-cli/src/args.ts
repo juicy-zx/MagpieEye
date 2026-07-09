@@ -7,7 +7,7 @@ export class CliUsageError extends Error {}
 export interface CliIgnoreRegion { x: number; y: number; w: number; h: number }
 
 export interface BaselinePullCmd { kind: 'baseline-pull'; fixture: string; file: string; node: string }
-export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; ignoreRegion: CliIgnoreRegion | null; record: boolean }
+export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; version: string | null; ignoreRegion: CliIgnoreRegion | null; record: boolean }
 export interface PinStateArg { name: string; judgePath: 'parity'; figmaVariantNodeId: string }
 export interface PinCmd {
   kind: 'pin';
@@ -18,6 +18,7 @@ export interface PinCmd {
 export interface VerifyPageCmd {
   kind: 'verify-page';
   test: string; node: string; demo: string; session: string;
+  version: string | null;   // D-02/M3 消歧：可选，给定时按 nodeId+version 唯一命中 mapping entry
   states: string[]; matrix: string; json: boolean; out: string | null;
 }
 export type ParsedCommand = BaselinePullCmd | CheckCmd | PinCmd | VerifyPageCmd;
@@ -112,13 +113,14 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
     // --record 是无值布尔旗标(T2.6),先剔除再走 --flag value 成对解析。
     const record = rest.includes('--record');
     const rest2 = rest.filter((a) => a !== '--record');
-    const flags = collectFlags(rest2, ['--preview', '--node', '--demo', '--ignore-region']);
+    const flags = collectFlags(rest2, ['--preview', '--node', '--demo', '--version', '--ignore-region']);
     const rawRegion = flags.get('--ignore-region');
     return {
       kind: 'check',
       preview: required(flags, '--preview'),
       node: required(flags, '--node'),
       demo: required(flags, '--demo'),
+      version: flags.get('--version') ?? null,
       ignoreRegion: rawRegion === undefined ? null : parseIgnoreRegion(rawRegion),
       record,
     };
@@ -155,7 +157,7 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
     // --json 是无值布尔旗标(同 --record 剔除法),其余成对解析。--test/--node/--demo/--session 必填。
     const json = rest.includes('--json');
     const rest2 = rest.filter((a) => a !== '--json');
-    const flags = collectFlags(rest2, ['--test', '--node', '--demo', '--session', '--states', '--matrix', '--out']);
+    const flags = collectFlags(rest2, ['--test', '--node', '--demo', '--session', '--version', '--states', '--matrix', '--out']);
     const statesRaw = flags.get('--states');
     return {
       kind: 'verify-page',
@@ -163,6 +165,7 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       node: required(flags, '--node'),
       demo: required(flags, '--demo'),
       session: required(flags, '--session'),
+      version: flags.get('--version') ?? null,
       states: statesRaw === undefined ? [] : statesRaw.split(',').map((s) => s.trim()).filter(Boolean),
       matrix: flags.get('--matrix') ?? 'l-shape',
       json,

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CliUsageError, parseCliArgs, parseIgnoreRegion, previewToTestFqn } from './args.js';
-import type { CheckCmd } from './args.js';
+import type { CheckCmd, VerifyPageCmd } from './args.js';
 
 describe('parseCliArgs: baseline pull', () => {
   it('解析 --fixture/--file/--node', () => {
@@ -17,10 +17,14 @@ describe('parseCliArgs: baseline pull', () => {
 });
 
 describe('parseCliArgs: check', () => {
-  it('解析 --preview/--node/--demo(无 ignore-region 时为 null,缺省 record=false)', () => {
+  it('解析 --preview/--node/--demo(无 ignore-region 时为 null,缺省 record=false,version=null)', () => {
     expect(parseCliArgs(['check', '--preview', 'com.magpie.uiv.demo.CalibCardPreview', '--node', '1:100', '--demo', 'demo-android'])).toEqual({
-      kind: 'check', preview: 'com.magpie.uiv.demo.CalibCardPreview', node: '1:100', demo: 'demo-android', ignoreRegion: null, record: false,
+      kind: 'check', preview: 'com.magpie.uiv.demo.CalibCardPreview', node: '1:100', demo: 'demo-android', version: null, ignoreRegion: null, record: false,
     });
+  });
+  it('check 解析可选 --version(D-02/M3 消歧;缺省 null)', () => {
+    expect((parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:100', '--demo', 'd', '--version', 'V2']) as CheckCmd).version).toBe('V2');
+    expect((parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:100', '--demo', 'd']) as CheckCmd).version).toBeNull();
   });
   it('解析 --ignore-region x,y,w,h', () => {
     const c = parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:100', '--demo', 'd', '--ignore-region', '4,8,15,16']);
@@ -69,13 +73,17 @@ describe('parseCliArgs: verify-page', () => {
       '--demo', 'demo-android', '--session', 'S1', '--states', 'empty,longText', '--matrix', 'full',
       '--out', '/tmp/r.json', '--json'])).toEqual({
         kind: 'verify-page', test: 'com.magpie.uiv.demo.CalibPageScreenshotTest', node: '1:100', demo: 'demo-android',
-        session: 'S1', states: ['empty', 'longText'], matrix: 'full', json: true, out: '/tmp/r.json',
+        session: 'S1', version: null, states: ['empty', 'longText'], matrix: 'full', json: true, out: '/tmp/r.json',
       });
   });
-  it('缺省:states=[]、matrix=l-shape、json=false、out=null', () => {
+  it('缺省:version=null、states=[]、matrix=l-shape、json=false、out=null', () => {
     expect(parseCliArgs(['verify-page', '--test', 'T', '--node', '1:100', '--demo', 'd', '--session', 'standalone']))
       .toEqual({ kind: 'verify-page', test: 'T', node: '1:100', demo: 'd', session: 'standalone',
-        states: [], matrix: 'l-shape', json: false, out: null });
+        version: null, states: [], matrix: 'l-shape', json: false, out: null });
+  });
+  it('解析可选 --version(D-02/M3 消歧;给定即取值)', () => {
+    const c = parseCliArgs(['verify-page', '--test', 'T', '--node', '1:100', '--demo', 'd', '--session', 'S', '--version', 'T1_0A_V1']) as VerifyPageCmd;
+    expect(c.version).toBe('T1_0A_V1');
   });
   it('缺 --test / 缺 --session 各抛 CliUsageError', () => {
     expect(() => parseCliArgs(['verify-page', '--node', '1:100', '--demo', 'd', '--session', 'S'])).toThrow(/--test/);

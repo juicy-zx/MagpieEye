@@ -18,13 +18,15 @@ import {
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
+import { selectMappingEntry } from './mapping-entry.js';
 import { isFastLaneEnabled } from './fastlane.js';
 import { renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
 
 type Lane = 'fast' | 'slow' | 'fast-fallback-slow';
 
-/** check 的 version 取自 mapping.json(baseline pull 的 upsert 产物,source of truth)。 */
-async function readMappingEntry(uiVerifyDir: string, nodeId: string): Promise<MappingEntry> {
+/** check/verify-page 的 version/minScore/states 取自 mapping.json(baseline pull 的 upsert 产物,source of truth)。
+ *  version 可选:给定时按 nodeId+version 唯一命中消歧(D-02/M3),否则按 nodeId 取首条。选取纯逻辑见 mapping-entry.ts。 */
+async function readMappingEntry(uiVerifyDir: string, nodeId: string, version?: string): Promise<MappingEntry> {
   const mappingPath = path.join(uiVerifyDir, 'mapping.json');
   let text: string;
   try {
@@ -33,11 +35,7 @@ async function readMappingEntry(uiVerifyDir: string, nodeId: string): Promise<Ma
     throw new CliUsageError(`mapping.json not found at ${mappingPath}; run \`uiv baseline pull\` first`);
   }
   const entries = JSON.parse(text) as MappingEntry[];
-  const entry = entries.find((e) => e.nodeId === nodeId);
-  if (entry === undefined) {
-    throw new CliUsageError(`node ${nodeId} not in mapping.json; run \`uiv baseline pull\` first`);
-  }
-  return entry;
+  return selectMappingEntry(entries, nodeId, version);
 }
 
 async function main(): Promise<void> {
@@ -91,7 +89,7 @@ async function main(): Promise<void> {
 
   if (cmd.kind === 'verify-page') {
     // 统一调用契约(跨章第 1 条):--test/--node/--demo/--session/--json --out。version/minScore/states 取自 mapping entry。
-    const entry = await readMappingEntry(uiVerifyDir, cmd.node);
+    const entry = await readMappingEntry(uiVerifyDir, cmd.node, cmd.version ?? undefined);
     const states = cmd.states.length > 0 ? cmd.states : (entry.states?.map((s) => s.name) ?? []);
     const sel = await selectGradleRunner(uiVerifyDir);
     console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
