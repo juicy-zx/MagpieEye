@@ -13,7 +13,7 @@
  * 本入口只负责 argv 解析 / IO 呈现(末行路径、--json、WARN 打印)/ exitCode / 退出治理;
  * check/verify-page/baseline-pull 的实际编排复用 commands.ts(与 MCP server 同源)。
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
@@ -121,6 +121,7 @@ async function main(): Promise<void> {
     const report = isPageReport ? validatePageReport(raw) : validateReportV1(raw);
     const xml = toJUnitXml(report, cmd.suite !== null ? { suiteName: cmd.suite } : {});
     const outPath = cmd.out !== null ? path.resolve(cwd, cmd.out) : path.join(path.dirname(inPath), 'junit.xml');
+    await mkdir(path.dirname(outPath), { recursive: true });   // --out 目录未必已存在(同 pin/verify-page 惯例)
     await writeFile(outPath, xml, 'utf8');
     console.log(outPath);   // 最后一行 = junit.xml 绝对路径
     return;
