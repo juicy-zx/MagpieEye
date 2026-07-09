@@ -5,11 +5,13 @@
   "codex": {
     "transport": "mcp",
     "thread_id": "019f4572-6e87-7762-9518-83dbdd278e46",
-    "last_decisions": "D-09: M3 dual-insurance plan (adapter hard gate + evidence unit), verify-page at implementation, narrow .ui-verify exemption",
+    "last_decisions": "M4 code review round2 approved(blocking check-t43 git 护栏修复 d60fbeb + 建议 bb179c9/17c0c0c); 全项目收官确认 2026-07-09, 遗留项按 pending_followups 管理",
     "note": "原线程随进程异常丢失, 2026-07-09 续接新线程(决断史经 orchestration.md 注入)"
   },
   "consensus_reached": true,
-  "current_milestone": "M4",
+  "current_milestone": "complete",
+  "completed": "2026-07-09",
+  "release_gate_note": "orchestration.md §4: PAT 真实 REST 闭环验证前, 状态=fixture 驱动实现完成, 不得宣称 REST 通道闭环",
   "milestones": {
     "M0": {
       "subplan": "approved-inline",
@@ -36,9 +38,9 @@
     },
     "M4": {
       "subplan": "approved",
-      "code_review": "in_progress",
+      "code_review": "approved",
       "review_rounds": 1,
-      "code_review_rounds": 0
+      "code_review_rounds": 2
     }
   },
   "plan_review": {
@@ -63,8 +65,9 @@
       "last_commit": "fcd29c2"
     },
     "T1.1": {
-      "status": "awaiting_review",
-      "last_commit": "411e30a"
+      "status": "done",
+      "last_commit": "411e30a",
+      "note": "M1 关闭(round 2 approved)时漏更状态, 收官落账补正"
     },
     "T1.2": {
       "status": "done",
@@ -137,19 +140,19 @@
       "note": "北极星验收 PASS: demo exit 0(半程1 verify-page 5格全绿 + 半程2 收官E2E + 回归门 3394/3397); magpie 侧 6 commit(S1~S7) + uiv 侧 3 commit"
     },
     "T4.1": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "bf7f2ee",
       "note": "298/47 绿; stdio e2e 过; commands.ts 四约束; 双保险注释"
     },
     "T4.2": {
-      "status": "awaiting_review",
-      "last_commit": "3a93aca",
-      "note": "358/54 绿; 触发前置强断言(真产clusters仍零调用); 两处自决留审(pass证据剔除/exit分层)"
+      "status": "done",
+      "last_commit": "bb179c9",
+      "note": "358/54 绿; 触发前置强断言; 两处自决获批; review 补: pass evidence 非数组 throw 走 exit 1 分层(bb179c9)"
     },
     "T4.3": {
-      "status": "awaiting_review",
-      "last_commit": "1f3e9ce",
-      "note": "324/50 绿; 四场景 exit0+git 护栏; junit xsd 机判; 修复 ci-gate bash $? 陷阱"
+      "status": "done",
+      "last_commit": "17c0c0c",
+      "note": "324/50 绿; junit xsd 机判; review blocking 修复: 写偏护栏脏则 exit 2 拒跑+字节级复原(d60fbeb), ci-gate advisory 文档(17c0c0c)"
     },
     "T4.4": {
       "status": "done",
@@ -157,7 +160,7 @@
       "note": "Codex 裁定入 backlog(最多 inflate 探针零 L2), M4 不做完整接入"
     },
     "T4.5": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "4ebfbfb",
       "note": "demo 27/27; ATF 红绿实证(1.02 检出/11:1 静默); useRealAni 零扰动护栏; 边界严守"
     },
