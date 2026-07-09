@@ -86,3 +86,19 @@ describe('pinBaseline COMPONENT_SET 枚举', () => {
     expect(r.warnings).toEqual(['variantOption 未见对应子节点: Empty']);
   });
 });
+
+describe('re-persist 触发标记', () => {
+  it('触发标记:scoped+.magpie/ 才写;standalone 不写', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'uiv-pin-'));
+    mkdirSync(join(root, '.magpie'));
+    mkdirSync(join(root, 'docs')); writeFileSync(join(root, 'docs/req.md'), 'PRD');
+    const scoped = await pinBaseline(card(), root, { fileKey: 'F', nodeId: '1:100',
+      testFqn: 'com.magpie.uiv.demo.CalibCardTest', demoDir: 'demo-android', sourceDoc: 'docs/req.md', now });
+    expect(scoped.repersistRequested).toBe(true);
+    const marker = JSON.parse(readFileSync(join(root, '.magpie/uiv-repersist.json'), 'utf8'));
+    expect([marker.schemaVersion, marker.reason, marker.mappingPath]).toEqual([1, 'uiv-pin', '.ui-verify/mapping.json']);
+    const standalone = await pinBaseline(card(), root, { fileKey: 'F', nodeId: '1:100',
+      testFqn: 'com.magpie.uiv.demo.CalibCardTest', demoDir: 'demo-android', now });
+    expect(standalone.repersistRequested).toBe(false);
+  });
+});
