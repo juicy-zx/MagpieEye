@@ -27,12 +27,15 @@ import { validatePageReport } from './report.js';
 import type { PageAssertionScope, PageCell, PageJudgePath, PageReport } from './report.js';
 import { buildL3InputPack } from './l3/inputPack.js';
 import type { L3Candidate } from './l3/inputPack.js';
+import { attachL3Verdicts } from './l3/attach.js';
+import type { VlmProvider } from './l3/provider.js';
 import { enrichViolations } from './source-attr.js';
 
 export interface VerifyPageOpts {
   demoDir: string; testFqn: string; nodeId: string; version: string; uiVerifyDir: string; sessionId: string;
   matrix: string; states: readonly string[]; minScore?: number; outPath?: string;
   pinnedStates?: readonly MappingStateRef[];   // T3.2/T3.4 mapping.states[](states[] canonical schema)
+  vlmProvider?: VlmProvider;                    // T4.2:provider 形态(B3);缺省=不注入=零 LLM 调用(轻量形态)
 }
 
 interface CellRoute { judgePath: PageJudgePath; assertionScope: PageAssertionScope }
@@ -157,18 +160,25 @@ export async function verifyPage(
   const pageReportPath = join(reportsDir, 'page-report.json');
   writeFileSync(pageReportPath, `${JSON.stringify(pageReport, null, 2)}\n`, 'utf8');
 
-  // T4.2:L1/L2 全过才触发 L3 输入包生成(轻量形态,advisory);pass=false 分支零调用(触发前置)。
+  // T4.2:L1/L2 全过才触发 L3(轻量形态生成输入包;provider 注入时回填 l3Verdicts)。pass=false 分支零调用(触发前置);
+  // 整段 advisory:失败仅 warn,不改 pass/返回值/退出码(同 L1 容错先例)。写盘后、--out 复制前接线,令 --out 拿到最终版。
+  let finalReport = pageReport;
   if (pageReport.pass) {
     try {
-      buildL3InputPack(l3Candidates, nodeDir, join(opts.uiVerifyDir, 'reports'), opts.nodeId, opts.version);
+      const built = buildL3InputPack(l3Candidates, nodeDir, join(opts.uiVerifyDir, 'reports'), opts.nodeId, opts.version);
+      if (built !== null && opts.vlmProvider !== undefined) {
+        const raw = await opts.vlmProvider.judge(built.pack);
+        attachL3Verdicts(pageReportPath, raw, built.packPath);   // 证据锚定过滤 + 写回磁盘
+        finalReport = validatePageReport(JSON.parse(readFileSync(pageReportPath, 'utf8')));   // 重读拿含 l3Verdicts 的最终版
+      }
     } catch (e) {
-      console.warn(`uiv: L3 input pack failed (advisory): ${(e as Error).message}`);
+      console.warn(`uiv: L3 advisory failed: ${(e as Error).message}`);
     }
   }
 
   if (opts.outPath !== undefined) {
     mkdirSync(dirname(opts.outPath), { recursive: true });
-    copyFileSync(pageReportPath, opts.outPath);   // --out 另复制一份(magpie 传 .magpie/sessions/<id>/)
+    copyFileSync(pageReportPath, opts.outPath);   // --out 另复制一份(magpie 传 .magpie/sessions/<id>/);attach 已写回,复制的是最终版
   }
-  return { report: pageReport, reportPath: pageReportPath };
+  return { report: finalReport, reportPath: pageReportPath };
 }

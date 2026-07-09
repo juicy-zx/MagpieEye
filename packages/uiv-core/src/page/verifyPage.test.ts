@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { pullBaseline } from '../baseline/pull.js';
 import type { MappingStateRef } from '../baseline/mapping.js';
 import { FixtureFigmaClient } from '../figma/client.js';
@@ -11,6 +11,8 @@ import type { GradleRunner } from '../check/run.js';
 import type { SemNode, SemanticsDump } from '../l2/types.js';
 import { verifyPage } from './verifyPage.js';
 import type { VerifyPageOpts } from './verifyPage.js';
+import type { VlmProvider } from './l3/provider.js';
+import type { L3InputPack } from './l3/inputPack.js';
 
 const FIXTURE = fileURLToPath(new URL('../../fixtures/rest-nodes-card.json', import.meta.url));
 const TEST_FQN = 'com.magpie.uiv.demo.CalibPageScreenshotTest';   // shortName = CalibPage
@@ -158,6 +160,102 @@ describe('verifyPage L3 触发前置(T4.2)', () => {
     if (existsSync(packPath)) {
       const pack = JSON.parse(readFileSync(packPath, 'utf8')) as { cells: Array<{ triptychPath: string }> };
       for (const cell of pack.cells) expect(existsSync(cell.triptychPath)).toBe(true);
+    }
+  });
+});
+
+/** 真实 baseline.png(64×64 纯白)落盘到 baselines/<nodeDir>/,令 base 格 L1 真跑。 */
+function seedBaseline(uiVerifyDir: string): string {
+  const dir = join(uiVerifyDir, 'baselines', '1-100@T1_0A_V1');
+  mkdirSync(dir, { recursive: true });
+  const p = join(dir, 'baseline.png');
+  const png = new PNG({ width: 64, height: 64 });
+  png.data.fill(255);
+  writeFileSync(p, PNG.sync.write(png));
+  return p;
+}
+
+/** 读 baseline 尺寸动态生成"同尺寸但左上 16×16 抹红"的 actual → odiff 真产非空 clusters + diff.png 落盘。 */
+class DiffingRunner implements GradleRunner {
+  calls: string[][] = [];
+  constructor(private readonly baselinePngPath: string, private readonly dump: unknown = goodDump()) {}
+  async run(cwd: string, args: string[]): Promise<{ exitCode: number; stderr: string }> {
+    this.calls.push(args);
+    const base = PNG.sync.read(readFileSync(this.baselinePngPath));
+    const actual = new PNG({ width: base.width, height: base.height });
+    base.data.copy(actual.data);
+    for (let y = 0; y < Math.min(16, base.height); y++) {
+      for (let x = 0; x < Math.min(16, base.width); x++) {
+        const o = (y * base.width + x) * 4;
+        actual.data[o] = 255; actual.data[o + 1] = 0; actual.data[o + 2] = 0; actual.data[o + 3] = 255;
+      }
+    }
+    const robo = join(cwd, 'app', 'build', 'outputs', 'roborazzi');
+    mkdirSync(robo, { recursive: true });
+    writeFileSync(join(robo, 'CalibPage_actual.png'), PNG.sync.write(actual));
+    const ui = join(cwd, 'app', 'build', 'uiv');
+    mkdirSync(ui, { recursive: true });
+    writeFileSync(join(ui, 'CalibPage.semantics.json'), JSON.stringify(this.dump), 'utf8');
+    return { exitCode: 0, stderr: '' };
+  }
+}
+
+/** fake provider:记录调用;返回引用 pack 首簇的合法 fail + 一条 evidence 空的 fail(应被 drop)。 */
+class FakeVlmProvider implements VlmProvider {
+  calls: L3InputPack[] = [];
+  async judge(pack: L3InputPack): Promise<unknown> {
+    this.calls.push(pack);
+    const cell = pack.cells[0];
+    const cl = cell?.clusters[0];
+    const evidence = cell !== undefined && cl !== undefined
+      ? [{ cellId: cell.cellId, x: cl.x, y: cl.y, w: cl.w, h: cl.h }] : [];
+    return [
+      { item: 'color', verdict: 'fail', evidence, severity: 'high', suggestion: '颜色偏差' },
+      { item: 'spacing', verdict: 'fail', evidence: [], severity: 'high', suggestion: '无证据(应 drop)' },
+    ];
+  }
+}
+
+describe('verifyPage vlm provider(T4.2 B3)', () => {
+  const NODE_DIR = '1-100@T1_0A_V1';
+  it('全绿 + 真实非空 clusters + 注入 fake → l3Verdicts 非空、无证据项 drop、全 fail 下 pass 仍 true', async () => {
+    const { demoDir, uiVerifyDir } = await setup();
+    const baselinePath = seedBaseline(uiVerifyDir);
+    const fake = new FakeVlmProvider();
+    const { report } = await verifyPage(new DiffingRunner(baselinePath), baseOpts(demoDir, uiVerifyDir, { vlmProvider: fake }));
+    expect(report.pass).toBe(true);                    // L1/L2 全过
+    expect(fake.calls).toHaveLength(1);                // pass ∧ pack 非 null → provider 调用一次
+    expect(report.l3Verdicts.length).toBeGreaterThanOrEqual(1);
+    expect(report.l3Verdicts.every((v) => v.verdict === 'fail')).toBe(true);
+    expect(report.pass).toBe(true);                    // 全 fail verdict 不改 pass(仅建议不门禁)
+    // 落盘 page-report.json 同步含回填后的 l3Verdicts
+    const onDisk = JSON.parse(readFileSync(join(uiVerifyDir, 'reports', NODE_DIR, 'page-report.json'), 'utf8'));
+    expect(onDisk.l3Verdicts.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('L2 fail + 真实 diff + 注入 fake → 触发前置对 provider 生效:fake.calls===0', async () => {
+    const { demoDir, uiVerifyDir } = await setup();
+    const baselinePath = seedBaseline(uiVerifyDir);
+    const fake = new FakeVlmProvider();
+    const { report } = await verifyPage(
+      new DiffingRunner(baselinePath, badGeomDump()), baseOpts(demoDir, uiVerifyDir, { vlmProvider: fake }));
+    expect(report.pass).toBe(false);
+    expect(fake.calls).toHaveLength(0);                // pass=false → 整段 L3 块跳过,provider 零调用
+    expect(report.l3Verdicts).toEqual([]);
+  });
+
+  it('provider judge 抛错 → advisory warn 后 report 正常返回、l3Verdicts []', async () => {
+    const { demoDir, uiVerifyDir } = await setup();
+    const baselinePath = seedBaseline(uiVerifyDir);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const throwing: VlmProvider = { judge: () => Promise.reject(new Error('provider boom')) };
+    try {
+      const { report } = await verifyPage(new DiffingRunner(baselinePath), baseOpts(demoDir, uiVerifyDir, { vlmProvider: throwing }));
+      expect(report.pass).toBe(true);
+      expect(report.l3Verdicts).toEqual([]);
+      expect(warnSpy).toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
     }
   });
 });
