@@ -14,7 +14,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
-  addIgnoreRegion, pinBaseline, pullBaseline, runCheckL2, runRecord, stopOdiffServer,
+  addIgnoreRegion, pinBaseline, pullBaseline, runCheckL2, runRecord, stopOdiffServer, verifyPage,
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
@@ -86,6 +86,35 @@ async function main(): Promise<void> {
       ? 'uiv: re-persist requested (.magpie/uiv-repersist.json)'
       : r.entry.scope ? 'uiv: scoped pin' : 'uiv: standalone pin');
     console.log(r.mappingPath);   // 最后一行 = mapping.json 绝对路径;成功 exit 0
+    return;
+  }
+
+  if (cmd.kind === 'verify-page') {
+    // 统一调用契约(跨章第 1 条):--test/--node/--demo/--session/--json --out。version/minScore/states 取自 mapping entry。
+    const entry = await readMappingEntry(uiVerifyDir, cmd.node);
+    const states = cmd.states.length > 0 ? cmd.states : (entry.states?.map((s) => s.name) ?? []);
+    const sel = await selectGradleRunner(uiVerifyDir);
+    console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
+    try {
+      const { report, reportPath } = await verifyPage(sel.runner, {
+        demoDir: path.resolve(cmd.demo),
+        testFqn: cmd.test,
+        nodeId: cmd.node,
+        version: entry.version,
+        uiVerifyDir,
+        sessionId: cmd.session,
+        matrix: cmd.matrix,
+        states,
+        minScore: entry.minScore,
+        ...(entry.states ? { pinnedStates: entry.states } : {}),
+        ...(cmd.out !== null ? { outPath: path.resolve(cmd.out) } : {}),
+      });
+      process.exitCode = report.pass ? 0 : 1;   // UI 违规非零,report 必已落盘
+      if (cmd.json) console.log(JSON.stringify(report, null, 2));
+      console.log(reportPath);   // 最后一行恒为 page-report 绝对路径
+    } finally {
+      stopOdiffServer();   // D-07(a):释放 odiff server 子进程
+    }
     return;
   }
 

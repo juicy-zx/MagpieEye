@@ -63,9 +63,30 @@ describe('parseCliArgs: pin', () => {
   });
 });
 
+describe('parseCliArgs: verify-page', () => {
+  it('全旗标解析(含 --session/--states/--matrix/--json/--out)', () => {
+    expect(parseCliArgs(['verify-page', '--test', 'com.magpie.uiv.demo.CalibPageScreenshotTest', '--node', '1:100',
+      '--demo', 'demo-android', '--session', 'S1', '--states', 'empty,longText', '--matrix', 'full',
+      '--out', '/tmp/r.json', '--json'])).toEqual({
+        kind: 'verify-page', test: 'com.magpie.uiv.demo.CalibPageScreenshotTest', node: '1:100', demo: 'demo-android',
+        session: 'S1', states: ['empty', 'longText'], matrix: 'full', json: true, out: '/tmp/r.json',
+      });
+  });
+  it('缺省:states=[]、matrix=l-shape、json=false、out=null', () => {
+    expect(parseCliArgs(['verify-page', '--test', 'T', '--node', '1:100', '--demo', 'd', '--session', 'standalone']))
+      .toEqual({ kind: 'verify-page', test: 'T', node: '1:100', demo: 'd', session: 'standalone',
+        states: [], matrix: 'l-shape', json: false, out: null });
+  });
+  it('缺 --test / 缺 --session 各抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['verify-page', '--node', '1:100', '--demo', 'd', '--session', 'S'])).toThrow(/--test/);
+    expect(() => parseCliArgs(['verify-page', '--test', 'T', '--node', '1:100', '--demo', 'd'])).toThrow(/--session/);
+  });
+});
+
 describe('parseCliArgs: 非法输入', () => {
-  it('未知子命令抛 CliUsageError', () => {
+  it('未知子命令抛 CliUsageError(消息含 verify-page)', () => {
     expect(() => parseCliArgs(['frobnicate'])).toThrow(CliUsageError);
+    expect(() => parseCliArgs(['frobnicate'])).toThrow(/verify-page/);
   });
   it('未知 flag 抛 CliUsageError', () => {
     expect(() => parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:100', '--demo', 'd', '--wat'])).toThrow(/--wat/);

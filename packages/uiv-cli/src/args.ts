@@ -15,7 +15,12 @@ export interface PinCmd {
   fixture: string | null; source: string | null;
   states: PinStateArg[]; minScore: number | null; matrix: string | null;
 }
-export type ParsedCommand = BaselinePullCmd | CheckCmd | PinCmd;
+export interface VerifyPageCmd {
+  kind: 'verify-page';
+  test: string; node: string; demo: string; session: string;
+  states: string[]; matrix: string; json: boolean; out: string | null;
+}
+export type ParsedCommand = BaselinePullCmd | CheckCmd | PinCmd | VerifyPageCmd;
 
 const PIN_MATRIX_RE = /^(l-shape|full|custom:.+)$/;
 
@@ -146,5 +151,23 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       matrix: matrixRaw ?? null,
     };
   }
-  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, pin)`);
+  if (cmd === 'verify-page') {
+    // --json 是无值布尔旗标(同 --record 剔除法),其余成对解析。--test/--node/--demo/--session 必填。
+    const json = rest.includes('--json');
+    const rest2 = rest.filter((a) => a !== '--json');
+    const flags = collectFlags(rest2, ['--test', '--node', '--demo', '--session', '--states', '--matrix', '--out']);
+    const statesRaw = flags.get('--states');
+    return {
+      kind: 'verify-page',
+      test: required(flags, '--test'),
+      node: required(flags, '--node'),
+      demo: required(flags, '--demo'),
+      session: required(flags, '--session'),
+      states: statesRaw === undefined ? [] : statesRaw.split(',').map((s) => s.trim()).filter(Boolean),
+      matrix: flags.get('--matrix') ?? 'l-shape',
+      json,
+      out: flags.get('--out') ?? null,
+    };
+  }
+  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, pin, verify-page)`);
 }
