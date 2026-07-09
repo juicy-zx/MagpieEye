@@ -5,6 +5,7 @@ import {
   UNTAGGED_COVERAGE_THRESHOLD, MATCH_RATE_FUSE, STAGNATION_TRIGGER,
   ROUND_LIMIT, SCORE_BACKSLIDE_TOLERANCE,
   TEXT_SIM_MIN, LCS_ALPHA, LCS_TYPE_DISCOUNT, LCS_SIM_MIN,
+  TOUCH_TARGET_MIN_DP, CLIP_TOL_DP, OVERLAP_MIN_DP,
 } from './constants.js';
 
 // 常量快照测试:防后续步骤悄改口径(设计文档 2.4 节 + 设计原则 2 的唯一出处)。
@@ -29,5 +30,10 @@ describe('L2 口径常量(2.4 节代码化)', () => {
     expect(LCS_ALPHA).toBe(10);
     expect(LCS_TYPE_DISCOUNT).toBe(0.5);
     expect(LCS_SIM_MIN).toBe(0.6);
+  });
+  it('T3.4 L2-invariant:触控最小 48dp / 裁剪容差 0.5dp / 兄弟重叠下限 1dp(设计 3.3)', () => {
+    expect(TOUCH_TARGET_MIN_DP).toBe(48);
+    expect(CLIP_TOL_DP).toBe(0.5);
+    expect(OVERLAP_MIN_DP).toBe(1);
   });
 });

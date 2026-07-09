@@ -14,16 +14,20 @@ export interface FigmaNode {
   style?: { fontSize?: number }; characters?: string; children?: FigmaNode[];
 }
 
-/** 语义树导出节点(全部 px)。 */
+/** 语义树导出节点(全部 px)。T3.4 可选字段:存量 TS fixture 免改,demo Rule 侧恒导出。 */
 export interface SemNode {
   testTag: string | null; text: string | null;
   positionInRoot: { x: number; y: number }; size: { width: number; height: number };
   touchBoundsInRoot: { left: number; top: number; right: number; bottom: number };
   colorHex: string | null; fontSizeSp: number | null; cornerRadiusPx: number | null;
+  boundsInRoot?: { left: number; top: number; right: number; bottom: number }; // px, clipped;与 unclipped positionInRoot+size 作差判被裁(childClipped)
+  hasVisualOverflow?: boolean | null;   // 文本可视溢出(ellipsis);非文本节点为 null
+  clickable?: boolean;                   // semantics config 含 OnClick(CS3 触控口径)
+  contentDescription?: string | null;    // merged 可及名(missingContentDescription 判据)
   children: SemNode[];
 }
 
-export interface SemanticsDump { density: number; root: SemNode }
+export interface SemanticsDump { density: number; root: SemNode; graphicsMode?: string }
 
 /** join 时 px→dp 换算后的语义节点(fontSizeSp/colorHex 不换算)。 */
 export interface SemDp {
@@ -31,6 +35,10 @@ export interface SemDp {
   positionDp: { x: number; y: number }; sizeDp: { width: number; height: number };
   touchBoundsDp: { left: number; top: number; right: number; bottom: number };
   colorHex: string | null; fontSizeSp: number | null; cornerRadiusDp: number | null;
+  boundsDp?: { left: number; top: number; right: number; bottom: number }; // ÷density
+  hasVisualOverflow?: boolean | null;
+  clickable?: boolean;
+  contentDescription?: string | null;
   children: SemDp[];
 }
 
@@ -40,7 +48,7 @@ export interface Pair { figma: FigmaNode; sem: SemDp }
 export type Severity = 'blocking' | 'high' | 'medium' | 'low';
 
 export interface Violation {
-  judgePath: 'parity' | 'parity-pixel-sampled'; testTag: string; figmaName: string;
+  judgePath: 'parity' | 'parity-pixel-sampled' | 'invariant'; testTag: string; figmaName: string;
   property: string; expected: string; actual: string; severity: Severity; hint: string;
 }
 

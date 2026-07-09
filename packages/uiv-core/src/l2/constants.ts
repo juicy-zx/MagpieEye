@@ -21,3 +21,8 @@ export const TEXT_SIM_MIN = 0.95;     // 降级 1:文本归一化编辑距离相
 export const LCS_ALPHA = 10;          // 降级 2:simPos=1/(1+L1/α) 的位置尺度(dp)
 export const LCS_TYPE_DISCOUNT = 0.5; // 降级 2:TEXT/非 TEXT 类型不一致的相似度折扣 δ
 export const LCS_SIM_MIN = 0.6;       // 降级 2:LCS 配对相似度下限
+
+// L2-invariant 免基准套件口径(T3.4,设计文档 3.3 节)。数值不得改动;constants.test.ts 做快照防漂移。
+export const TOUCH_TARGET_MIN_DP = 48; // CS3 最小可点击触控区(Material a11y 48x48dp);判定读 touchBoundsInRoot
+export const CLIP_TOL_DP = 0.5;        // childClipped 判定容差 = 框架量化噪声上界(对齐 EXACT_GRID_DP)
+export const OVERLAP_MIN_DP = 1;       // siblingOverlap:交叠宽高须均 >1dp(容抗锯齿贴边)

@@ -21,6 +21,13 @@ export function toDp(n: SemNode, density: number): SemDp {
     },
     colorHex: n.colorHex, fontSizeSp: n.fontSizeSp,           // sp 不换算
     cornerRadiusDp: n.cornerRadiusPx === null ? null : d(n.cornerRadiusPx),
+    // T3.4 invariant 字段透传:boundsInRoot(clipped px)÷density;布尔/字符串原样,undefined 保持 undefined(exactOptionalPropertyTypes)。
+    ...(n.boundsInRoot !== undefined ? {
+      boundsDp: { left: d(n.boundsInRoot.left), top: d(n.boundsInRoot.top), right: d(n.boundsInRoot.right), bottom: d(n.boundsInRoot.bottom) },
+    } : {}),
+    ...(n.hasVisualOverflow !== undefined ? { hasVisualOverflow: n.hasVisualOverflow } : {}),
+    ...(n.clickable !== undefined ? { clickable: n.clickable } : {}),
+    ...(n.contentDescription !== undefined ? { contentDescription: n.contentDescription } : {}),
     children: n.children.map((c) => toDp(c, density)),
   };
 }
