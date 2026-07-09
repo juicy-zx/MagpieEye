@@ -50,6 +50,7 @@ export type Severity = 'blocking' | 'high' | 'medium' | 'low';
 export interface Violation {
   judgePath: 'parity' | 'parity-pixel-sampled' | 'invariant'; testTag: string; figmaName: string;
   property: string; expected: string; actual: string; severity: Severity; hint: string;
+  source?: string | null;   // T3.3:verify-page 层由 enrichViolations 富化(demoDir 相对 "path:line");l2 引擎不产
 }
 
 /** T2.7 像素通道跳过记录。 */
