@@ -17,7 +17,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
-  detectVersionDrift, extractMetaVersion, pinBaseline, runRecord, toJUnitXml, validatePageReport, validateReportV1,
+  attachL3Verdicts, detectVersionDrift, extractMetaVersion, pinBaseline, runRecord, toJUnitXml,
+  validatePageReport, validateReportV1,
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
@@ -124,6 +125,22 @@ async function main(): Promise<void> {
     await mkdir(path.dirname(outPath), { recursive: true });   // --out 目录未必已存在(同 pin/verify-page 惯例)
     await writeFile(outPath, xml, 'utf8');
     console.log(outPath);   // 最后一行 = junit.xml 绝对路径
+    return;
+  }
+
+  if (cmd.kind === 'l3-attach') {
+    // T4.2 轻量形态回填:读 verdicts.json → attachL3Verdicts 证据锚定过滤 → 打印计数。
+    // §2.3:命令合法调用后执行期发现的数据问题(非法 JSON / 内部校验 throw)→ exit 1(独立于 CliUsageError=exit 2)。
+    try {
+      const reportPath = path.resolve(cwd, cmd.report);
+      const packPath = path.resolve(cwd, cmd.pack);
+      const verdicts: unknown = JSON.parse(await readFile(path.resolve(cwd, cmd.verdicts), 'utf8'));
+      const r = attachL3Verdicts(reportPath, verdicts, packPath);
+      console.log(`attached=${r.attached} dropped=${r.dropped}`);
+    } catch (e) {
+      console.error(`uiv: ${(e as Error).message}`);
+      process.exitCode = 1;
+    }
     return;
   }
 

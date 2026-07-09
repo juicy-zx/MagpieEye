@@ -156,3 +156,23 @@ describe('parseIgnoreRegion', () => {
     expect(() => parseIgnoreRegion('1,2,3,nope')).toThrow(CliUsageError);
   });
 });
+
+describe('parseCliArgs: l3-attach(T4.2 回填通道)', () => {
+  it('解析 --report/--verdicts/--pack(三必选)', () => {
+    expect(parseCliArgs(['l3-attach', '--report', 'r.json', '--verdicts', 'v.json', '--pack', 'p.json'])).toEqual({
+      kind: 'l3-attach', report: 'r.json', verdicts: 'v.json', pack: 'p.json',
+    });
+  });
+  it('缺 --report 抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['l3-attach', '--verdicts', 'v.json', '--pack', 'p.json'])).toThrow(/--report/);
+  });
+  it('缺 --verdicts 抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['l3-attach', '--report', 'r.json', '--pack', 'p.json'])).toThrow(/--verdicts/);
+  });
+  it('缺 --pack 抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['l3-attach', '--report', 'r.json', '--verdicts', 'v.json'])).toThrow(/--pack/);
+  });
+  it('未知命令提示串含 l3-attach', () => {
+    expect(() => parseCliArgs(['bogus'])).toThrow(/l3-attach/);
+  });
+});

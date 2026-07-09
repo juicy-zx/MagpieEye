@@ -23,7 +23,8 @@ export interface VerifyPageCmd {
   states: string[]; matrix: string; json: boolean; out: string | null;
 }
 export interface ReportCmd { kind: 'report'; junit: boolean; in: string; out: string | null; suite: string | null }
-export type ParsedCommand = BaselinePullCmd | BaselineCheckVersionCmd | CheckCmd | PinCmd | VerifyPageCmd | ReportCmd;
+export interface L3AttachCmd { kind: 'l3-attach'; report: string; verdicts: string; pack: string }
+export type ParsedCommand = BaselinePullCmd | BaselineCheckVersionCmd | CheckCmd | PinCmd | VerifyPageCmd | ReportCmd | L3AttachCmd;
 
 const PIN_MATRIX_RE = /^(l-shape|full|custom:.+)$/;
 
@@ -199,5 +200,15 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       suite: flags.get('--suite') ?? null,
     };
   }
-  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, pin, verify-page, report)`);
+  if (cmd === 'l3-attach') {
+    // T4.2 轻量形态回填通道:page-report + verdicts.json + l3-input.json,三必选(缺任一 → CliUsageError=exit 2)。
+    const flags = collectFlags(rest, ['--report', '--verdicts', '--pack']);
+    return {
+      kind: 'l3-attach',
+      report: required(flags, '--report'),
+      verdicts: required(flags, '--verdicts'),
+      pack: required(flags, '--pack'),
+    };
+  }
+  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, pin, verify-page, report, l3-attach)`);
 }
