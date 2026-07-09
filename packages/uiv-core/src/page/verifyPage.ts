@@ -25,6 +25,8 @@ import { expandMatrix } from './matrix.js';
 import type { Device } from './matrix.js';
 import { validatePageReport } from './report.js';
 import type { PageAssertionScope, PageCell, PageJudgePath, PageReport } from './report.js';
+import { buildL3InputPack } from './l3/inputPack.js';
+import type { L3Candidate } from './l3/inputPack.js';
 import { enrichViolations } from './source-attr.js';
 
 export interface VerifyPageOpts {
@@ -80,6 +82,7 @@ export async function verifyPage(
   const cells = expandMatrix(opts.matrix, opts.states);
   const perCell: PageCell[] = [];
   const classifyInput: Array<{ cellId: string; report: ReportV1 }> = [];
+  const l3Candidates: L3Candidate[] = [];   // T4.2:parity 格 L3 候选(合格性由 buildL3InputPack 按 artifacts 三路径过滤)
   const shortName = shortNameOf(opts.testFqn);
 
   for (const cell of cells) {
@@ -103,6 +106,12 @@ export async function verifyPage(
         ...(route.assertionScope === 'geometry-only' ? { excludeProperties: ['color'] } : {}),
       });
       report = rc.report; reportPath = rc.reportPath;
+      // T4.2:parity 格入 L3 候选(pixel5-dark 因 skipL1 无 diff,后续按 artifacts 三路径过滤自然排除)。
+      l3Candidates.push({
+        cellId: cell.cellId, state: cell.state, assertionScope: route.assertionScope,
+        artifacts: report.artifacts,
+        pixel: report.pixel === null ? null : { diffRatio: report.pixel.diffRatio, clusters: report.pixel.clusters },
+      });
     } else if (route.judgePath === 'invariant-only') {
       // base × 无 pin 态:先 runCheck 渲染产 semantics dump,再 runInvariantOnly 取真实 pass/violations。
       const rc = await runCheck(runner, { ...common, nodeId: opts.nodeId, version: opts.version });
@@ -147,6 +156,16 @@ export async function verifyPage(
   mkdirSync(reportsDir, { recursive: true });
   const pageReportPath = join(reportsDir, 'page-report.json');
   writeFileSync(pageReportPath, `${JSON.stringify(pageReport, null, 2)}\n`, 'utf8');
+
+  // T4.2:L1/L2 全过才触发 L3 输入包生成(轻量形态,advisory);pass=false 分支零调用(触发前置)。
+  if (pageReport.pass) {
+    try {
+      buildL3InputPack(l3Candidates, nodeDir, join(opts.uiVerifyDir, 'reports'), opts.nodeId, opts.version);
+    } catch (e) {
+      console.warn(`uiv: L3 input pack failed (advisory): ${(e as Error).message}`);
+    }
+  }
+
   if (opts.outPath !== undefined) {
     mkdirSync(dirname(opts.outPath), { recursive: true });
     copyFileSync(pageReportPath, opts.outPath);   // --out 另复制一份(magpie 传 .magpie/sessions/<id>/)

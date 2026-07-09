@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,6 +27,15 @@ function sem(tag: string | null, x: number, y: number, w: number, h: number,
 function goodDump(): SemanticsDump {
   return { density: 2.0, graphicsMode: 'NATIVE', root: sem('fig:1:100', 0, 0, 720, 400, null, null, [
     sem('fig:1:101', 24, 24, 400, 40, '#FFFFFF', 16),
+    sem('fig:1:102', 24, 72, 400, 32, '#CCE0FF', 12),
+    sem('fig:1:103', 24, 120, 160, 80, '#FF9900', null),
+    sem('fig:1:104', 592, 24, 104, 40, '#FF3B30', null),
+  ]) };
+}
+/** 把首个子节点几何写偏(px 200 vs 期望 24 → positionDp 偏 88dp ≫ 2dp 容差)→ L2 position 高违规 → 整页 fail。 */
+function badGeomDump(): SemanticsDump {
+  return { density: 2.0, graphicsMode: 'NATIVE', root: sem('fig:1:100', 0, 0, 720, 400, null, null, [
+    sem('fig:1:101', 200, 24, 400, 40, '#FFFFFF', 16),
     sem('fig:1:102', 24, 72, 400, 32, '#CCE0FF', 12),
     sem('fig:1:103', 24, 120, 160, 80, '#FF9900', null),
     sem('fig:1:104', 592, 24, 104, 40, '#FF3B30', null),
@@ -126,5 +135,29 @@ describe('verifyPage', () => {
     const { report } = await verifyPage(new WritingRunner(), baseOpts(demoDir, uiVerifyDir, { sessionId: 'S1', outPath }));
     expect(existsSync(outPath)).toBe(true);
     expect(report.sessionId).toBe('S1');
+  });
+});
+
+describe('verifyPage L3 触发前置(T4.2)', () => {
+  const NODE_DIR = '1-100@T1_0A_V1';
+  it('L2 fail 整页 → pass false ∧ l3/ 目录不存在 ∧ l3Verdicts=[] ∧ page-report 原文不含 l3-input', async () => {
+    const { demoDir, uiVerifyDir } = await setup();
+    const { report, reportPath } = await verifyPage(new WritingRunner(0, badGeomDump()), baseOpts(demoDir, uiVerifyDir));
+    expect(report.pass).toBe(false);
+    expect(report.l3Verdicts).toEqual([]);
+    expect(existsSync(join(uiVerifyDir, 'reports', NODE_DIR, 'l3'))).toBe(false);   // 零 L3 目录
+    expect(readFileSync(reportPath, 'utf8')).not.toContain('l3-input');             // 报告原文零 L3 痕迹
+  });
+
+  it('全绿跑 → l3Verdicts 仍 [](轻量形态不自动回填);若 l3-input.json 存在则 cells triptychPath 齐落盘', async () => {
+    const { demoDir, uiVerifyDir } = await setup();
+    const { report } = await verifyPage(new WritingRunner(), baseOpts(demoDir, uiVerifyDir));
+    expect(report.pass).toBe(true);
+    expect(report.l3Verdicts).toEqual([]);
+    const packPath = join(uiVerifyDir, 'reports', NODE_DIR, 'l3', 'l3-input.json');
+    if (existsSync(packPath)) {
+      const pack = JSON.parse(readFileSync(packPath, 'utf8')) as { cells: Array<{ triptychPath: string }> };
+      for (const cell of pack.cells) expect(existsSync(cell.triptychPath)).toBe(true);
+    }
   });
 });
