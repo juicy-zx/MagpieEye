@@ -9,7 +9,7 @@
     "note": "原线程随进程异常丢失, 2026-07-09 续接新线程(决断史经 orchestration.md 注入)"
   },
   "consensus_reached": true,
-  "current_milestone": "M3",
+  "current_milestone": "M4",
   "milestones": {
     "M0": {
       "subplan": "approved-inline",
@@ -30,9 +30,9 @@
     },
     "M3": {
       "subplan": "approved",
-      "code_review": "in_progress",
+      "code_review": "approved",
       "review_rounds": 3,
-      "code_review_rounds": 1
+      "code_review_rounds": 2
     },
     "M4": {
       "subplan": "none",
@@ -116,17 +116,17 @@
       "note": "只读核验完成: 3 承重发现驱动 D-09 方案重写; magpie HEAD 4d86bbc5; 测试基线 3346/3349(3 failed=Go 缺失环境性)"
     },
     "T3.2": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "44478a9",
       "note": "226/33 绿; CS6 冒烟过; sig/sha1/canonical states 契约落地; build 待 barrel 集成恢复"
     },
     "T3.3": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "69fa9ad",
       "note": "+29 绿; E2E 两格 23.5s; page-report 契约全落; barrel 独立 commit 52e29c4 按先例"
     },
     "T3.4": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "5cd4d51",
       "note": "+20 uiv/+demo 23 绿; 五不变量实证; 接口冻结 stateJudgePath/runInvariantOnly/opts.invariant"
     },
@@ -175,12 +175,12 @@
       "note": "双退化证伪(测量假象); 真凶 odiff 看门狗5s; 修复后 P50=5090 达标"
     },
     "T3.1a": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "35028403(magpie)",
       "note": "4 commit @feature/ui-visual-validation; 回归门守住(3350/3353); contract.uiParity 接口冻结"
     },
     "T3.1b": {
-      "status": "awaiting_review",
+      "status": "done",
       "last_commit": "cd3b7aeb(magpie)",
       "note": "+29 零回归; 九分支/窄豁免两面/repersist 落地; matrix 不 gate(T3.3 知悉); T3.5 四注入入口"
     },
