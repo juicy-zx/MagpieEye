@@ -118,15 +118,16 @@
       "last_commit": null
     },
     "T3.2": {
-      "status": "in_progress",
-      "last_commit": null
+      "status": "awaiting_review",
+      "last_commit": "44478a9",
+      "note": "226/33 绿; CS6 冒烟过; sig/sha1/canonical states 契约落地; build 待 barrel 集成恢复"
     },
     "T3.3": {
       "status": "pending",
       "last_commit": null
     },
     "T3.4": {
-      "status": "pending",
+      "status": "in_progress",
       "last_commit": null
     },
     "T3.5": {
@@ -173,8 +174,19 @@
       "note": "双退化证伪(测量假象); 真凶 odiff 看门狗5s; 修复后 P50=5090 达标"
     },
     "T3.1a": {
+      "status": "awaiting_review",
+      "last_commit": "35028403(magpie)",
+      "note": "4 commit @feature/ui-visual-validation; 回归门守住(3350/3353); contract.uiParity 接口冻结"
+    },
+    "T3.1b": {
+      "status": "awaiting_review",
+      "last_commit": "cd3b7aeb(magpie)",
+      "note": "+29 零回归; 九分支/窄豁免两面/repersist 落地; matrix 不 gate(T3.3 知悉); T3.5 四注入入口"
+    },
+    "HOTFIX-cold-exit": {
       "status": "in_progress",
-      "last_commit": null
+      "last_commit": null,
+      "note": "扩范围两案合并: ①冷道悬挂(22+min) ②findNewestPng 误选陈旧 _actual(幻影 color 违规); 共同回归分析: T2.6 两修复为何失效"
     }
   },
   "blockers": [
