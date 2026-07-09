@@ -197,6 +197,8 @@ function mergeUiParityFromMapping(workspaceRoot: string, sourceDocumentPath: str
 }
 ```
 
+缺 `testFqn`/`demoDir` 的条目与无 `scope` 的条目一样直接跳过(不合并入 `uiParity`)——兼容 legacy pull 写入、未带这两个字段的历史 mapping.json 条目;通用 mapping 条目的 `testFqn`/`demoDir` 是否必填见 T3.2 口径钉死①(pin 写入恒含,legacy pull 条目可缺省)。
+
 (c) `buildRequirementContract` 的 input 签名增 `workspaceRoot?: string`;`coverageUnits` 数组字面量后、最终 `return` 前插入:
 
 ```ts
@@ -415,9 +417,9 @@ export async function runUiVisualValidationIfRequired(input: {
 
 **逻辑**(顺序即规格):
 1. **re-persist 触发标记消费**(D-09 ③,跨章契约裁定第 3 条落地;`uiv pin` 侧写入见 T3.2):`workspaceRoot = session.artifacts.workspacePath || session.artifacts.repoRootPath`;若 `existsSync(join(workspaceRoot, '.magpie/uiv-repersist.json'))` → 先 `await persistRequirementContract(session, { workspaceRoot })` 重建合同(纳入本轮 pin 后的最新 uiParity),再 `fs.rmSync` 删除该标记文件(幂等:标记不存在则整步跳过,不影响后续;删标记发生在 persist 成功之后,防重复重建);此步先于下一步读合同,保证读到的是消费后的最新合同。
-2. 读合同(`session.artifacts.requirementContractPath || sourceDocumentContractPath`,与 execute.ts 同一 fallback 链);不存在或 `!contract.uiParity` → `{ran:false}`,**绝不设置 uiVisualValidationPath**(M3 表 T3.1 验收:无 uiParity 合同的 session 不产生该字段);取 `entry = contract.uiParity.entries[0]`(M3 只支持恰一条,多条由 S1 adapter 的 multiple_entries 分支 fail-fast,本步不重复校验,按首条组装即可);
+2. 读合同(`session.artifacts.requirementContractPath || sourceDocumentContractPath`,与 execute.ts 同一 fallback 链);不存在、`!contract.uiParity` 或 `contract.uiParity.entries.length !== 1` → `{ran:false}`,**绝不设置 uiVisualValidationPath**(M3 表 T3.1 验收:无 uiParity 合同的 session 不产生该字段;多 entry 场景同样不跑 verify-page,直接让 S1 adapter 的 multiple_entries finding 阻断,避免执行一次注定被 fail-fast 忽略的 verify-page——无意义副作用);仅当 `entries.length === 1` 时取 `entry = entries[0]` 组装调用串;
 3. `reportPath = join(session.artifacts.sessionDir, 'ui-visual-validation.json')`;**先 `rm -f` 旧 report**(fs.rmSync force)——实现"每次新改动重跑不复用",并保证崩溃路径上不残留上一轮文件冒充新鲜;
-4. `runCommand(cwd, \`uiv verify-page --test ${entry.testFqn} --node ${entry.nodeId} --demo ${entry.demoDir} --session ${session.id} --json --out ${reportPath}\`, { safety, timeoutMs, governance:{cwd, capability:'loop', sessionId} })`(uiv 经 PATH 解析;五参数为跨任务契约统一调用契约,见 §6;`--test`/`--node`/`--demo` 恒取自 `entry`,禁止硬编码或隐式默认值);
+4. `runCommand(cwd, \`uiv verify-page --test "${entry.testFqn}" --node "${entry.nodeId}" --demo "${entry.demoDir}" --session "${session.id}" --json --out "${reportPath}"\`, { safety, timeoutMs, governance:{cwd, capability:'loop', sessionId} })`(uiv 经 PATH 解析;五参数为跨任务契约统一调用契约,见 §6;`--test`/`--node`/`--demo` 恒取自 `entry`,禁止硬编码或隐式默认值)。**quoting 要求**:`runSafeCommand(cwd, command: string, options)`(runtime.ts)第二参数是单个 command 字符串,不是 argv 数组——内部 `parseCommandArgs` 按空白分词、支持 `"…"`/`'…'` 引用与 `\` 转义,但硬拒绝 `| & ; < > \` $` 五类元字符;拼接时每个插值(testFqn/nodeId/demoDir/session.id/reportPath)须如上以双引号包裹,防止取值含空格时被误拆成多个 argv token;上述五值均为内部生成的 FQN/相对路径/sessionId/绝对路径,不含引号或反斜杠,双引号包裹已足够;若未来该函数暴露 argv 数组重载,则改走 argv 传参,无需手动 quoting;
 5. 运行后 `existsSync(reportPath)` 为真 → `session.artifacts.uiVisualValidationPath = reportPath`(即使 verify-page 因 UI 违规退出非零——pass:false 的 report 是合法证据,adapter 按 not_passed 阻断且违规对模型可见);文件不存在(命令被 safety 阻断/崩溃/超时未落盘)→ **显式置 `undefined`,落缺失态**,由 adapter missing 分支阻断——D-09 ②"runSafeCommand 失败落缺失态"的实现;
 6. 返回值供 execute.ts 记 observed event(`ui_visual_validation_executed` / `ui_visual_validation_missing`,复用 `appendObservedEvent` 现有模式),环境故障可审计,为 T3.3 的 environment_gap 分类留钩子。
 
@@ -426,7 +428,7 @@ export async function runUiVisualValidationIfRequired(input: {
 ### 3.1 S2 测试清单(新文件 `tests/capabilities/loop/ui-visual-validation.test.ts`)
 
 Fake runCommand(记录调用参数,按剧本写/不写 report 文件):
-- 无 uiParity 合同 → runCommand 零调用、artifacts 字段保持 undefined;
+- 无 uiParity 合同、或 `contract.uiParity.entries.length !== 1`(多 entry)→ runCommand 零调用、artifacts 字段保持 undefined;
 - 有 uiParity → 命令串含 `verify-page`、`--test <entry.testFqn>`、`--node <entry.nodeId>`、`--demo <entry.demoDir>`、`--out <sessionDir>/ui-visual-validation.json`、`--session <id>`;
 - **re-persist 标记消费**(单测,B6):`workspaceRoot` 下预置 `.magpie/uiv-repersist.json` + `.ui-verify/mapping.json`(scoped pin)但**旧合同文件不含 uiParity**(模拟"pin 发生在合同首次生成之后");调用后断言:① 合同文件被重写且含 uiParity;② 标记文件已删除;③ 若 workspaceRoot 下无标记文件,跳过该步且合同不被重建(零标记时不擅自 persist,防无谓 IO/覆盖并发写入);
 - 旧 report 预置后调用 → 步骤 3(原步骤 2)已删除(Fake 不写文件时,终态 path=undefined 且旧文件不存在——"不复用旧 report"两面验证);
@@ -493,7 +495,7 @@ function isControlledMappingWrite(path, repoRoot): boolean {
 
 #### 口径钉死
 
-1. **mapping.json = uiParity source of truth**(5.1,数组)。条目 v2:`{fileKey, nodeId, version, minScore, testFqn, demoDir, matrix, scope?, states?}`(`testFqn`=Robolectric 测试 FQN,`demoDir`=demo 模块相对 workspace 路径,由 `pin` CLI 新增 `--test`/`--demo` 必填旗标写入;T3.1b 组装 verify-page 调用串时**只**从该 entry 读取这两个字段,禁止隐式默认);`scope={sourceDocumentPath(repo 相对 posix), sourceDocumentHash(源文档字节 sha1 hex,对齐 magpie `hashContent`,**非** sha256), pinnedAt(ISO)}`;`states[]={name, judgePath:'parity'|'invariant-only', figmaVariantNodeId?}`(states[] canonical schema,T3.1a/T3.2/T3.3/T3.4 四章统一;本章 CS6 自动枚举与显式 `--state` 写入的条目恒 `judgePath:'parity'` 且必带 `figmaVariantNodeId`,本章不产生 invariant-only 条目)。**无 scope = standalone pin,永不入合同**——T3.1a 构建器只合并 path 匹配当前源文档的条目,hash 仅漂移告警。禁止直接写合同 JSON(ANY-of 陷阱)。
+1. **mapping.json = uiParity source of truth**(5.1,数组)。条目 v2:`{fileKey, nodeId, version, minScore, testFqn?, demoDir?, matrix, scope?, states?}`(`testFqn`=Robolectric 测试 FQN,`demoDir`=demo 模块相对 workspace 路径,由 `pin` CLI 新增 `--test`/`--demo` 必填旗标写入;**pin 写入的 uiParity entry 恒含 testFqn/demoDir,legacy pull entry(既有 baseline pull 产出,无 --test/--demo 旗标)可缺省这两个字段**,故通用 `MappingEntry` 类型上二者可选(见 Step 1);T3.1b 组装 verify-page 调用串时**只**从该 entry 读取这两个字段,禁止隐式默认);`scope={sourceDocumentPath(repo 相对 posix), sourceDocumentHash(源文档字节 sha1 hex,对齐 magpie `hashContent`,**非** sha256), pinnedAt(ISO)}`;`states[]={name, judgePath:'parity'|'invariant-only', figmaVariantNodeId?}`(states[] canonical schema,T3.1a/T3.2/T3.3/T3.4 四章统一;本章 CS6 自动枚举与显式 `--state` 写入的条目恒 `judgePath:'parity'` 且必带 `figmaVariantNodeId`,本章不产生 invariant-only 条目)。**无 scope = standalone pin,永不入合同**——T3.1a 构建器只合并 path 匹配当前源文档的条目,hash 仅漂移告警。禁止直接写合同 JSON(ANY-of 陷阱)。
 2. **upsert 主键 = (fileKey, nodeId, scope?.sourceDocumentPath ?? '')**(D-02 消歧写侧落地);re-pin 同键 version 变更 = 替换非追加(幂等)。cli `readMappingEntry` 仍 nodeId 首条(消费侧消歧归 T3.3);pull 默认 matrix `default5` 不动,pin 默认 `l-shape`,矩阵语义由 verify-page 统一消费。
 3. **受控标记(D-09 ③,T3.1b 对接)**:每次写 mapping.json 同写 `.ui-verify/mapping.json.sig = {schemaVersion:1, writtenBy:'uiv', algo:'sha256', digest:<mapping.json 字节 sha256 hex>}`(无时间戳→内容确定性)。豁免判据 = sig 存在且 digest 匹配;手改即失配→不豁免。sig 随 mapping 入库;pull 同步切换受控写入。
 4. **基准通道复用 M2**:`client = CachedFigmaClient(inner, <cwd>/.uiv-cache)`;inner = `--fixture`→Fixture,否则 FIGMA_PAT→Rest,双缺→usage error(B1)。首拉不带 version,以响应 version 钉;variant 内联同一响应零额外请求;每显式 `--state` +1 次 getNodes(带钉定 version)。
@@ -530,7 +532,7 @@ it('主键含 scope.path;幂等 re-pin(version 替换);sig 受控/手改失配',
 export interface MappingScope { sourceDocumentPath: string; sourceDocumentHash: string; pinnedAt: string }
 export interface MappingStateRef { name: string; judgePath: 'parity' | 'invariant-only'; figmaVariantNodeId?: string }
 export interface MappingEntry { fileKey: string; nodeId: string; version: string; minScore: number;
-  testFqn: string; demoDir: string; matrix: string; scope?: MappingScope; states?: MappingStateRef[] }
+  testFqn?: string; demoDir?: string; matrix: string; scope?: MappingScope; states?: MappingStateRef[] }
 const sha256 = (b: string | Buffer) => createHash('sha256').update(b).digest('hex');
 const key = (e: MappingEntry): string => `${e.fileKey} ${e.nodeId} ${e.scope?.sourceDocumentPath ?? ''}`;
 
