@@ -1,0 +1,48 @@
+/**
+ * T3.3:source 行号归因(口径⑦)。violation.testTag(如 fig:1:101)作字面量在
+ * demoDir/app/src/main 下 .kt(路径字典序)纯文本检索首个含 "<testTag>"(带双引号)的行,
+ * 产 "<demoDir 相对路径>:<行号>";无命中 → null。l2 引擎不改,在 verify-page 层富化。
+ */
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
+import type { Violation } from '../l2/types.js';
+
+/** 递归收集 demoDir/app/src/main 下所有 .kt 的绝对路径,按字典序(相对序一致,同前缀)。 */
+function collectKtFiles(demoDir: string): string[] {
+  const out: string[] = [];
+  const walk = (dir: string): void => {
+    if (!existsSync(dir)) return;
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.isFile() && e.name.endsWith('.kt')) out.push(p);
+    }
+  };
+  walk(join(demoDir, 'app', 'src', 'main'));
+  return out.sort();
+}
+
+export function attributeSource(testTag: string, demoDir: string): string | null {
+  const needle = `"${testTag}"`;   // 带双引号:tag 含 ':' 不误伤,纯文本 includes(非正则)
+  for (const file of collectKtFiles(demoDir)) {
+    let lines: string[];
+    try { lines = readFileSync(file, 'utf8').split('\n'); } catch { continue; }
+    for (let i = 0; i < lines.length; i += 1) {
+      if (lines[i]!.includes(needle)) {
+        return `${relative(demoDir, file).split(sep).join('/')}:${i + 1}`;
+      }
+    }
+  }
+  return null;
+}
+
+/** 逐条富化 violation.source(已有值不覆写);同 testTag 复用一次检索。 */
+export function enrichViolations(violations: Violation[], demoDir: string): Violation[] {
+  const cache = new Map<string, string | null>();
+  for (const v of violations) {
+    if (v.source !== undefined) continue;   // 已有值(含 null)不覆写
+    if (!cache.has(v.testTag)) cache.set(v.testTag, attributeSource(v.testTag, demoDir));
+    v.source = cache.get(v.testTag) ?? null;
+  }
+  return violations;
+}
