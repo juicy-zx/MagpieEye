@@ -15,3 +15,9 @@ demo-android/.robolectric-deps/
 experiments/fastlane-spike/*/build/
 experiments/fastlane-spike/*/.gradle/
 .uiv-cache/
+
+# Figma PAT / secrets —— 绝不入库
+.figma-pat
+.env
+.env.*
+!.env.example
