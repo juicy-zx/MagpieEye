@@ -21,7 +21,8 @@ export interface VerifyPageCmd {
   version: string | null;   // D-02/M3 消歧：可选，给定时按 nodeId+version 唯一命中 mapping entry
   states: string[]; matrix: string; json: boolean; out: string | null;
 }
-export type ParsedCommand = BaselinePullCmd | CheckCmd | PinCmd | VerifyPageCmd;
+export interface ReportCmd { kind: 'report'; junit: boolean; in: string; out: string | null; suite: string | null }
+export type ParsedCommand = BaselinePullCmd | CheckCmd | PinCmd | VerifyPageCmd | ReportCmd;
 
 const PIN_MATRIX_RE = /^(l-shape|full|custom:.+)$/;
 
@@ -172,5 +173,19 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       out: flags.get('--out') ?? null,
     };
   }
-  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, pin, verify-page)`);
+  if (cmd === 'report') {
+    // T4.3:--junit 是无值布尔旗标,现阶段唯一支持的输出格式,故显式必填(为未来非 junit 格式预留旗标位;§4 明确不做)。
+    const junit = rest.includes('--junit');
+    const rest2 = rest.filter((a) => a !== '--junit');
+    const flags = collectFlags(rest2, ['--in', '--out', '--suite']);
+    if (!junit) throw new CliUsageError('report requires --junit (only junit output supported currently)');
+    return {
+      kind: 'report',
+      junit: true,
+      in: required(flags, '--in'),
+      out: flags.get('--out') ?? null,
+      suite: flags.get('--suite') ?? null,
+    };
+  }
+  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, pin, verify-page, report)`);
 }

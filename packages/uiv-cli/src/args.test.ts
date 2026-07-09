@@ -91,10 +91,31 @@ describe('parseCliArgs: verify-page', () => {
   });
 });
 
+describe('parseCliArgs: report', () => {
+  it('解析 --junit --in(--out/--suite 缺省 null)', () => {
+    expect(parseCliArgs(['report', '--junit', '--in', 'a.json'])).toEqual({
+      kind: 'report', junit: true, in: 'a.json', out: null, suite: null,
+    });
+  });
+  it('解析可选 --out/--suite', () => {
+    expect(parseCliArgs(['report', '--junit', '--in', 'a.json', '--out', 'o.xml', '--suite', 'S'])).toEqual({
+      kind: 'report', junit: true, in: 'a.json', out: 'o.xml', suite: 'S',
+    });
+  });
+  it('缺 --junit 抛 CliUsageError(现阶段仅支持 junit 转换)', () => {
+    expect(() => parseCliArgs(['report', '--in', 'a.json'])).toThrow(CliUsageError);
+    expect(() => parseCliArgs(['report', '--in', 'a.json'])).toThrow(/--junit/);
+  });
+  it('缺 --in 抛 CliUsageError', () => {
+    expect(() => parseCliArgs(['report', '--junit'])).toThrow(/--in/);
+  });
+});
+
 describe('parseCliArgs: 非法输入', () => {
-  it('未知子命令抛 CliUsageError(消息含 verify-page)', () => {
+  it('未知子命令抛 CliUsageError(消息含 verify-page 与 report)', () => {
     expect(() => parseCliArgs(['frobnicate'])).toThrow(CliUsageError);
     expect(() => parseCliArgs(['frobnicate'])).toThrow(/verify-page/);
+    expect(() => parseCliArgs(['frobnicate'])).toThrow(/report/);
   });
   it('未知 flag 抛 CliUsageError', () => {
     expect(() => parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:100', '--demo', 'd', '--wat'])).toThrow(/--wat/);

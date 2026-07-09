@@ -11,10 +11,11 @@
  * 本入口只负责 argv 解析 / IO 呈现(末行路径、--json、WARN 打印)/ exitCode / 退出治理;
  * check/verify-page/baseline-pull 的实际编排复用 commands.ts(与 MCP server 同源)。
  */
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
-  pinBaseline, runRecord,
+  pinBaseline, runRecord, toJUnitXml, validatePageReport, validateReportV1,
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
@@ -80,6 +81,19 @@ async function main(): Promise<void> {
     process.exitCode = report.pass ? 0 : 1;   // UI 违规非零,report 必已落盘
     if (cmd.json) console.log(JSON.stringify(report, null, 2));
     console.log(reportPath);   // 最后一行恒为 page-report 绝对路径
+    return;
+  }
+
+  if (cmd.kind === 'report') {
+    // T4.3:纯转换器,exit 恒 0(转换成功语义;门禁职责在 verify-page,--in 内容 schema 非法走异常 exit 2)。
+    const inPath = path.resolve(cwd, cmd.in);
+    const raw: unknown = JSON.parse(await readFile(inPath, 'utf8'));
+    const isPageReport = typeof raw === 'object' && raw !== null && (raw as { kind?: unknown }).kind === 'page-report';
+    const report = isPageReport ? validatePageReport(raw) : validateReportV1(raw);
+    const xml = toJUnitXml(report, cmd.suite !== null ? { suiteName: cmd.suite } : {});
+    const outPath = cmd.out !== null ? path.resolve(cwd, cmd.out) : path.join(path.dirname(inPath), 'junit.xml');
+    await writeFile(outPath, xml, 'utf8');
+    console.log(outPath);   // 最后一行 = junit.xml 绝对路径
     return;
   }
 
