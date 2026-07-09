@@ -1,0 +1,22 @@
+{ "name": "uiv-cs", "version": "CS_V1",
+  "nodes": { "9:100": { "document": {
+    "id": "9:100", "name": "CardStates", "type": "COMPONENT_SET",
+    "absoluteBoundingBox": { "x": 0, "y": 0, "width": 800, "height": 300 },
+    "componentPropertyDefinitions": { "State": { "type": "VARIANT", "variantOptions": ["Empty", "Filled", "Error"] } },
+    "children": [
+      { "id": "9:101", "name": "State=Empty", "type": "COMPONENT",
+        "absoluteBoundingBox": { "x": 20, "y": 20, "width": 360, "height": 200 },
+        "children": [
+          { "id": "9:111", "name": "EmptyLabel", "type": "TEXT",
+            "absoluteBoundingBox": { "x": 32, "y": 32, "width": 100, "height": 16 },
+            "characters": "No items",
+            "style": { "fontFamily": "Inter", "fontSize": 14, "fontWeight": 400 },
+            "children": [] }
+        ] },
+      { "id": "9:102", "name": "State=Filled", "type": "COMPONENT",
+        "absoluteBoundingBox": { "x": 400, "y": 20, "width": 360, "height": 200 },
+        "children": [] },
+      { "id": "9:103", "name": "State=Error", "type": "COMPONENT",
+        "absoluteBoundingBox": { "x": 20, "y": 240, "width": 360, "height": 40 },
+        "children": [] }
+    ] } } } }
