@@ -50,5 +50,11 @@ class SemanticsDumpTest {
         assertTrue("含标题文本", json.contains("Calibration Card"))
         // 圆角 v0 恒 null(exporter 不导出 cornerRadius)
         assertTrue("cornerRadiusPx 恒 null", json.contains("\"cornerRadiusPx\":null"))
+        // T3.4:导出扩展四字段 + graphicsMode(供 L2-invariant 消费)
+        assertTrue("顶层含 graphicsMode NATIVE(hard-gate 执行依据)", json.contains("\"graphicsMode\": \"NATIVE\""))
+        assertTrue("节点含 boundsInRoot 四键(clipped px)", json.contains("\"boundsInRoot\":{\"left\":"))
+        assertTrue("CalibTitle hasVisualOverflow false(不溢出)", json.contains("\"hasVisualOverflow\":false"))
+        assertTrue("swatch clickable false(非可点击)", json.contains("\"clickable\":false"))
+        assertTrue("无 cd → contentDescription null", json.contains("\"contentDescription\":null"))
     }
 }

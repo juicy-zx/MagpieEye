@@ -22,11 +22,12 @@ import java.io.File
  */
 class SemanticsDumpRule(private val outDir: File = File("build/uiv")) : TestWatcher() {
 
-    fun dump(rule: ComposeContentTestRule, name: String) {
+    // graphicsMode 默认 NATIVE(环境由 ConfigPinningTest 钉死;切 LEGACY 必须同步传参并重跑 CS1/CS2 probe——calibration.md hard-gate 条款)。
+    fun dump(rule: ComposeContentTestRule, name: String, graphicsMode: String = "NATIVE") {
         val root = rule.onRoot(useUnmergedTree = true).fetchSemanticsNode()
         outDir.mkdirs()
         File(outDir, "$name.semantics.json")
-            .writeText("""{"density": ${rule.density.density}, "root": ${nodeJson(root)}}""")
+            .writeText("""{"density": ${rule.density.density}, "graphicsMode": "$graphicsMode", "root": ${nodeJson(root)}}""")
     }
 
     private fun nodeJson(n: SemanticsNode): String {
@@ -41,11 +42,19 @@ class SemanticsDumpRule(private val outDir: File = File("build/uiv")) : TestWatc
         val p = n.positionInRoot
         val s = n.size
         val t = n.touchBoundsInRoot
+        // T3.4:boundsInRoot 为 clipped px 盒(childClipped 依据,与 unclipped positionInRoot+size 作差);
+        // hasVisualOverflow 取自已解出的 TextLayoutResult(非文本无 → null);clickable=config 含 OnClick;cd=merged 可及名。
+        val b = n.boundsInRoot
+        val overflow = results.firstOrNull()?.hasVisualOverflow?.toString() ?: "null"
+        val clickable = n.config.contains(SemanticsActions.OnClick)
+        val cd = n.config.getOrNull(SemanticsProperties.ContentDescription)?.joinToString(" ")
         return """{"testTag":${js(tag)},"text":${js(text)},""" +
             """"positionInRoot":{"x":${p.x},"y":${p.y}},""" +
             """"size":{"width":${s.width},"height":${s.height}},""" +
             """"touchBoundsInRoot":{"left":${t.left},"top":${t.top},"right":${t.right},"bottom":${t.bottom}},""" +
+            """"boundsInRoot":{"left":${b.left},"top":${b.top},"right":${b.right},"bottom":${b.bottom}},""" +
             """"colorHex":$color,"fontSizeSp":${fontSp ?: "null"},"cornerRadiusPx":null,""" +
+            """"hasVisualOverflow":$overflow,"clickable":$clickable,"contentDescription":${js(cd)},""" +
             """"children":[${n.children.joinToString(",") { nodeJson(it) }}]}"""
     }
 
