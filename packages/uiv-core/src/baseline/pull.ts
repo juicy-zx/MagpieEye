@@ -4,31 +4,19 @@
  * baseline.png 只探测存在性不阻断(fixture 模式下 REST images 通道不可用,
  * PNG 由主会话经 MCP 落盘,来源通道待 Codex 决断)。
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { FigmaClient } from '../figma/client.js';
 import { normalizeNodesResponse } from '../figma/normalize.js';
+import { upsertMappingEntry } from './mapping.js';
 
 export interface PullResult { specPath: string; baselinePngPath: string; baselinePngExists: boolean; mappingPath: string }
 
-export interface MappingEntry {
-  fileKey: string; nodeId: string; version: string; minScore: number; matrix: string;
-}
+export type { MappingEntry } from './mapping.js';
 
 /** macOS 路径避 ':':nodeId 的 ':' 换 '-',拼 @version;mapping.json 内保留原 id。 */
 export function baselineDirName(nodeId: string, version: string): string {
   return `${nodeId.replaceAll(':', '-')}@${version}`;
-}
-
-function upsertMapping(mappingPath: string, entry: MappingEntry): void {
-  let entries: MappingEntry[] = [];
-  if (existsSync(mappingPath)) {
-    entries = JSON.parse(readFileSync(mappingPath, 'utf8')) as MappingEntry[];
-  }
-  const i = entries.findIndex((e) => e.fileKey === entry.fileKey && e.nodeId === entry.nodeId);
-  if (i >= 0) entries[i] = entry;
-  else entries.push(entry);
-  writeFileSync(mappingPath, `${JSON.stringify(entries, null, 2)}\n`, 'utf8');
 }
 
 export async function pullBaseline(client: FigmaClient, fileKey: string, nodeId: string,
@@ -45,8 +33,7 @@ export async function pullBaseline(client: FigmaClient, fileKey: string, nodeId:
   const baselinePngPath = join(dir, 'baseline.png');
   const baselinePngExists = existsSync(baselinePngPath);
 
-  const mappingPath = join(uiVerifyDir, 'mapping.json');
-  upsertMapping(mappingPath, { fileKey, nodeId, version: spec.version, minScore: 0.9, matrix: 'default5' });
+  const mappingPath = upsertMappingEntry(uiVerifyDir, { fileKey, nodeId, version: spec.version, minScore: 0.9, matrix: 'default5' });
 
   return { specPath, baselinePngPath, baselinePngExists, mappingPath };
 }
