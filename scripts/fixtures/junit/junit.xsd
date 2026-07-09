@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  T4.3 Step 2:report/junit.ts (toJUnitXml) 产物的 schema 契约,离线手写(不抄网络版,
+  仅覆盖本仓库实际产出的最小子集)。机判用法(xmllint 加 noout 与 schema 两个长旗标,
+  第二参为本文件路径,第三参为待校验 XML):见 scripts/ci-gate.sh / check-t43.mjs 调用点。
+  结构:testsuites(单 testsuite 子节点)> testsuite(0..N testcase)> testcase(至多
+  failure 或 skipped 二选一,互斥,均可缺省=pass)。
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="testsuites" type="testsuitesType"/>
+
+  <xs:complexType name="testsuitesType">
+    <xs:sequence>
+      <xs:element name="testsuite" type="testsuiteType" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="tests" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="failures" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="skipped" type="xs:nonNegativeInteger" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="testsuiteType">
+    <xs:sequence>
+      <xs:element name="testcase" type="testcaseType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="tests" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="failures" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="skipped" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="time" type="xs:decimal" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="testcaseType">
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:element name="failure" type="messageType"/>
+      <xs:element name="skipped" type="skippedType"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="classname" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <!-- failure:message 必需属性 + 自由文本内容(违规详情 JSON,文本节点)。 -->
+  <xs:complexType name="messageType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="message" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- skipped:仅 message 必需属性,恒空元素(toJUnitXml 不产文本子节点)。 -->
+  <xs:complexType name="skippedType">
+    <xs:attribute name="message" type="xs:string" use="required"/>
+  </xs:complexType>
+
+</xs:schema>
