@@ -241,7 +241,9 @@
     "L2 修复 P2 遗留(Codex 裁定): spec v0 未建模 layoutWrap 与 layoutPositioning——WRAP 容器仍报 HORIZONTAL/VERTICAL、ABSOLUTE 定位子无法从双射/推导门过滤, 当前设计侧门部分兜底非完备(assert.ts 门区块注释已标)。触发: spec 升版采集字段时(与 SPACE_BETWEEN 条目同批)",
     "normalize honesty(Codex 裁定 P2 契约迁移): layoutMode NONE 节点 padding/itemSpacing 伪造 0 而非缺省字段(数据契约撒谎, 当前被 runL2 NONE 门拦截, 该门已有正反控单测钉住)。触发: spec 升版/specVersion 议题一并",
     "node-level opacity 未纳入 effective alpha(Codex 裁定 P2): 当前 effective alpha = paint opacity(spec v0 无 node opacity 字段), 半透明跳过判定对 node 级透明度不可见。触发: 真实设计出现 node 级半透明导致 ΔE 误判时",
-    "itemSpacing 仅校验首对相邻子(Codex 非阻断建议): 未来升级为设计侧及语义侧所有相邻 flow pair 均满足, 整条属性仍计 1 executed。触发: 多子容器间距假阴性实例出现时"
+    "itemSpacing 仅校验首对相邻子(Codex 非阻断建议): 未来升级为设计侧及语义侧所有相邻 flow pair 均满足, 整条属性仍计 1 executed。触发: 多子容器间距假阴性实例出现时",
+    "check 单格默认不防陈旧测试产物(2026-07-10 盲修闭环实证烧掉 1/3 轮): gradle up-to-date/build cache 回填旧渲染+语义产物, check 拿旧数据出一份看似正常的报告且无任何字段暴露产物时间戳; T3.3 semanticsMinMtimeMs 陈旧门仅 verify-page 启用, run.ts:113-115 有 UIV_RERUN=1 逃生门但默认不设防。修法方向: 单格 check 默认启用陈旧门(陈旧→semantics_export_failed)或 report 暴露 renderTimestamp。触发: loop 自动化/无人值守启用前必须(该坑对自动修正者不可自察)",
+    "report 可用性(盲修者一手反馈, 2026-07-10): ①position 违规建议附直接父容器内局部坐标(深嵌套沿链回推易错) ②L1 diffRatio 大数值(透明底 baseline 口径下 0.98 无意义)出现在报告头部但不参与判定, 对修正者有误导——建议标注 advisory 属性或口径异常时置 null。触发: report schema 演进(v2)或第二个盲修消费者出现时"
   ],
   "calibration": {
     "channel": "mcp+rest",
