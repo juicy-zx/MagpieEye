@@ -24,13 +24,14 @@ function hexToRgb(hex: string): { r: number; g: number; b: number; a: number } {
   return { r: ((int >> 16) & 0xff) / 255, g: ((int >> 8) & 0xff) / 255, b: (int & 0xff) / 255, a: 1 };
 }
 
-/** 归一化 spec.json 的 SpecNode(bbox 已 re-base)→ L2 FigmaNode。padding/itemSpacing 仅 auto-layout 携带。 */
+/** 归一化 spec.json 的 SpecNode(bbox 已 re-base)→ L2 FigmaNode。padding/itemSpacing/layoutMode 仅 auto-layout 携带。 */
 export function specNodeToFigma(n: SpecNode): FigmaNode {
   const out: FigmaNode = {
     id: n.id, name: n.name, type: n.type, visible: n.visible,
     absoluteBoundingBox: n.bbox === null ? null : { x: n.bbox.x, y: n.bbox.y, width: n.bbox.w, height: n.bbox.h },
   };
   if (n.layoutMode !== 'NONE') {
+    out.layoutMode = n.layoutMode;   // Codex B1:透传轴向供 itemSpacing 派生断言;NONE 门(下方字段不携带)行为不变
     out.paddingLeft = n.padding.l; out.paddingTop = n.padding.t;
     out.paddingRight = n.padding.r; out.paddingBottom = n.padding.b;
     out.itemSpacing = n.itemSpacing;

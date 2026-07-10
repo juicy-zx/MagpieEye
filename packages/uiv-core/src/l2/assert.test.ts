@@ -21,6 +21,17 @@ const has = (r: { violations: unknown[] }, property: string, severity: string): 
   (r.violations as Array<{ property: string; severity: string }>)
     .some((v) => v.property === property && v.severity === severity);
 
+/** Figma 直接子节点(A′ 门身份双射的 Figma 侧)。 */
+const figKid = (id: string, x: number, y: number, w: number, h: number): FigmaNode => ({
+  id, name: `Kid-${id}`, type: 'RECTANGLE', absoluteBoundingBox: { x, y, width: w, height: h },
+});
+/** 语义直接子节点(tag=fig:<id> 时可与 figKid 形成身份映射)。 */
+const semKid = (tag: string | null, x: number, y: number, w: number, h: number): SemDp => ({
+  testTag: tag, text: null, positionDp: { x, y }, sizeDp: { width: w, height: h },
+  touchBoundsDp: { left: x, top: y, right: x + w, bottom: y + h },
+  colorHex: null, fontSizeSp: null, cornerRadiusDp: null, children: [],
+});
+
 describe('assertPair 逐属性断言(±2dp/精确/±0.5sp/ΔE<3)', () => {
   // position:L1 距离≤2,high
   it('position 偏 3dp 记 high 违规', () => {
@@ -78,29 +89,27 @@ describe('assertPair 逐属性断言(±2dp/精确/±0.5sp/ΔE<3)', () => {
     expect(r.executed).toBe(2);   // 仅 position + size
   });
 
-  // padding:容器 pair,首子相对父,0.5dp 网格,medium
-  const container = (childX: number): Pair => mkPair(
-    { paddingLeft: 12, absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 200 } },
-    { positionDp: { x: 0, y: 0 }, sizeDp: { width: 200, height: 200 }, children: [{
-      testTag: null, text: null, positionDp: { x: childX, y: 20 }, sizeDp: { width: 50, height: 20 },
-      touchBoundsDp: { left: childX, top: 20, right: childX + 50, bottom: 40 },
-      colorHex: null, fontSizeSp: null, cornerRadiusDp: null, children: [],
-    }] });
+  // padding:容器 pair,首子相对父,0.5dp 网格,medium。
+  // A′ 门口径改造(Codex D1):figma 侧补直接子节点、sem 子挂 fig:<id> tag 使身份双射成立,派生断言本身仍被验证。
+  // R1-①:设计侧可推导性门要求 Figma 子几何与 authored padding 一致(fig 子恒 x=12),偏差注入语义侧。
+  const container = (semChildX: number): Pair => mkPair(
+    { paddingLeft: 12, absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 200 },
+      children: [figKid('1:201', 12, 20, 50, 20)] },
+    { positionDp: { x: 0, y: 0 }, sizeDp: { width: 200, height: 200 },
+      children: [semKid('fig:1:201', semChildX, 20, 50, 20)] });
   it('paddingLeft 12 vs 16 记 medium 违规', () =>
     expect(has(assertPair(container(16)), 'paddingLeft', 'medium')).toBe(true));
   it('paddingLeft 12 vs 12.4(网格内)不违规', () =>
     expect(has(assertPair(container(12.4)), 'paddingLeft', 'medium')).toBe(false));
 
-  // itemSpacing:相邻子间距,0.5dp 网格,medium
-  const stack = (gap: number): Pair => mkPair(
-    { itemSpacing: 8, absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 200 } },
+  // itemSpacing:相邻子间距,0.5dp 网格,medium(B1:轴向由 layoutMode 决定,VERTICAL=y 轴)。
+  // R1-①:Figma 子间隙恒 8(与 authored 一致过设计侧门),偏差注入语义侧。
+  const stack = (semGap: number): Pair => mkPair(
+    { itemSpacing: 8, layoutMode: 'VERTICAL', absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 200 },
+      children: [figKid('1:201', 0, 0, 50, 20), figKid('1:202', 0, 28, 50, 20)] },
     { positionDp: { x: 0, y: 0 }, sizeDp: { width: 200, height: 200 }, children: [
-      { testTag: null, text: null, positionDp: { x: 0, y: 0 }, sizeDp: { width: 50, height: 20 },
-        touchBoundsDp: { left: 0, top: 0, right: 50, bottom: 20 },
-        colorHex: null, fontSizeSp: null, cornerRadiusDp: null, children: [] },
-      { testTag: null, text: null, positionDp: { x: 0, y: 20 + gap }, sizeDp: { width: 50, height: 20 },
-        touchBoundsDp: { left: 0, top: 20 + gap, right: 50, bottom: 40 + gap },
-        colorHex: null, fontSizeSp: null, cornerRadiusDp: null, children: [] },
+      semKid('fig:1:201', 0, 0, 50, 20),
+      semKid('fig:1:202', 0, 20 + semGap, 50, 20),
     ] });
   it('itemSpacing 8 vs 12 记 medium 违规', () =>
     expect(has(assertPair(stack(12)), 'itemSpacing', 'medium')).toBe(true));
@@ -159,5 +168,227 @@ describe('assertPair 像素采样颜色通道(T2.7)', () => {
       { fills: [{ type: 'SOLID', color: { r: 0.8, g: 0.878, b: 1, a: 1 } }] },  // #CCE0FF
       { colorHex: '#99B3E6' }), px(0x99, 0xb3, 0xe6));
     expect(r.violations).toContainEqual(expect.objectContaining({ judgePath: 'parity', property: 'color' }));
+  });
+});
+
+// Codex D1(A′+B1+B2)/D2:派生断言结构可判定门 —— 身份双射不成立/轴向不可知时保守跳过并记 diagnostic。
+describe('assertPair 派生几何门(A′ 身份双射 + B1/B2 轴向,Codex D1/D2)', () => {
+  const skipOf = (r: { diagnostics: Array<Record<string, unknown>> }): Array<Record<string, unknown>> =>
+    r.diagnostics.filter((d) => d['code'] === 'l2_derived_geometry_skipped');
+
+  it('A′ 拍平中间容器(yanhao 最小重现):sem 子 tag 非 Figma 直接子 id → 跳过派生、不计 executed、记 diagnostic', () => {
+    // Figma:父 → 中间容器 1:210(未挂 tag,被语义树拍平)→ 孙 1:211;直接子集合 {1:210, 1:212}。
+    // 语义:直接子 = 孙 1:211 + 1:212 → 身份双射不成立(1:211 ∉ 直接子集合)。
+    const middle: FigmaNode = { ...figKid('1:210', 0, 16, 360, 200), children: [figKid('1:211', 16, 28, 302, 80)] };
+    const pair = mkPair(
+      { paddingLeft: 0, paddingTop: 16, itemSpacing: 20, layoutMode: 'VERTICAL',
+        absoluteBoundingBox: { x: 0, y: 0, width: 360, height: 475 },
+        children: [middle, figKid('1:212', 0, 427, 360, 48)] },
+      { positionDp: { x: 0, y: 0 }, sizeDp: { width: 360, height: 475 }, children: [
+        semKid('fig:1:211', 16, 28, 302, 80), semKid('fig:1:212', 0, 427, 360, 48),
+      ] });
+    const r = assertPair(pair);
+    expect(r.violations).toEqual([]);            // 修复前:paddingLeft 16/paddingTop 28/itemSpacing 319 三条假违规
+    expect(r.executed).toBe(2);                  // 仅 position + size
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      code: 'l2_derived_geometry_skipped', nodeId: '1:101',
+      reason: 'direct_child_correspondence_unproven',
+      rules: ['padding', 'itemSpacing'], semChildCount: 2, figChildCount: 2,
+    })]);
+  });
+
+  it('A′ 语义子未挂 tag:数量相等也不放行(身份不可证)', () => {
+    const r = assertPair(mkPair(
+      { paddingLeft: 5, children: [figKid('1:201', 10, 10, 20, 20)] },
+      { children: [semKid(null, 10, 10, 20, 20)] }));
+    expect(r.violations).toEqual([]);            // 修复前:paddingLeft 派生 10 vs 5 假违规
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      reason: 'direct_child_correspondence_unproven', rules: ['padding'], semChildCount: 1, figChildCount: 1,
+    })]);
+  });
+
+  it('A′ 两侧直接子数量不等 → 跳过(Figma 1 子被语义树拍平为 2)', () => {
+    const r = assertPair(mkPair(
+      { paddingLeft: 12, children: [figKid('1:201', 12, 6, 78, 20)] },
+      { children: [semKid('fig:1:202', 12, 6, 20, 20), semKid('fig:1:203', 40, 6, 50, 20)] }));
+    expect(r.violations).toEqual([]);
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      reason: 'direct_child_correspondence_unproven', semChildCount: 2, figChildCount: 1,
+    })]);
+  });
+
+  it('A′ tag 重复(非单射)→ 跳过', () => {
+    const r = assertPair(mkPair(
+      { paddingLeft: 0, children: [figKid('1:201', 0, 0, 20, 20), figKid('1:202', 0, 30, 20, 20)] },
+      { children: [semKid('fig:1:201', 0, 0, 20, 20), semKid('fig:1:201', 0, 30, 20, 20)] }));
+    expect(r.violations).toEqual([]);
+    expect(skipOf(r)).toHaveLength(1);
+  });
+
+  it('R2-② Figma 侧重复 id(figKids [A,A] × sem [A,B])→ 双射 fail-closed 跳过(修复前错误放行 [semA,semA])', () => {
+    const r = assertPair(mkPair(
+      { paddingLeft: 0, absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 60 },
+        children: [figKid('1:201', 0, 0, 20, 20), figKid('1:201', 0, 30, 20, 20)] },
+      { sizeDp: { width: 200, height: 60 }, children: [
+        semKid('fig:1:201', 0, 0, 20, 20), semKid('fig:1:202', 0, 30, 20, 20),
+      ] }));
+    expect(r.violations).toEqual([]);
+    expect(r.executed).toBe(2);                  // 仅 position + size,padding 不得放行执行
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      reason: 'direct_child_correspondence_unproven', rules: ['padding'], semChildCount: 2, figChildCount: 2,
+    })]);
+  });
+
+  // R2-①:want* 入口不得因单侧数量不足而静默漏报 —— 任一侧达最小基数即入门,
+  // 数量不对称由双射门 fail-closed 记 diagnostic;两侧都不足最小基数才视为天然不可观察。
+  it('R2-① Figma 1 直接子 / 语义 0 子 / authored padding:修复前静默无 diagnostic → correspondence_unproven', () => {
+    const r = assertPair(mkPair(
+      { paddingLeft: 12, children: [figKid('1:201', 12, 6, 78, 20)] },
+      { children: [] }));
+    expect(r.violations).toEqual([]);
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      reason: 'direct_child_correspondence_unproven', rules: ['padding'], semChildCount: 0, figChildCount: 1,
+    })]);
+  });
+
+  it('R2-① Figma 2 子 / 语义 1 子 / 仅 authored itemSpacing:修复前静默无 diagnostic → correspondence_unproven', () => {
+    const r = assertPair(mkPair(
+      { itemSpacing: 8, layoutMode: 'VERTICAL',
+        children: [figKid('1:201', 0, 0, 50, 20), figKid('1:202', 0, 28, 50, 20)] },
+      { children: [semKid('fig:1:201', 0, 0, 50, 20)] }));
+    expect(r.violations).toEqual([]);
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      reason: 'direct_child_correspondence_unproven', rules: ['itemSpacing'], semChildCount: 1, figChildCount: 2,
+    })]);
+  });
+
+  it('R2-① 边界:两侧都不足最小基数(authored padding、双侧 0 子)→ 天然不可观察,无 diagnostic', () => {
+    const r = assertPair(mkPair({ paddingLeft: 12 }, {}));
+    expect(r.violations).toEqual([]);
+    expect(skipOf(r)).toEqual([]);
+  });
+
+  it('A′ 不可见/无 bbox 的 Figma 子不入可见集:映射到它的 sem 子 → 跳过', () => {
+    const hidden: FigmaNode = { ...figKid('1:201', 0, 0, 20, 20), visible: false };
+    const r = assertPair(mkPair(
+      { paddingLeft: 0, children: [hidden, figKid('1:202', 0, 30, 20, 20)] },
+      { children: [semKid('fig:1:201', 0, 0, 20, 20), semKid('fig:1:202', 0, 30, 20, 20)] }));
+    expect(r.violations).toEqual([]);
+    expect(skipOf(r)).toEqual([expect.objectContaining({ semChildCount: 2, figChildCount: 1 })]);
+  });
+
+  it('B1 layoutMode undefined:不得默认 VERTICAL —— padding 照常执行,itemSpacing 跳过(layout_mode_missing)', () => {
+    // y 轴派生 = 60-(20+20) = 20 ≠ 8:若误按 VERTICAL 执行必产假违规。
+    const r = assertPair(mkPair(
+      { paddingLeft: 12, itemSpacing: 8, absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 200 },
+        children: [figKid('1:201', 12, 20, 50, 20), figKid('1:202', 12, 60, 50, 20)] },
+      { positionDp: { x: 0, y: 0 }, sizeDp: { width: 200, height: 200 }, children: [
+        semKid('fig:1:201', 12, 20, 50, 20), semKid('fig:1:202', 12, 60, 50, 20),
+      ] }));
+    expect(r.violations).toEqual([]);
+    expect(r.executed).toBe(3);                  // position + size + paddingLeft(spacing 不计)
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      reason: 'layout_mode_missing', rules: ['itemSpacing'],
+    })]);
+  });
+
+  it('B2 HORIZONTAL 按 x 轴派生:gap 8 匹配不违规(修复前恒按 y 轴派生 -20 假违规)', () => {
+    // R1-①:Figma 第二子恒 x=58(design-derived 8 = authored 过门),语义偏差注入 semX2。
+    const row = (semX2: number): Pair => mkPair(
+      { itemSpacing: 8, layoutMode: 'HORIZONTAL', absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 20 },
+        children: [figKid('1:201', 0, 0, 50, 20), figKid('1:202', 58, 0, 50, 20)] },
+      { positionDp: { x: 0, y: 0 }, sizeDp: { width: 200, height: 20 }, children: [
+        semKid('fig:1:201', 0, 0, 50, 20), semKid('fig:1:202', semX2, 0, 50, 20),
+      ] });
+    expect(assertPair(row(58)).violations).toEqual([]);                       // 50+8=58 → 派生 8 ✓
+    expect(assertPair(row(62)).violations).toContainEqual(expect.objectContaining({
+      property: 'itemSpacing', expected: '8', actual: '12', severity: 'medium',
+    }));
+  });
+
+  it('B2 文档顺序优先于坐标排序:负 spacing/乱序 sem 数组按 Figma 子顺序对齐,且不改 sem.children 原数组', () => {
+    // Figma 文档顺序:1:201(x=60) 在前、1:202(x=0) 在后 → 派生 = 0-(60+30) = -90;坐标排序会误得 30。
+    const pair = mkPair(
+      { itemSpacing: -90, layoutMode: 'HORIZONTAL', absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 20 },
+        children: [figKid('1:201', 60, 0, 30, 20), figKid('1:202', 0, 0, 30, 20)] },
+      { positionDp: { x: 0, y: 0 }, sizeDp: { width: 200, height: 20 }, children: [
+        semKid('fig:1:202', 0, 0, 30, 20), semKid('fig:1:201', 60, 0, 30, 20),   // sem 数组顺序故意与文档顺序相反
+      ] });
+    const before = pair.sem.children.map((c) => c.testTag);
+    expect(assertPair(pair).violations).toEqual([]);
+    expect(pair.sem.children.map((c) => c.testTag)).toEqual(before);   // 禁止原地改 children
+  });
+
+  it('B2 GRID(非 flow 拓扑)→ itemSpacing 保守跳过(unsupported_layout)', () => {
+    const r = assertPair(mkPair(
+      { itemSpacing: 4, layoutMode: 'GRID',
+        children: [figKid('1:201', 0, 0, 20, 20), figKid('1:202', 30, 0, 20, 20)] },
+      { children: [semKid('fig:1:201', 0, 0, 20, 20), semKid('fig:1:202', 30, 0, 20, 20)] }));
+    expect(r.violations).toEqual([]);
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      reason: 'unsupported_layout', rules: ['itemSpacing'],
+    })]);
+  });
+});
+
+// R1-①(Codex):设计侧可推导性门 —— 身份双射成立后,同一套包络/相邻间隙 derivation 先跑在
+// Figma direct-child bbox 上;design-derived ≈ authored(同 0.5dp 网格容差)的规则才拿
+// semantic-derived 去比,不可重建的规则按规则粒度跳过并记 design_derivation_mismatch
+// (与 correspondence_unproven 区分)。门只消费设计数据 → 真实实现偏差不会借道变成 skip。
+describe('assertPair 设计侧可推导性门(R1-①,design_derivation_mismatch)', () => {
+  const mismatchOf = (r: { diagnostics: Array<Record<string, unknown>> }): Array<Record<string, unknown>> =>
+    r.diagnostics.filter((d) => d['reason'] === 'design_derivation_mismatch');
+
+  it('Codex 反例 fixed-size+counter-axis CENTER:包络推导左右各 60 ≠ authored 20 → 两条 padding 规则跳过(修复前 2 条 medium 假违规)', () => {
+    // 父宽 200,authored paddingLeft/Right=20,唯一子宽 80 居中(x=60);语义侧如实镜像设计(实现无偏差)。
+    const r = assertPair(mkPair(
+      { paddingLeft: 20, paddingRight: 20, absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 60 },
+        children: [figKid('1:201', 60, 0, 80, 60)] },
+      { sizeDp: { width: 200, height: 60 }, children: [semKid('fig:1:201', 60, 0, 80, 60)] }));
+    expect(r.violations).toEqual([]);            // 修复前:paddingLeft 60/paddingRight 60 两条 medium 假违规
+    expect(r.executed).toBe(2);                  // 仅 position + size,两条 padding 规则不计
+    expect(mismatchOf(r)).toEqual([expect.objectContaining({
+      code: 'l2_derived_geometry_skipped', reason: 'design_derivation_mismatch',
+      rules: ['paddingLeft', 'paddingRight'],
+    })]);
+  });
+
+  it('MAX 对齐按规则粒度:paddingLeft 不可重建跳过,paddingRight 可重建照常执行且仍检出语义侧真实偏差', () => {
+    // authored L=20/R=20;子 w=80 对齐 MAX(x=100):design left=100≠20 → 跳过;design right=200-180=20 → 执行。
+    const mk = (semX: number): Pair => mkPair(
+      { paddingLeft: 20, paddingRight: 20, absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 60 },
+        children: [figKid('1:201', 100, 0, 80, 60)] },
+      { sizeDp: { width: 200, height: 60 }, children: [semKid('fig:1:201', semX, 0, 80, 60)] });
+    const ok = assertPair(mk(100));              // 语义镜像设计
+    expect(ok.violations).toEqual([]);
+    expect(ok.executed).toBe(3);                 // position + size + paddingRight(left 不计)
+    expect(mismatchOf(ok)).toEqual([expect.objectContaining({ rules: ['paddingLeft'] })]);
+    const drift = assertPair(mk(96));            // 真实实现偏差:右缘 96+80=176 → sem-derived right 24
+    expect(drift.violations).toContainEqual(expect.objectContaining({
+      property: 'paddingRight', expected: '20', actual: '24', severity: 'medium',
+    }));
+  });
+
+  it('SPACE_BETWEEN 止血(yanhao 根真实几何):authored gap 20 vs design-derived 211 → itemSpacing 跳过,可重建的 paddingTop 照常执行', () => {
+    // yanhao 39:10844:VERTICAL,pad t=16,gap 20;直接子 (0,16,360,200)/(0,427,360,48) → design gap = 427-216 = 211。
+    const r = assertPair(mkPair(
+      { paddingTop: 16, itemSpacing: 20, layoutMode: 'VERTICAL',
+        absoluteBoundingBox: { x: 0, y: 0, width: 360, height: 475 },
+        children: [figKid('39:10845', 0, 16, 360, 200), figKid('39:10846', 0, 427, 360, 48)] },
+      { sizeDp: { width: 360, height: 475 }, children: [
+        semKid('fig:39:10845', 0, 16, 360, 200), semKid('fig:39:10846', 0, 427, 360, 48),
+      ] }));
+    expect(r.violations).toEqual([]);            // 修复前:itemSpacing 20 vs 211 medium 假违规
+    expect(r.executed).toBe(3);                  // position + size + paddingTop
+    expect(mismatchOf(r)).toEqual([expect.objectContaining({ rules: ['itemSpacing'] })]);
+  });
+
+  it('父 bbox 缺失:design-derived 不可得 → padding 规则全部跳过(不回退语义侧派生)', () => {
+    const r = assertPair(mkPair(
+      { paddingLeft: 5, absoluteBoundingBox: null, children: [figKid('1:201', 10, 10, 20, 20)] },
+      { children: [semKid('fig:1:201', 10, 10, 20, 20)] }));
+    expect(r.violations).toEqual([]);            // 修复前:sem 派生 10 vs 5 假违规
+    expect(r.executed).toBe(0);                  // fb null:position/size 亦不可执行
+    expect(mismatchOf(r)).toEqual([expect.objectContaining({ rules: ['paddingLeft'] })]);
   });
 });

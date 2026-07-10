@@ -6,8 +6,11 @@ import { PNG } from 'pngjs';
 import { describe, it, expect } from 'vitest';
 import { FixtureFigmaClient } from '../figma/client.js';
 import { pullBaseline } from '../baseline/pull.js';
+import type { SpecNode } from '../figma/types.js';
+import { runL2 } from '../l2/report.js';
+import type { SemanticsDump } from '../l2/types.js';
 import { validateReportV1 } from '../report/v1.js';
-import { runCheckL2 } from './runL2.js';
+import { runCheckL2, specNodeToFigma } from './runL2.js';
 import type { GradleRunner } from './run.js';
 
 const FIXTURE = fileURLToPath(new URL('../../fixtures/rest-nodes-card.json', import.meta.url));
@@ -185,5 +188,66 @@ describe('runCheckL2(uiv check 接入 L2,fixture 级不跑 gradle)', () => {
     expect(existsSync(statePath)).toBe(false);
     expect(report.regression).toBe(false);
     expect(report.pass).toBe(true);
+  });
+});
+
+function specNode(over: Partial<SpecNode>): SpecNode {
+  return { id: '9:0', name: 'N', type: 'FRAME', visible: true, bbox: { x: 0, y: 0, w: 200, h: 200 },
+    layoutMode: 'NONE', padding: { l: 0, t: 0, r: 0, b: 0 }, itemSpacing: 0, cornerRadii: null,
+    fills: [], text: null, children: [], ...over };
+}
+
+// Codex D3:runL2 NONE 门单测 —— 两侧 children 完全对应(A′ 身份双射成立)、几何故意可派生出
+// 非零值(padding 派生 16 vs 声明 10;spacing 派生 24 vs 声明 7),防 A′ 门误保护掩盖 NONE 门缺失。
+// R1-① 后该几何为设计侧不自洽:若 NONE 门缺失,派生属性会被携带 → 设计侧门记
+// design_derivation_mismatch skip → 仍被下方"无 skip diagnostic"断言检出。
+describe('specNodeToFigma NONE 门(D3:NONE 不携带派生属性;VERTICAL 正控执行断言)', () => {
+  const gateSpec = (layoutMode: SpecNode['layoutMode']): SpecNode => specNode({
+    id: '9:1', layoutMode, padding: { l: 10, t: 10, r: 10, b: 10 }, itemSpacing: 7,
+    children: [
+      specNode({ id: '9:2', type: 'RECTANGLE', bbox: { x: 16, y: 16, w: 50, h: 20 } }),
+      specNode({ id: '9:3', type: 'RECTANGLE', bbox: { x: 16, y: 60, w: 50, h: 20 } }),
+    ],
+  });
+  const gateDump = { density: 2.0, root: sem('fig:9:1', 0, 0, 400, 400, null, null, [
+    sem('fig:9:2', 32, 32, 100, 40), sem('fig:9:3', 32, 120, 100, 40),
+  ]) } as SemanticsDump;
+
+  it('NONE:padding/itemSpacing 不进 FigmaNode → 派生断言不执行(无违规、无 skip diagnostic、score 1)', () => {
+    const report = runL2(specNodeToFigma(gateSpec('NONE')), gateDump, { prevState: null });
+    expect(report.pass).toBe(true);
+    expect(report.score).toBe(1);
+    expect(report.structural?.violations).toEqual([]);
+    expect((report.structural?.diagnostics.pixel ?? [])
+      .filter((d) => d.code === 'l2_derived_geometry_skipped')).toEqual([]);
+  });
+
+  it('VERTICAL 正控:双射+设计侧双门放行 → 派生断言执行并检出 padding/itemSpacing 违规(门未误保护)', () => {
+    // R1-①:正控须过设计侧可推导性门 → Figma 子几何与 authored 自洽(首子 (10,10) 对 pad l/t=10;
+    // 末子右缘/底缘 190 对 pad r/b=10;间隙 37-30=7 对 gap=7);语义侧维持 16/60 几何 →
+    // sem-derived padding 16 vs 10、spacing 24 vs 7 为真实实现偏差,必须检出。
+    const consistentSpec = specNode({
+      id: '9:1', layoutMode: 'VERTICAL', padding: { l: 10, t: 10, r: 10, b: 10 }, itemSpacing: 7,
+      children: [
+        specNode({ id: '9:2', type: 'RECTANGLE', bbox: { x: 10, y: 10, w: 180, h: 20 } }),
+        specNode({ id: '9:3', type: 'RECTANGLE', bbox: { x: 10, y: 37, w: 180, h: 153 } }),
+      ],
+    });
+    const report = runL2(specNodeToFigma(consistentSpec), gateDump, { prevState: null });
+    const props = (report.structural?.violations ?? []).map((v) => v.property);
+    expect(props).toContain('paddingLeft');
+    expect(props).toContain('itemSpacing');
+    expect((report.structural?.diagnostics.pixel ?? [])
+      .filter((d) => d.code === 'l2_derived_geometry_skipped')).toEqual([]);   // 双门放行,无保守跳过
+  });
+
+  it('B1 透传:非 NONE 携带 layoutMode;NONE 不携带 layoutMode/padding/itemSpacing', () => {
+    const vertical = specNodeToFigma(gateSpec('VERTICAL'));
+    expect(vertical.layoutMode).toBe('VERTICAL');
+    expect(vertical.itemSpacing).toBe(7);
+    const none = specNodeToFigma(gateSpec('NONE'));
+    expect(none.layoutMode).toBeUndefined();
+    expect(none.paddingLeft).toBeUndefined();
+    expect(none.itemSpacing).toBeUndefined();
   });
 });

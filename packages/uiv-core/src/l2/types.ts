@@ -10,6 +10,8 @@ export interface FigmaNode {
   absoluteBoundingBox: Box | null;
   paddingLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number;
   itemSpacing?: number; cornerRadius?: number;
+  /** Codex B1:auto-layout 轴向(runL2 自 spec 透传);undefined 时 itemSpacing 派生断言保守跳过,不得默认 VERTICAL。 */
+  layoutMode?: 'NONE' | 'HORIZONTAL' | 'VERTICAL' | 'GRID';
   fills?: { type: string; color?: { r: number; g: number; b: number; a: number } }[];
   style?: { fontSize?: number }; characters?: string; children?: FigmaNode[];
 }
@@ -53,10 +55,22 @@ export interface Violation {
   source?: string | null;   // T3.3:verify-page 层由 enrichViolations 富化(demoDir 相对 "path:line");l2 引擎不产
 }
 
-/** T2.7 像素通道跳过记录。 */
+/**
+ * assertPair informational 跳过记录(落 structural.diagnostics.pixel,不进 violations、不计 executed、不影响 score/pass):
+ * pixel_sample_* = T2.7 像素通道跳过三态;
+ * l2_derived_geometry_skipped = Codex D2 派生几何门跳过(携结构化字段)。
+ */
 export interface PixelDiagnostic {
-  code: 'pixel_sample_skipped_nonsolid' | 'pixel_sample_skipped_container' | 'pixel_sample_empty_region';
+  code: 'pixel_sample_skipped_nonsolid' | 'pixel_sample_skipped_container' | 'pixel_sample_empty_region'
+    | 'l2_derived_geometry_skipped';
   testTag: string; detail: string;
+  /** 以下字段仅 l2_derived_geometry_skipped 携带(D2:nodeId + 原因 + 跳过规则 + 两侧直接子节点数)。 */
+  nodeId?: string;
+  /** design_derivation_mismatch = R1-① 设计侧可推导性门:authored 值无法由 Figma 直接子 bbox 重建(与身份双射失败区分)。 */
+  reason?: 'direct_child_correspondence_unproven' | 'design_derivation_mismatch' | 'layout_mode_missing' | 'unsupported_layout';
+  /** correspondence 门整族跳过用粗粒度 'padding';R1-① 设计侧门按规则粒度记具体 padding 键。 */
+  rules?: Array<'padding' | 'itemSpacing' | 'paddingLeft' | 'paddingTop' | 'paddingRight' | 'paddingBottom'>;
+  semChildCount?: number; figChildCount?: number;
 }
 
 /** report.json 顶层 reason=inconclusive 时的细分(设计文档 2.4 节/步骤 5)。 */
