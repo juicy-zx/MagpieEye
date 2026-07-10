@@ -5,5 +5,14 @@
     "version": "T1_0A_V1",
     "minScore": 0.9,
     "matrix": "default5"
+  },
+  {
+    "fileKey": "hH7NUAlm9DsLRaGScQP0Z1",
+    "nodeId": "39:10844",
+    "version": "2342874355766877359",
+    "minScore": 0.9,
+    "matrix": "l-shape",
+    "testFqn": "com.magpie.uiv.demo.HashtagPanelScreenshotTest",
+    "demoDir": "demo-android"
   }
 ]
