@@ -1,0 +1,122 @@
+{
+  "_source": {
+    "note": "确定性提取自 39:10822 冻结 spec 子树(Codex D7);禁独立 pull。XML 只对该子树负责。",
+    "file": ".ui-verify/baselines/39-10822@2342874355766877359/spec.json",
+    "sha256": "4e3d6d35d1900573d872d848a7957e7d596e3481e4d4e6c356c85697af4f1e32",
+    "extractedNodeId": "39:10826"
+  },
+  "specVersion": 0,
+  "fileKey": "hH7NUAlm9DsLRaGScQP0Z1",
+  "nodeId": "39:10826",
+  "version": "2342874355766877359",
+  "root": {
+    "id": "39:10826",
+    "name": "ct_language_select",
+    "type": "FRAME",
+    "visible": true,
+    "bbox": {
+      "x": 16,
+      "y": 352,
+      "w": 328,
+      "h": 48
+    },
+    "layoutMode": "HORIZONTAL",
+    "primaryAxisAlignItems": "SPACE_BETWEEN",
+    "padding": {
+      "l": 0,
+      "t": 7.5,
+      "r": 0,
+      "b": 7.5
+    },
+    "itemSpacing": 16,
+    "cornerRadii": null,
+    "fills": [],
+    "text": null,
+    "children": [
+      {
+        "id": "39:10827",
+        "name": "Text",
+        "type": "TEXT",
+        "visible": true,
+        "bbox": {
+          "x": 16,
+          "y": 367.5,
+          "w": 63,
+          "h": 17
+        },
+        "layoutMode": "NONE",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 0,
+        "cornerRadii": null,
+        "fills": [
+          {
+            "type": "SOLID",
+            "hex": "#FFFFFF",
+            "opacity": 0.8999999761581421
+          }
+        ],
+        "text": {
+          "characters": "Language",
+          "fontSize": 14,
+          "fontWeight": 400,
+          "overrides": []
+        },
+        "children": []
+      },
+      {
+        "id": "39:10828",
+        "name": "ic_arrow",
+        "type": "INSTANCE",
+        "visible": true,
+        "bbox": {
+          "x": 320,
+          "y": 364,
+          "w": 24,
+          "h": 24
+        },
+        "layoutMode": "NONE",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 0,
+        "cornerRadii": null,
+        "fills": [],
+        "text": null,
+        "children": [
+          {
+            "id": "I39:10828;9100:73500",
+            "name": "Vector",
+            "type": "VECTOR",
+            "visible": true,
+            "bbox": {
+              "x": 329,
+              "y": 370.5,
+              "w": 6.000000476837158,
+              "h": 11.999999046325684
+            },
+            "layoutMode": "NONE",
+            "padding": {
+              "l": 0,
+              "t": 0,
+              "r": 0,
+              "b": 0
+            },
+            "itemSpacing": 0,
+            "cornerRadii": null,
+            "fills": [],
+            "text": null,
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}

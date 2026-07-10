@@ -1,0 +1,136 @@
+{
+  "_source": {
+    "note": "从 39:10822 整页 Compose dump 确定性提取 39:10826 子树并 rebase 到原点(D6 弱交叉印证:same design→same L2 verdict)。",
+    "file": "demo-android/app/build/uiv/UploadContent.semantics.json (Gradle 产物)",
+    "sha256": "a09f96c513552a7f89df00c198c6c2b350ae63ac42d4d32dab3c31d63b201f9f",
+    "extractedTag": "fig:39:10826"
+  },
+  "density": 2,
+  "graphicsMode": "NATIVE",
+  "root": {
+    "testTag": "fig:39:10826",
+    "text": null,
+    "positionInRoot": {
+      "x": 0,
+      "y": 0
+    },
+    "size": {
+      "width": 656,
+      "height": 96
+    },
+    "touchBoundsInRoot": {
+      "left": 0,
+      "top": 0,
+      "right": 656,
+      "bottom": 96
+    },
+    "boundsInRoot": {
+      "left": 0,
+      "top": 0,
+      "right": 656,
+      "bottom": 96
+    },
+    "colorHex": null,
+    "fontSizeSp": null,
+    "cornerRadiusPx": null,
+    "hasVisualOverflow": null,
+    "clickable": false,
+    "contentDescription": null,
+    "children": [
+      {
+        "testTag": "fig:39:10827",
+        "text": "Language",
+        "positionInRoot": {
+          "x": 0,
+          "y": 31
+        },
+        "size": {
+          "width": 126,
+          "height": 34
+        },
+        "touchBoundsInRoot": {
+          "left": 0,
+          "top": 31,
+          "right": 126,
+          "bottom": 65
+        },
+        "boundsInRoot": {
+          "left": 0,
+          "top": 31,
+          "right": 126,
+          "bottom": 65
+        },
+        "colorHex": "#FFFFFF",
+        "fontSizeSp": 14,
+        "cornerRadiusPx": null,
+        "hasVisualOverflow": false,
+        "clickable": false,
+        "contentDescription": null,
+        "children": []
+      },
+      {
+        "testTag": "fig:39:10828",
+        "text": null,
+        "positionInRoot": {
+          "x": 608,
+          "y": 24
+        },
+        "size": {
+          "width": 48,
+          "height": 48
+        },
+        "touchBoundsInRoot": {
+          "left": 608,
+          "top": 24,
+          "right": 656,
+          "bottom": 72
+        },
+        "boundsInRoot": {
+          "left": 608,
+          "top": 24,
+          "right": 656,
+          "bottom": 72
+        },
+        "colorHex": null,
+        "fontSizeSp": null,
+        "cornerRadiusPx": null,
+        "hasVisualOverflow": null,
+        "clickable": false,
+        "contentDescription": null,
+        "children": [
+          {
+            "testTag": null,
+            "text": null,
+            "positionInRoot": {
+              "x": 608,
+              "y": 24
+            },
+            "size": {
+              "width": 48,
+              "height": 48
+            },
+            "touchBoundsInRoot": {
+              "left": 584,
+              "top": 0,
+              "right": 680,
+              "bottom": 96
+            },
+            "boundsInRoot": {
+              "left": 608,
+              "top": 24,
+              "right": 656,
+              "bottom": 72
+            },
+            "colorHex": null,
+            "fontSizeSp": null,
+            "cornerRadiusPx": null,
+            "hasVisualOverflow": null,
+            "clickable": false,
+            "contentDescription": null,
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}

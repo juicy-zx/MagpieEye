@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  commit2 R1 Codex 追加(req5):受控"父容器裁剪 child"负例,证 XML 的 boundsInRoot 能让 childClipped
+  真产出 violation(不只加 executed 计数)。
+  父 fig:clip:parent 100x100dp(clipChildren 默认 true);child fig:clip:child 80x80dp 偏移 (60,60)dp
+  → unclipped 右下 (140,140)dp 超出父 100dp 边界 → getGlobalVisibleRect 被父裁到 (60,60,100,100)dp。
+  dump 后 fig:clip:child 的 boundsInRoot(60,60,100,100)dp < unclipped box(60,60,140,140)dp
+  → childClipped high 违规(TS 侧断言)。测试再置 clipChildren=false 重 dump → 违规消失。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:tag="fig:clip:parent"
+    android:clipChildren="true"
+    android:layout_width="100dp"
+    android:layout_height="100dp">
+
+    <View
+        android:tag="fig:clip:child"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="60dp"
+        android:background="#3366CC" />
+</FrameLayout>

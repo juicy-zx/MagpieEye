@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ct_language_select(Figma hH7NUAlm9DsLRaGScQP0Z1 / 39:10826)的 XML/View 复刻。
+  几何以 .ui-verify/baselines/39-10822@2342874355766877359/spec.json 的 39:10826 子树为唯一事实源
+  (子树 rebase 到原点后:Text (0,15.5) 63x17;ic_arrow (304,12) 24x24;容器 328x48)。
+
+  刻意决策(勿"修正"):
+  - 用 FrameLayout + 绝对 margin 定位(镜像 Compose 侧 AbsoluteLayout),不用 LinearLayout+Space:
+    L2 对 SPACE_BETWEEN 一律跳 itemSpacing 派生断言,weight/Space 的额外未挂 tag 子节点会破坏
+    padding 双射门(mapDirectChildren 要求全部直接子挂 tag),故取恰好 2 个挂 tag 子节点,
+    与 Compose 侧执行集完全一致(D6 交叉印证)。
+  - 非 clickable(镜像 Compose 侧 39:10826 clickable=false):保持 same-in→same-out 纯净对照;
+    clickable=true + touchBounds=null 的归一化路径由 clickable_matrix.xml 独立覆盖(Codex 追加)。
+  - Text 定宽定高 63x17dp(size 断言读上报几何);textColor #E6FFFFFF → colorHex #FFFFFF(与 Compose 同,
+    但 spec fill 半透明 opacity 0.9 → L2 跳 ΔE);无 ellipsize → hasVisualOverflow=false(不承担 CS2)。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:tag="fig:39:10826"
+    android:layout_width="328dp"
+    android:layout_height="48dp">
+
+    <TextView
+        android:tag="fig:39:10827"
+        android:layout_width="63dp"
+        android:layout_height="17dp"
+        android:layout_gravity="top|start"
+        android:layout_marginTop="15.5dp"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:text="Language"
+        android:textColor="#E6FFFFFF"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:tag="fig:39:10828"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="304dp"
+        android:layout_marginTop="12dp"
+        android:src="@drawable/ic_arrow" />
+</FrameLayout>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Codex 追加覆盖点:用正式 XML 全链覆盖 clickable=true + touchBoundsInRoot=null 的归一化路径。
+  三个真实 clickable 节点(经 inflate+measure+layout→ViewDumpRule dump→runInvariants 全链),
+  验证:
+   - touchBoundsInRoot=null(ViewDumpRule 诚实缺席)→ touchTargetTooSmall 门对全部 clickable 跳过;
+   - c1(clickable + 子文本"OK"形成有效可及名)→ missingContentDescription 执行但不产违规;
+   - c2(clickable + 无文本 + 无 contentDescription)→ missingContentDescription **承重**(high 违规);
+   - c3(clickable + 合法 android:contentDescription)→ missingContentDescription 执行但不产违规。
+  即"真缺可及名就承重;真有名(子文本或 cd)就放行",不抹 clickable / 不塞假描述。
+  纵向 LinearLayout 定高堆叠,避免 siblingOverlap 噪声。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:tag="fig:cm:root"
+    android:orientation="vertical"
+    android:layout_width="200dp"
+    android:layout_height="144dp">
+
+    <FrameLayout
+        android:tag="fig:cm:c1-clickable-with-text"
+        android:clickable="true"
+        android:layout_width="200dp"
+        android:layout_height="48dp">
+
+        <TextView
+            android:tag="fig:cm:c1-text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="OK"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp" />
+    </FrameLayout>
+
+    <ImageView
+        android:tag="fig:cm:c2-clickable-no-name"
+        android:clickable="true"
+        android:layout_width="24dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_arrow" />
+
+    <ImageView
+        android:tag="fig:cm:c3-clickable-with-cd"
+        android:clickable="true"
+        android:layout_width="24dp"
+        android:layout_height="48dp"
+        android:contentDescription="Language"
+        android:src="@drawable/ic_arrow" />
+</LinearLayout>

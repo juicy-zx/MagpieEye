@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  D8⑤ 稳定 XML 几何负例:与 language_select.xml 唯一差异 = ic_arrow 尺寸 40x40dp(应为 24x24)。
+  经真 inflate+measure+layout→dump→runL2 后,fig:39:10828 触发 size parity 违规(high),verdict fail;
+  恢复(good fixture)后过。证明几何偏差经完整 XML 全链被精确检出。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:tag="fig:39:10826"
+    android:layout_width="328dp"
+    android:layout_height="48dp">
+
+    <TextView
+        android:tag="fig:39:10827"
+        android:layout_width="63dp"
+        android:layout_height="17dp"
+        android:layout_gravity="top|start"
+        android:layout_marginTop="15.5dp"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:text="Language"
+        android:textColor="#E6FFFFFF"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:tag="fig:39:10828"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="304dp"
+        android:layout_marginTop="12dp"
+        android:src="@drawable/ic_arrow" />
+</FrameLayout>
