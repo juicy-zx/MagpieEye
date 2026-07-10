@@ -23,5 +23,14 @@
     "matrix": "l-shape",
     "testFqn": "com.magpie.uiv.demo.UploadContentScreenshotTest",
     "demoDir": "demo-android"
+  },
+  {
+    "fileKey": "hH7NUAlm9DsLRaGScQP0Z1",
+    "nodeId": "39:10826",
+    "version": "2342874355766877359",
+    "minScore": 0.9,
+    "matrix": "l-shape",
+    "testFqn": "com.magpie.uiv.demo.LanguageSelectXmlScreenshotTest",
+    "demoDir": "demo-android"
   }
 ]

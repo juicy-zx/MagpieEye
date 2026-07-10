@@ -79,7 +79,7 @@ class LanguageSelectXmlScreenshotTest {
         assertBoundsAlignPosPlusSize(text, rootLocWin, rootVis)
         assertBoundsAlignPosPlusSize(arrow, rootLocWin, rootVis)
 
-        root.captureRoboImage("build/outputs/roborazzi/LanguageSelectXml.png")
+        root.captureRoboImage("src/test/snapshots/LanguageSelectXml.png")
         dumpRule.dump(root, "LanguageSelectXml")
     }
 
