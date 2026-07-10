@@ -180,7 +180,9 @@ export function assertPair(
       // R1-①(Codex):第二层"设计侧可推导性门"—— 同一套包络/相邻间隙 derivation 先跑在 Figma
       // direct-child bbox 上,design-derived ≈ authored(同 0.5dp 网格容差)才证明该规则在此拓扑下
       // 可由子几何重建,再拿 semantic-derived 与 authored 比;不可重建(counter-axis CENTER/MAX
-      // 对齐、SPACE_BETWEEN 等分布式对齐)按规则粒度跳过并记 design_derivation_mismatch。
+      // 对齐等)按规则粒度跳过并记 design_derivation_mismatch。
+      // B3 后分工:显式 SPACE_BETWEEN 由下方 primary_axis_space_between 门前置一律跳 itemSpacing
+      // (不再依赖本门兜底);本门继续兜底旧 spec 缺 primaryAxisAlignItems 的 unknown 路径。
       // 门只消费设计数据 → 真实实现偏差(语义侧)不会被它转成 skip。
       // 门禁正确性遗留(P2,勿动 normalize):spec v0 未导出 layoutWrap 与 layoutPositioning ——
       // WRAP 容器 layoutMode 仍为 HORIZONTAL/VERTICAL 无法识别;ABSOLUTE 定位子节点无法从双射/
@@ -223,20 +225,27 @@ export function assertPair(
         // GRID/其余非 flow 拓扑保守跳过(先于设计侧门:无轴向则 design-derived 不可算)。
         const mode = p.figma.layoutMode;
         if (mode === 'HORIZONTAL' || mode === 'VERTICAL') {
-          const fa = figKids[0]!.absoluteBoundingBox!;
-          const fc = figKids[1]!.absoluteBoundingBox!;
-          const designGap = mode === 'HORIZONTAL' ? fc.x - (fa.x + fa.width) : fc.y - (fa.y + fa.height);
-          if (!gridEqual(p.figma.itemSpacing!, designGap)) {
-            designMismatch.push('itemSpacing');   // SPACE_BETWEEN 等:authored gap 无法由子几何重建
+          if (p.figma.primaryAxisAlignItems === 'SPACE_BETWEEN') {
+            // B3(Codex D3/D4):显式 SPACE_BETWEEN 的 authored gap 语义是"剩余空间等分",不具可断言性,
+            // 一律跳过(数值偶合 ≈ design gap 也不豁免);缺字段(旧 spec unknown)不走此门,由下方设计门兜底。
+            // 只跳 itemSpacing:padding 已在上方照常断言,不提前返回。
+            skipDerived('primary_axis_space_between', ['itemSpacing']);
           } else {
-            const a = mapped[0]!;
-            const b = mapped[1]!;
-            executed++;
-            const derived = mode === 'HORIZONTAL'
-              ? b.positionDp.x - (a.positionDp.x + a.sizeDp.width)
-              : b.positionDp.y - (a.positionDp.y + a.sizeDp.height);
-            if (!gridEqual(p.figma.itemSpacing!, derived)) {
-              add('itemSpacing', `${p.figma.itemSpacing}`, `${derived}`, 'medium');
+            const fa = figKids[0]!.absoluteBoundingBox!;
+            const fc = figKids[1]!.absoluteBoundingBox!;
+            const designGap = mode === 'HORIZONTAL' ? fc.x - (fa.x + fa.width) : fc.y - (fa.y + fa.height);
+            if (!gridEqual(p.figma.itemSpacing!, designGap)) {
+              designMismatch.push('itemSpacing');   // unknown 主轴对齐(旧 spec 缺字段)的 SPACE_BETWEEN 几何等:authored gap 无法由子几何重建
+            } else {
+              const a = mapped[0]!;
+              const b = mapped[1]!;
+              executed++;
+              const derived = mode === 'HORIZONTAL'
+                ? b.positionDp.x - (a.positionDp.x + a.sizeDp.width)
+                : b.positionDp.y - (a.positionDp.y + a.sizeDp.height);
+              if (!gridEqual(p.figma.itemSpacing!, derived)) {
+                add('itemSpacing', `${p.figma.itemSpacing}`, `${derived}`, 'medium');
+              }
             }
           }
         } else {

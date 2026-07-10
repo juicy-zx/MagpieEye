@@ -33,6 +33,8 @@ export function specNodeToFigma(n: SpecNode): FigmaNode {
   };
   if (n.layoutMode !== 'NONE') {
     out.layoutMode = n.layoutMode;   // Codex B1:透传轴向供 itemSpacing 派生断言;NONE 门(下方字段不携带)行为不变
+    // B3:主轴对齐门内透传(SPACE_BETWEEN 时 assert 跳 itemSpacing);spec 缺字段不合成 own-property
+    if (n.primaryAxisAlignItems !== undefined) out.primaryAxisAlignItems = n.primaryAxisAlignItems;
     out.paddingLeft = n.padding.l; out.paddingTop = n.padding.t;
     out.paddingRight = n.padding.r; out.paddingBottom = n.padding.b;
     out.itemSpacing = n.itemSpacing;

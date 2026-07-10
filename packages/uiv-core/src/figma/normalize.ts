@@ -18,6 +18,7 @@ interface RawNode {
   cornerRadius?: number;
   rectangleCornerRadii?: [number, number, number, number];
   layoutMode?: string;
+  primaryAxisAlignItems?: string;
   paddingLeft?: number; paddingTop?: number; paddingRight?: number; paddingBottom?: number;
   itemSpacing?: number;
   fills?: RawPaint[];
@@ -82,6 +83,18 @@ function normalizeLayoutMode(v: string | undefined): SpecNode['layoutMode'] {
   return v === 'HORIZONTAL' || v === 'VERTICAL' || v === 'GRID' ? v : 'NONE';
 }
 
+/**
+ * B3:primaryAxisAlignItems 白名单发射 —— 仅当节点明确为 auto-layout(normalize 后 layoutMode
+ * 非 NONE,天然防 raw undefined!==NONE 误发射)且 raw 值命中四值白名单才发射;缺失/其他不发射
+ * (旧 spec = unknown),严禁合成 MIN/PACKED/几何反推。
+ */
+function normalizePrimaryAxisAlignItems(
+  layoutMode: SpecNode['layoutMode'], v: string | undefined,
+): NonNullable<SpecNode['primaryAxisAlignItems']> | undefined {
+  if (layoutMode === 'NONE') return undefined;
+  return v === 'MIN' || v === 'CENTER' || v === 'MAX' || v === 'SPACE_BETWEEN' ? v : undefined;
+}
+
 function normalizeCornerRadii(node: RawNode): SpecNode['cornerRadii'] {
   if (node.rectangleCornerRadii !== undefined) {
     const [tl, tr, br, bl] = node.rectangleCornerRadii;
@@ -101,13 +114,17 @@ function walk(node: RawNode, rootOrigin: { x: number; y: number }): SpecNode {
     : { x: ab.x - rootOrigin.x, y: ab.y - rootOrigin.y, w: ab.width, h: ab.height };
   const isText = node.type === 'TEXT';
   const characters = node.characters ?? '';
+  const layoutMode = normalizeLayoutMode(node.layoutMode);
+  const primaryAxisAlignItems = normalizePrimaryAxisAlignItems(layoutMode, node.primaryAxisAlignItems);
   return {
     id: node.id ?? '',
     name: node.name ?? '',
     type: node.type ?? '',
     visible: node.visible ?? true,
     bbox,
-    layoutMode: normalizeLayoutMode(node.layoutMode),
+    layoutMode,
+    // B3:缺失即不携带 own-property(unknown),下游不得读到合成值
+    ...(primaryAxisAlignItems !== undefined ? { primaryAxisAlignItems } : {}),
     padding: {
       l: node.paddingLeft ?? 0,
       t: node.paddingTop ?? 0,

@@ -12,6 +12,8 @@ export interface FigmaNode {
   itemSpacing?: number; cornerRadius?: number;
   /** Codex B1:auto-layout 轴向(runL2 自 spec 透传);undefined 时 itemSpacing 派生断言保守跳过,不得默认 VERTICAL。 */
   layoutMode?: 'NONE' | 'HORIZONTAL' | 'VERTICAL' | 'GRID';
+  /** B3:主轴对齐(runL2 自 spec 透传);SPACE_BETWEEN 一律跳 itemSpacing 派生断言;undefined=unknown 走设计门兜底。 */
+  primaryAxisAlignItems?: 'MIN' | 'CENTER' | 'MAX' | 'SPACE_BETWEEN';
   fills?: { type: string; color?: { r: number; g: number; b: number; a: number } }[];
   style?: { fontSize?: number }; characters?: string; children?: FigmaNode[];
 }
@@ -68,8 +70,12 @@ export interface PixelDiagnostic {
   testTag: string; detail: string;
   /** 以下字段仅 l2_derived_geometry_skipped 携带(D2:nodeId + 原因 + 跳过规则 + 两侧直接子节点数)。 */
   nodeId?: string;
-  /** design_derivation_mismatch = R1-① 设计侧可推导性门:authored 值无法由 Figma 直接子 bbox 重建(与身份双射失败区分)。 */
-  reason?: 'direct_child_correspondence_unproven' | 'design_derivation_mismatch' | 'layout_mode_missing' | 'unsupported_layout';
+  /**
+   * design_derivation_mismatch = R1-① 设计侧可推导性门:authored 值无法由 Figma 直接子 bbox 重建(与身份双射失败区分);
+   * primary_axis_space_between = B3 显式 SPACE_BETWEEN 门:authored gap 语义为剩余空间等分,一律跳 itemSpacing(D3)。
+   */
+  reason?: 'direct_child_correspondence_unproven' | 'design_derivation_mismatch' | 'layout_mode_missing'
+    | 'unsupported_layout' | 'primary_axis_space_between';
   /** correspondence 门整族跳过用粗粒度 'padding';R1-① 设计侧门按规则粒度记具体 padding 键。 */
   rules?: Array<'padding' | 'itemSpacing' | 'paddingLeft' | 'paddingTop' | 'paddingRight' | 'paddingBottom'>;
   semChildCount?: number; figChildCount?: number;

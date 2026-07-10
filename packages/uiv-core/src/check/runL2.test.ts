@@ -250,6 +250,16 @@ describe('specNodeToFigma NONE 门(D3:NONE 不携带派生属性;VERTICAL 正控
     expect(none.paddingLeft).toBeUndefined();
     expect(none.itemSpacing).toBeUndefined();
   });
+
+  // B3:primaryAxisAlignItems 在 layoutMode!==NONE 门内透传;spec 缺字段不得合成 own-property。
+  it('B3-⑤ spec 携带 primaryAxisAlignItems → FigmaNode 透传', () => {
+    const fig = specNodeToFigma(specNode({ layoutMode: 'VERTICAL', primaryAxisAlignItems: 'SPACE_BETWEEN' }));
+    expect(fig.primaryAxisAlignItems).toBe('SPACE_BETWEEN');
+  });
+  it('B3-⑥ spec 缺字段 → FigmaNode 无 own-property(unknown 不得合成)', () => {
+    const fig = specNodeToFigma(specNode({ layoutMode: 'VERTICAL' }));
+    expect(Object.hasOwn(fig, 'primaryAxisAlignItems')).toBe(false);
+  });
 });
 
 // Codex D4:spec fills opacity 透传到断言层(effective alpha;spec v0 无 node opacity,等于 paint opacity)。

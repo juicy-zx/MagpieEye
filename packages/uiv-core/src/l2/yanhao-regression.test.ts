@@ -11,10 +11,12 @@
  *   本树全部容器身份双射不成立,保守跳过记 l2_derived_geometry_skipped;半透明 paint
  *   (Hashtag 文本 #FFFFFF α≈0.9)跳过 ΔE 记 l2_color_skipped_translucent_paint;
  *   容器像素采样跳过记 pixel_sample_skipped_container → violations=0、score=1、executed=15。
- * R1-① 设计侧门在本 fixture 不改变 skip 集合(双射门先于设计门全部拦下);若双射未来放行,
- *   根容器 SPACE_BETWEEN(authored gap 20 vs design-derived 211)与 btn_fullscreen 居中 icon
- *   (authored pad 0 vs design-derived 4)将由 design_derivation_mismatch 兜底,
- *   该效果已在 assert.test.ts 以 yanhao 根真实几何单测钉死。
+ * R1-① 设计侧门在本 fixture 不改变 skip 集合(双射门先于设计门全部拦下);冻结 spec 为旧格式、
+ *   无 primaryAxisAlignItems 字段(unknown 路径,B3 显式 SPACE_BETWEEN 门不触发)—— 本回归即
+ *   旧 spec unknown 路径的常驻反控。若双射未来放行,根容器 SPACE_BETWEEN 几何(authored gap 20
+ *   vs design-derived 211)与 btn_fullscreen 居中 icon(authored pad 0 vs design-derived 4)
+ *   仍由 design_derivation_mismatch 兜底(assert.test.ts yanhao 根真实几何单测钉死);
+ *   B3 后新抓 spec 携显式 SPACE_BETWEEN 时则由 primary_axis_space_between 前置跳过 itemSpacing。
  *
  * executed 35 → 15 逐规则账目(修复前 = 6 pair 全量执行;修复后 20 条保守跳过不计分母):
  *   pair                                     修复前执行                     修复后跳过(原因)

@@ -393,6 +393,69 @@ describe('assertPair 设计侧可推导性门(R1-①,design_derivation_mismatch)
   });
 });
 
+// B3(Codex D3/D4):显式 SPACE_BETWEEN 门 —— 双射门之后、mode∈{H,V} 判定之后、designGap 之前,
+// 一律跳 itemSpacing(authored gap 语义是"剩余空间等分",数值偶合不构成可断言性);不提前返回,
+// padding 继续原断言。缺字段(旧 spec unknown)不触发本门,维持设计门兜底(上方 SPACE_BETWEEN 止血用例即反控)。
+describe('assertPair 显式 SPACE_BETWEEN 门(B3,primary_axis_space_between)', () => {
+  const skipOf = (r: { diagnostics: Array<Record<string, unknown>> }): Array<Record<string, unknown>> =>
+    r.diagnostics.filter((d) => d['code'] === 'l2_derived_geometry_skipped');
+
+  it('B3-⑦ 双射成立:恰 1 条 primary_axis_space_between/[itemSpacing];padding 语义偏差照常检出(Codex oracle 2)', () => {
+    // 父 (0,0,200,100),authored padT/padB=10、gap=8;Figma 子 (0,10,200,20)/(0,70,200,20):
+    // design padT=10 ✓ padB=100-90=10 ✓(可推导继续执行);design gap=70-30=40(SPACE_BETWEEN 撑开)。
+    // 语义侧注入 paddingTop 偏差(首子 y=16 → sem-derived 16 vs authored 10)证明只跳 itemSpacing。
+    const r = assertPair(mkPair(
+      { paddingTop: 10, paddingBottom: 10, itemSpacing: 8,
+        layoutMode: 'VERTICAL', primaryAxisAlignItems: 'SPACE_BETWEEN',
+        absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 100 },
+        children: [figKid('1:201', 0, 10, 200, 20), figKid('1:202', 0, 70, 200, 20)] },
+      { sizeDp: { width: 200, height: 100 }, children: [
+        semKid('fig:1:201', 0, 16, 200, 20), semKid('fig:1:202', 0, 70, 200, 20),
+      ] }));
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      code: 'l2_derived_geometry_skipped', nodeId: '1:101',
+      reason: 'primary_axis_space_between', rules: ['itemSpacing'],
+    })]);
+    expect(r.violations).toEqual([expect.objectContaining({
+      property: 'paddingTop', expected: '10', actual: '16', severity: 'medium',
+    })]);                                        // 只跳 itemSpacing:padding 违规照常触发,无 itemSpacing 违规
+    expect(r.executed).toBe(4);                  // position + size + paddingTop + paddingBottom(gap 不计)
+  });
+
+  it('B3-⑨ 显式 CENTER/MIN:itemSpacing 照常执行不误杀', () => {
+    // authored gap 8 = design gap(过设计门);语义 gap 12 为真实偏差,必须检出。
+    for (const align of ['CENTER', 'MIN'] as const) {
+      const r = assertPair(mkPair(
+        { itemSpacing: 8, layoutMode: 'VERTICAL', primaryAxisAlignItems: align,
+          absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 200 },
+          children: [figKid('1:201', 0, 0, 50, 20), figKid('1:202', 0, 28, 50, 20)] },
+        { sizeDp: { width: 200, height: 200 }, children: [
+          semKid('fig:1:201', 0, 0, 50, 20), semKid('fig:1:202', 0, 32, 50, 20),
+        ] }));
+      expect(r.violations).toContainEqual(expect.objectContaining({
+        property: 'itemSpacing', expected: '8', actual: '12', severity: 'medium' }));
+      expect(skipOf(r)).toEqual([]);
+    }
+  });
+
+  it('B3-⑩ D3 钉子:SPACE_BETWEEN 且 authored 恰=design gap(数值偶合)仍跳', () => {
+    // authored gap 40 恰 = design gap(60-20=40):偶合不构成可断言性,一律跳;
+    // 语义侧注入 gap 50 偏差旁证确实未执行(若执行必产违规)。
+    const r = assertPair(mkPair(
+      { itemSpacing: 40, layoutMode: 'VERTICAL', primaryAxisAlignItems: 'SPACE_BETWEEN',
+        absoluteBoundingBox: { x: 0, y: 0, width: 200, height: 100 },
+        children: [figKid('1:201', 0, 0, 200, 20), figKid('1:202', 0, 60, 200, 20)] },
+      { sizeDp: { width: 200, height: 100 }, children: [
+        semKid('fig:1:201', 0, 0, 200, 20), semKid('fig:1:202', 0, 70, 200, 20),
+      ] }));
+    expect(r.violations).toEqual([]);
+    expect(r.executed).toBe(2);                  // 仅 position + size
+    expect(skipOf(r)).toEqual([expect.objectContaining({
+      reason: 'primary_axis_space_between', rules: ['itemSpacing'],
+    })]);
+  });
+});
+
 // Codex D4:半透明 paint(effective alpha<1)只跳过依赖显示色的 ΔE 断言;几何/排版不受影响,不做背景合成。
 describe('assertPair 半透明 paint 颜色断言跳过(Codex D4)', () => {
   it('半透明 tagged leaf(语义通道):跳过 ΔE、不扣分、记 l2_color_skipped_translucent_paint', () => {

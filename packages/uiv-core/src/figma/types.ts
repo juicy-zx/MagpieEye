@@ -8,6 +8,8 @@ export interface SpecNode {
   id: string; name: string; type: string; visible: boolean;
   bbox: Rect | null;                 // 已减根 frame 绝对原点;1 Figma 单位=1dp(T1.0a)
   layoutMode: 'NONE' | 'HORIZONTAL' | 'VERTICAL' | 'GRID';
+  /** B3:主轴对齐(仅明确 auto-layout 且四值白名单命中才携带;缺失=unknown,严禁合成 MIN)。 */
+  primaryAxisAlignItems?: 'MIN' | 'CENTER' | 'MAX' | 'SPACE_BETWEEN';
   padding: { l: number; t: number; r: number; b: number };
   itemSpacing: number;
   cornerRadii: [number, number, number, number] | null;
