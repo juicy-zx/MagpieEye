@@ -58,6 +58,20 @@ class SemanticsDumpRule(private val outDir: File = File("build/uiv")) : TestWatc
             """"children":[${n.children.joinToString(",") { nodeJson(it) }}]}"""
     }
 
+    // 控制字符必须转义:多行 TEXT(如 Figma 39:10844 正文含 \n)否则产出非法 JSON → semantics_export_failed。
     private fun js(v: String?): String =
-        v?.let { "\"${it.replace("\\", "\\\\").replace("\"", "\\\"")}\"" } ?: "null"
+        v?.let {
+            val sb = StringBuilder("\"")
+            for (ch in it) {
+                when (ch) {
+                    '\\' -> sb.append("\\\\")
+                    '"' -> sb.append("\\\"")
+                    '\n' -> sb.append("\\n")
+                    '\r' -> sb.append("\\r")
+                    '\t' -> sb.append("\\t")
+                    else -> if (ch < ' ') sb.append("\\u%04x".format(ch.code)) else sb.append(ch)
+                }
+            }
+            sb.append("\"").toString()
+        } ?: "null"
 }
