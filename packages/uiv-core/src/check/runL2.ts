@@ -19,9 +19,10 @@ import type { Lane, ReportV1 } from '../report/v1.js';
 import { runCheck } from './run.js';
 import type { CheckOpts, GradleRunner } from './run.js';
 
-function hexToRgb(hex: string): { r: number; g: number; b: number; a: number } {
+/** hex → 归一化 RGB;a 携 paint opacity(Codex D4:spec v0 无 node opacity,effective alpha = paint opacity)。 */
+function hexToRgb(hex: string, alpha: number): { r: number; g: number; b: number; a: number } {
   const int = Number.parseInt(hex.replace('#', ''), 16);
-  return { r: ((int >> 16) & 0xff) / 255, g: ((int >> 8) & 0xff) / 255, b: (int & 0xff) / 255, a: 1 };
+  return { r: ((int >> 16) & 0xff) / 255, g: ((int >> 8) & 0xff) / 255, b: (int & 0xff) / 255, a: alpha };
 }
 
 /** 归一化 spec.json 的 SpecNode(bbox 已 re-base)→ L2 FigmaNode。padding/itemSpacing/layoutMode 仅 auto-layout 携带。 */
@@ -37,7 +38,7 @@ export function specNodeToFigma(n: SpecNode): FigmaNode {
     out.itemSpacing = n.itemSpacing;
   }
   if (n.cornerRadii !== null) out.cornerRadius = n.cornerRadii[0];
-  const fills = n.fills.map((f) => (f.hex === null ? { type: f.type } : { type: f.type, color: hexToRgb(f.hex) }));
+  const fills = n.fills.map((f) => (f.hex === null ? { type: f.type } : { type: f.type, color: hexToRgb(f.hex, f.opacity) }));
   if (fills.length > 0) out.fills = fills;
   if (n.text !== null) { out.style = { fontSize: n.text.fontSize }; out.characters = n.text.characters; }
   if (n.children.length > 0) out.children = n.children.map(specNodeToFigma);

@@ -141,11 +141,11 @@ describe('assertPair 像素采样颜色通道(T2.7)', () => {
     fills: [{ type: 'SOLID', color: { r: 1, g: 0.6, b: 0, a: 1 } }] };
   const sem = { sizeDp: { width: 2, height: 2 } };   // dp×2 = px(0,0,4,4)
 
-  it('非文本叶子:偏色→parity-pixel-sampled;同色不违规计 executed;无 ctx 不执行', () => {
+  it('非文本叶子:偏色→parity-pixel-sampled(alpha=1 正控,ΔE 超阈产 high);同色不违规计 executed;无 ctx 不执行', () => {
     const bad = assertPair(mkPair(fig, sem), px(0xff, 0x66, 0x00));
     expect(bad.violations).toContainEqual(expect.objectContaining({
       judgePath: 'parity-pixel-sampled', property: 'color',
-      expected: '#FF9900', actual: '#FF6600' }));
+      expected: '#FF9900', actual: '#FF6600', severity: 'high' }));
     const ok = assertPair(mkPair(fig, sem), px(0xff, 0x99, 0x00));
     expect(has(ok, 'color', 'high')).toBe(false);
     expect(ok.executed).toBe(3);                            // position+size+color
@@ -390,5 +390,47 @@ describe('assertPair 设计侧可推导性门(R1-①,design_derivation_mismatch)
     expect(r.violations).toEqual([]);            // 修复前:sem 派生 10 vs 5 假违规
     expect(r.executed).toBe(0);                  // fb null:position/size 亦不可执行
     expect(mismatchOf(r)).toEqual([expect.objectContaining({ rules: ['paddingLeft'] })]);
+  });
+});
+
+// Codex D4:半透明 paint(effective alpha<1)只跳过依赖显示色的 ΔE 断言;几何/排版不受影响,不做背景合成。
+describe('assertPair 半透明 paint 颜色断言跳过(Codex D4)', () => {
+  it('半透明 tagged leaf(语义通道):跳过 ΔE、不扣分、记 l2_color_skipped_translucent_paint', () => {
+    const r = assertPair(mkPair(
+      { fills: [{ type: 'SOLID', color: { r: 1, g: 0, b: 0, a: 0.5 } }] }, { colorHex: '#0000FF' }));
+    expect(r.violations).toEqual([]);            // 未合成的 #FF0000 vs #0000FF 不得判违规
+    expect(r.executed).toBe(2);                  // position + size(color 不计)
+    expect(r.diagnostics).toEqual([expect.objectContaining({
+      code: 'l2_color_skipped_translucent_paint', testTag: 'fig:1:101',
+    })]);
+  });
+
+  it('R1-④a opacity=0 边界(?? 语义:0 不得回退 1):按半透明跳过 ΔE 并记 diagnostic', () => {
+    const r = assertPair(mkPair(
+      { fills: [{ type: 'SOLID', color: { r: 1, g: 0, b: 0, a: 0 } }] }, { colorHex: '#0000FF' }));
+    expect(r.violations).toEqual([]);
+    expect(r.executed).toBe(2);
+    expect(r.diagnostics).toEqual([expect.objectContaining({ code: 'l2_color_skipped_translucent_paint' })]);
+  });
+
+  it('opacity=1 控制例:ΔE>3 仍产 high violation(通道未被误杀)', () => {
+    const r = assertPair(mkPair(
+      { fills: [{ type: 'SOLID', color: { r: 1, g: 0, b: 0, a: 1 } }] }, { colorHex: '#0000FF' }));
+    expect(has(r, 'color', 'high')).toBe(true);
+    expect(r.executed).toBe(3);
+  });
+
+  it('半透明非文本叶子(像素通道):跳过采样、记 diagnostic、不计 executed', () => {
+    const ctx: PixelSampleCtx = {
+      png: { width: 4, height: 4, data: Uint8Array.from({ length: 64 }, (_, i) => [0xff, 0x99, 0x00, 255][i % 4] as number) },
+      density: 2,
+    };
+    const r = assertPair(mkPair(
+      { absoluteBoundingBox: { x: 0, y: 0, width: 2, height: 2 },
+        fills: [{ type: 'SOLID', color: { r: 1, g: 0.6, b: 0, a: 0.5 } }] },
+      { sizeDp: { width: 2, height: 2 } }), ctx);
+    expect(r.violations).toEqual([]);
+    expect(r.executed).toBe(2);
+    expect(r.diagnostics).toEqual([expect.objectContaining({ code: 'l2_color_skipped_translucent_paint' })]);
   });
 });

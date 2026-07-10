@@ -1,0 +1,294 @@
+{
+  "_source": {
+    "fileKey": "hH7NUAlm9DsLRaGScQP0Z1",
+    "nodeId": "39:10844",
+    "version": "2342874355766877359",
+    "origin": ".ui-verify/renders/39-10844@2342874355766877359/semantics.json (base__typical 真实 Robolectric 渲染语义树快照)"
+  },
+  "density": 2,
+  "graphicsMode": "NATIVE",
+  "root": {
+    "testTag": null,
+    "text": null,
+    "positionInRoot": {
+      "x": 0,
+      "y": 0
+    },
+    "size": {
+      "width": 720,
+      "height": 950
+    },
+    "touchBoundsInRoot": {
+      "left": 0,
+      "top": 0,
+      "right": 720,
+      "bottom": 950
+    },
+    "boundsInRoot": {
+      "left": 0,
+      "top": 0,
+      "right": 720,
+      "bottom": 950
+    },
+    "colorHex": null,
+    "fontSizeSp": null,
+    "cornerRadiusPx": null,
+    "hasVisualOverflow": null,
+    "clickable": false,
+    "contentDescription": null,
+    "children": [
+      {
+        "testTag": "fig:39:10844",
+        "text": null,
+        "positionInRoot": {
+          "x": 0,
+          "y": 0
+        },
+        "size": {
+          "width": 720,
+          "height": 950
+        },
+        "touchBoundsInRoot": {
+          "left": 0,
+          "top": 0,
+          "right": 720,
+          "bottom": 950
+        },
+        "boundsInRoot": {
+          "left": 0,
+          "top": 0,
+          "right": 720,
+          "bottom": 950
+        },
+        "colorHex": null,
+        "fontSizeSp": null,
+        "cornerRadiusPx": null,
+        "hasVisualOverflow": null,
+        "clickable": false,
+        "contentDescription": null,
+        "children": [
+          {
+            "testTag": "fig:I39:10845;10587:144062",
+            "text": "#在星空下，月光轻洒，数不尽的梦，随风飘洒。\n一二三四，心中有诗，五六七八，愿望如霞。九十的未来，闪耀着光，让我们一起，追逐希望的方向 #InspireMelodies #Inspire #Hhhhhhhhhhhh",
+            "positionInRoot": {
+              "x": 32,
+              "y": 56
+            },
+            "size": {
+              "width": 604,
+              "height": 160
+            },
+            "touchBoundsInRoot": {
+              "left": 32,
+              "top": 56,
+              "right": 636,
+              "bottom": 216
+            },
+            "boundsInRoot": {
+              "left": 32,
+              "top": 56,
+              "right": 636,
+              "bottom": 216
+            },
+            "colorHex": "#41A0FF",
+            "fontSizeSp": 14,
+            "cornerRadiusPx": null,
+            "hasVisualOverflow": false,
+            "clickable": false,
+            "contentDescription": null,
+            "children": []
+          },
+          {
+            "testTag": "fig:39:10846",
+            "text": null,
+            "positionInRoot": {
+              "x": 0,
+              "y": 854
+            },
+            "size": {
+              "width": 720,
+              "height": 96
+            },
+            "touchBoundsInRoot": {
+              "left": 0,
+              "top": 854,
+              "right": 720,
+              "bottom": 950
+            },
+            "boundsInRoot": {
+              "left": 0,
+              "top": 854,
+              "right": 720,
+              "bottom": 950
+            },
+            "colorHex": null,
+            "fontSizeSp": null,
+            "cornerRadiusPx": null,
+            "hasVisualOverflow": null,
+            "clickable": false,
+            "contentDescription": null,
+            "children": [
+              {
+                "testTag": "fig:I39:10846;10221:94053",
+                "text": null,
+                "positionInRoot": {
+                  "x": 24,
+                  "y": 854
+                },
+                "size": {
+                  "width": 204,
+                  "height": 64
+                },
+                "touchBoundsInRoot": {
+                  "left": 24,
+                  "top": 854,
+                  "right": 228,
+                  "bottom": 918
+                },
+                "boundsInRoot": {
+                  "left": 24,
+                  "top": 854,
+                  "right": 228,
+                  "bottom": 918
+                },
+                "colorHex": null,
+                "fontSizeSp": null,
+                "cornerRadiusPx": null,
+                "hasVisualOverflow": null,
+                "clickable": false,
+                "contentDescription": null,
+                "children": [
+                  {
+                    "testTag": null,
+                    "text": null,
+                    "positionInRoot": {
+                      "x": 48,
+                      "y": 866
+                    },
+                    "size": {
+                      "width": 40,
+                      "height": 40
+                    },
+                    "touchBoundsInRoot": {
+                      "left": 20,
+                      "top": 838,
+                      "right": 116,
+                      "bottom": 934
+                    },
+                    "boundsInRoot": {
+                      "left": 48,
+                      "top": 866,
+                      "right": 88,
+                      "bottom": 906
+                    },
+                    "colorHex": null,
+                    "fontSizeSp": null,
+                    "cornerRadiusPx": null,
+                    "hasVisualOverflow": null,
+                    "clickable": false,
+                    "contentDescription": null,
+                    "children": []
+                  },
+                  {
+                    "testTag": "fig:I39:10846;10221:94053;10154:58638",
+                    "text": "Hashtag",
+                    "positionInRoot": {
+                      "x": 92,
+                      "y": 866
+                    },
+                    "size": {
+                      "width": 112,
+                      "height": 40
+                    },
+                    "touchBoundsInRoot": {
+                      "left": 92,
+                      "top": 866,
+                      "right": 204,
+                      "bottom": 906
+                    },
+                    "boundsInRoot": {
+                      "left": 92,
+                      "top": 866,
+                      "right": 204,
+                      "bottom": 906
+                    },
+                    "colorHex": "#FFFFFF",
+                    "fontSizeSp": 14,
+                    "cornerRadiusPx": null,
+                    "hasVisualOverflow": false,
+                    "clickable": false,
+                    "contentDescription": null,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "testTag": "fig:I39:10846;10221:94058",
+                "text": null,
+                "positionInRoot": {
+                  "x": 632,
+                  "y": 854
+                },
+                "size": {
+                  "width": 64,
+                  "height": 64
+                },
+                "touchBoundsInRoot": {
+                  "left": 632,
+                  "top": 854,
+                  "right": 696,
+                  "bottom": 918
+                },
+                "boundsInRoot": {
+                  "left": 632,
+                  "top": 854,
+                  "right": 696,
+                  "bottom": 918
+                },
+                "colorHex": null,
+                "fontSizeSp": null,
+                "cornerRadiusPx": null,
+                "hasVisualOverflow": null,
+                "clickable": false,
+                "contentDescription": null,
+                "children": [
+                  {
+                    "testTag": null,
+                    "text": null,
+                    "positionInRoot": {
+                      "x": 632,
+                      "y": 854
+                    },
+                    "size": {
+                      "width": 64,
+                      "height": 64
+                    },
+                    "touchBoundsInRoot": {
+                      "left": 616,
+                      "top": 838,
+                      "right": 712,
+                      "bottom": 934
+                    },
+                    "boundsInRoot": {
+                      "left": 632,
+                      "top": 854,
+                      "right": 696,
+                      "bottom": 918
+                    },
+                    "colorHex": null,
+                    "fontSizeSp": null,
+                    "cornerRadiusPx": null,
+                    "hasVisualOverflow": null,
+                    "clickable": false,
+                    "contentDescription": null,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

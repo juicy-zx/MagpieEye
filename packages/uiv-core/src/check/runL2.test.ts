@@ -251,3 +251,20 @@ describe('specNodeToFigma NONE 门(D3:NONE 不携带派生属性;VERTICAL 正控
     expect(none.itemSpacing).toBeUndefined();
   });
 });
+
+// Codex D4:spec fills opacity 透传到断言层(effective alpha;spec v0 无 node opacity,等于 paint opacity)。
+describe('specNodeToFigma paint opacity 透传(D4)', () => {
+  it('fills[].opacity 进 color.a(不再恒 1)', () => {
+    const n = specNodeToFigma(specNode({
+      fills: [{ type: 'SOLID', hex: '#FFFFFF', opacity: 0.9 }],
+    }));
+    expect(n.fills?.[0]?.color?.a).toBe(0.9);
+    const opaque = specNodeToFigma(specNode({ fills: [{ type: 'SOLID', hex: '#FF0000', opacity: 1 }] }));
+    expect(opaque.fills?.[0]?.color?.a).toBe(1);
+  });
+
+  it('R1-④a opacity=0 保真透传(?? 语义,0 不得回退 1)', () => {
+    const zero = specNodeToFigma(specNode({ fills: [{ type: 'SOLID', hex: '#FF0000', opacity: 0 }] }));
+    expect(zero.fills?.[0]?.color?.a).toBe(0);
+  });
+});

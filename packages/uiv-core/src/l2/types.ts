@@ -58,11 +58,13 @@ export interface Violation {
 /**
  * assertPair informational 跳过记录(落 structural.diagnostics.pixel,不进 violations、不计 executed、不影响 score/pass):
  * pixel_sample_* = T2.7 像素通道跳过三态;
- * l2_derived_geometry_skipped = Codex D2 派生几何门跳过(携结构化字段)。
+ * l2_derived_geometry_skipped = Codex D2 派生几何门跳过(携结构化字段);
+ * l2_color_skipped_translucent_paint = Codex D4 半透明 paint 跳过 ΔE 断言。
  */
 export interface PixelDiagnostic {
   code: 'pixel_sample_skipped_nonsolid' | 'pixel_sample_skipped_container' | 'pixel_sample_empty_region'
-    | 'l2_derived_geometry_skipped';
+    | 'l2_derived_geometry_skipped'
+    | 'l2_color_skipped_translucent_paint';
   testTag: string; detail: string;
   /** 以下字段仅 l2_derived_geometry_skipped 携带(D2:nodeId + 原因 + 跳过规则 + 两侧直接子节点数)。 */
   nodeId?: string;

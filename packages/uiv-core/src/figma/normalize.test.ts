@@ -66,4 +66,10 @@ describe('C3 boundaries', () => {
     expect(s1.root.padding).toEqual({ l: 12, t: 12, r: 12, b: 12 });
     expect(s1.root.itemSpacing).toBe(8);
   });
+  it('R1-④a fills opacity=0 保真(?? 语义:0 不得回退 color.a 或 1)', () => {
+    const r = structuredClone(raw);
+    r.nodes['1:100'].document.fills[0].opacity = 0;
+    const s = normalizeNodesResponse(r, 'FKEY', '1:100');
+    expect(s.root.fills[0].opacity).toBe(0);
+  });
 });

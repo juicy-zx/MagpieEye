@@ -97,11 +97,21 @@ export function assertPair(
   }
 
   // color:文本节点语义通道;非文本叶子像素通道(T2.7);其余值不可得跳过。excluded('color') 时两分支均跳过。
+  // Codex D4:effective alpha<1(半透明 paint,未做背景合成)时两通道均只跳过 ΔE 断言并记 diagnostic,
+  // 几何/排版/不透明色断言不受影响。
   const firstFill = p.figma.fills?.[0];
+  const translucent = firstFill?.color !== undefined && firstFill.color.a < 1;
+  const skipTranslucent = (): void => {
+    diagnostics.push({ code: 'l2_color_skipped_translucent_paint', testTag,
+      detail: `首 fill 半透明(alpha=${firstFill?.color?.a}),显示色未合成背景,跳过 ΔE 断言` });
+  };
   if (!excluded('color') && firstFill?.color !== undefined && sem.colorHex !== null) {
-    executed++;
-    const figHex = rgbToHex(firstFill.color);
-    if (ciede2000(figHex, sem.colorHex) >= TOL_DELTA_E) add('color', figHex, sem.colorHex, 'high');
+    if (translucent) skipTranslucent();
+    else {
+      executed++;
+      const figHex = rgbToHex(firstFill.color);
+      if (ciede2000(figHex, sem.colorHex) >= TOL_DELTA_E) add('color', figHex, sem.colorHex, 'high');
+    }
   } else if (!excluded('color') && sem.colorHex === null && (p.figma.fills?.length ?? 0) > 0 && pixel !== undefined) {
     const skip = (code: PixelDiagnostic['code'], detail: string): void => {
       diagnostics.push({ code, testTag, detail });
@@ -110,6 +120,8 @@ export function assertPair(
       skip('pixel_sample_skipped_nonsolid', `首 fill ${firstFill?.type ?? '?'} 非纯色`);
     } else if (sem.children.length > 0) {
       skip('pixel_sample_skipped_container', '容器子像素污染');
+    } else if (translucent) {
+      skipTranslucent();
     } else {
       const d = pixel.density;
       const sampled = samplePixelColor(pixel.png,
