@@ -234,7 +234,12 @@
     "runInvariants 未从 uiv-core barrel(src/index.ts)导出, 验收脚本 scripts/check-t34.mjs:11 直读 dist/l2/invariant.js 内部路径。触发: 出现 uiv-core 外部消费方、或下次调整 uiv-core 公共 API 时一并入 barrel 并改脚本走公共入口",
     "主设计文档 docs/ui-visual-self-verification.md §2.5/§8 CLI 示例全部过期(9 条示例均无法通过 args.ts 解析: 漏必填 --test/--demo/--session/--in, 写了不存在的 --scale、check --state, --matrix default5 非法, 缺 l3-attach 子命令)。触发: 文档面向外部用户/新人发布前重写示例",
     "CI 真实 REST /meta 定期漂移检查: 设计口径在 milestone-4.md:261、docs/ci-gate.md:35(「真实定期轮询 REST /meta 是 pending_followups(B1)」), 但 B1 已 resolved 且 resolution 只覆盖 /nodes 交叉标定与 /v1/images, /meta 轮询从未落账——本条补账。触发: 与「真实远程 CI 接入」(现有条目一)同时",
-    "fastlane-worker 构建未入常驻回归(2026-07-10 外部 review 附带建议): 快车道编译已修复(commit 2c34220 白名单只同步 CalibCard.kt), 但无机制防止共享源码再次引入编译回归。触发: CalibCard.kt 再出编译回归、或接入真实远程 CI 时一并挂 compileDebugKotlin 检查"
+    "fastlane-worker 构建未入常驻回归(2026-07-10 外部 review 附带建议): 快车道编译已修复(commit 2c34220 白名单只同步 CalibCard.kt), 但无机制防止共享源码再次引入编译回归。触发: CalibCard.kt 再出编译回归、或接入真实远程 CI 时一并挂 compileDebugKotlin 检查",
+    "L2 派生断言在真实设计上系统性假违规(2026-07-10 yanhao 39:10844 实证): (a)padding 从语义子节点几何反推, 遇隐藏 INSTANCE/装饰节点失真 (b)itemSpacing 推导只算 y 轴, HORIZONTAL 容器恒负恒违规 (c)SPACE_BETWEEN 的 authored itemSpacing 被 Figma 自身忽略但仍入 spec 被断言 (d)layoutMode NONE 的 padding 归一化写全 0 而非 undefined。净效果: 完美实现固定吃 5 条 medium 假违规损失 0.057 分, 复杂页面会被压穿 0.9 门假失败。修复已启动(.claude/plans/l2-derived-assertion-fix, 门禁口径改动过 Codex)。触发: 即时",
+    "语义层级工程学习曲线(yanhao 实证): 过 0.9 门需刻意设计 tag 挂载层级(6 处 tag+容器取舍, input_hashtags 挂了反而多 4 条假违规), 远超「从 spec.json 抄 id」的宣称成本。触发: 第二个真实设计接入者出现时, 沉淀接入指南或 tag 方案建议器",
+    "Robolectric 与设计字体(PingFang 等)度量差无校准通道(yanhao 实证): CJK 宽度差 <1px 即折行 off-by-one 触发 textOverflow 硬阻断, 唯一出路 fontScale 补偿 hack 且对工具不可见; fontSize 断言只读 TextStyle 声明值不验物理渲染。触发: 真实项目再现字体假阻断时设计字体校准通道",
+    "check --record 成功路径 stderr 打「odiff server exited unexpectedly with code null」噪声(yanhao 实证), 不影响 exit 与产物但污染 CI 日志判读。触发: CI 日志判读受干扰、或下次动 odiff 生命周期代码时顺手修",
+    "半透明纯色叶子 ΔE 假阻断风险(代码推导, yanhao 未实爆): assert.ts rgbToHex 用 fill rgb 忽略 opacity 合成, 挂 tag 且无语义子节点的半透明叶子(如 #FFFFFF@10% 圆钮)对比合成后暗色像素必超 ΔE; 本次靠钮内 Image 语义子节点触发 pixel_sample_skipped_container 侥幸规避。触发: 真实设计实爆时, 或修 L2 断言口径时一并验证"
   ],
   "calibration": {
     "channel": "mcp+rest",
