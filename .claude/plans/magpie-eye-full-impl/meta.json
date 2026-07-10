@@ -233,7 +233,8 @@
     "report 的 unresolvedKnownDeviations 类型 never[] 恒空(report.ts:41 注释「M4 填」未填, 唯一赋值点 verifyPage.ts:153 硬编码空数组)。触发: 首次需要登记已知偏差豁免时, 连带把类型从 never[] 放开",
     "runInvariants 未从 uiv-core barrel(src/index.ts)导出, 验收脚本 scripts/check-t34.mjs:11 直读 dist/l2/invariant.js 内部路径。触发: 出现 uiv-core 外部消费方、或下次调整 uiv-core 公共 API 时一并入 barrel 并改脚本走公共入口",
     "主设计文档 docs/ui-visual-self-verification.md §2.5/§8 CLI 示例全部过期(9 条示例均无法通过 args.ts 解析: 漏必填 --test/--demo/--session/--in, 写了不存在的 --scale、check --state, --matrix default5 非法, 缺 l3-attach 子命令)。触发: 文档面向外部用户/新人发布前重写示例",
-    "CI 真实 REST /meta 定期漂移检查: 设计口径在 milestone-4.md:261、docs/ci-gate.md:35(「真实定期轮询 REST /meta 是 pending_followups(B1)」), 但 B1 已 resolved 且 resolution 只覆盖 /nodes 交叉标定与 /v1/images, /meta 轮询从未落账——本条补账。触发: 与「真实远程 CI 接入」(现有条目一)同时"
+    "CI 真实 REST /meta 定期漂移检查: 设计口径在 milestone-4.md:261、docs/ci-gate.md:35(「真实定期轮询 REST /meta 是 pending_followups(B1)」), 但 B1 已 resolved 且 resolution 只覆盖 /nodes 交叉标定与 /v1/images, /meta 轮询从未落账——本条补账。触发: 与「真实远程 CI 接入」(现有条目一)同时",
+    "fastlane-worker 构建未入常驻回归(2026-07-10 外部 review 附带建议): 快车道编译已修复(commit 2c34220 白名单只同步 CalibCard.kt), 但无机制防止共享源码再次引入编译回归。触发: CalibCard.kt 再出编译回归、或接入真实远程 CI 时一并挂 compileDebugKotlin 检查"
   ],
   "calibration": {
     "channel": "mcp+rest",
