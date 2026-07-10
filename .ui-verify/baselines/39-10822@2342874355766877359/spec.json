@@ -1,0 +1,3618 @@
+{
+  "specVersion": 0,
+  "fileKey": "hH7NUAlm9DsLRaGScQP0Z1",
+  "nodeId": "39:10822",
+  "version": "2342874355766877359",
+  "root": {
+    "id": "39:10822",
+    "name": "scroller_content_drop",
+    "type": "FRAME",
+    "visible": true,
+    "bbox": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 530
+    },
+    "layoutMode": "VERTICAL",
+    "padding": {
+      "l": 16,
+      "t": 0,
+      "r": 16,
+      "b": 0
+    },
+    "itemSpacing": 16,
+    "cornerRadii": null,
+    "fills": [],
+    "text": null,
+    "children": [
+      {
+        "id": "39:10823",
+        "name": "ct_file_status",
+        "type": "INSTANCE",
+        "visible": true,
+        "bbox": {
+          "x": 16,
+          "y": 0,
+          "w": 328,
+          "h": 24
+        },
+        "layoutMode": "NONE",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 0,
+        "cornerRadii": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "fills": [
+          {
+            "type": "SOLID",
+            "hex": "#0B5B14",
+            "opacity": 0.10000000149011612
+          }
+        ],
+        "text": null,
+        "children": [
+          {
+            "id": "I39:10823;6116:67508",
+            "name": "Frame 2117133853",
+            "type": "FRAME",
+            "visible": true,
+            "bbox": {
+              "x": 16,
+              "y": 0,
+              "w": 328,
+              "h": 24
+            },
+            "layoutMode": "HORIZONTAL",
+            "padding": {
+              "l": 0,
+              "t": 0,
+              "r": 0,
+              "b": 0
+            },
+            "itemSpacing": 0,
+            "cornerRadii": null,
+            "fills": [],
+            "text": null,
+            "children": [
+              {
+                "id": "I39:10823;6116:67509",
+                "name": "Rectangle 8443",
+                "type": "VECTOR",
+                "visible": false,
+                "bbox": {
+                  "x": 16,
+                  "y": 0,
+                  "w": 30,
+                  "h": 24
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": [
+                  100,
+                  100,
+                  100,
+                  100
+                ],
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#0B5B14",
+                    "opacity": 1
+                  }
+                ],
+                "text": null,
+                "children": []
+              },
+              {
+                "id": "I39:10823;6116:67510",
+                "name": "Rectangle 8444",
+                "type": "VECTOR",
+                "visible": false,
+                "bbox": {
+                  "x": 46,
+                  "y": 0,
+                  "w": 298,
+                  "h": 24
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": [
+                  100,
+                  100,
+                  100,
+                  100
+                ],
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#FFFFFF",
+                    "opacity": 0.10000000149011612
+                  }
+                ],
+                "text": null,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "I39:10823;6116:67511",
+            "name": "button",
+            "type": "FRAME",
+            "visible": true,
+            "bbox": {
+              "x": 16,
+              "y": 0,
+              "w": 328,
+              "h": 24
+            },
+            "layoutMode": "HORIZONTAL",
+            "padding": {
+              "l": 12,
+              "t": 0,
+              "r": 4,
+              "b": 0
+            },
+            "itemSpacing": 4,
+            "cornerRadii": [
+              100,
+              100,
+              100,
+              100
+            ],
+            "fills": [],
+            "text": null,
+            "children": [
+              {
+                "id": "I39:10823;6116:67512",
+                "name": "Frame 2117133851",
+                "type": "FRAME",
+                "visible": true,
+                "bbox": {
+                  "x": 28,
+                  "y": 3,
+                  "w": 286,
+                  "h": 18
+                },
+                "layoutMode": "HORIZONTAL",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 4,
+                "cornerRadii": null,
+                "fills": [],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10823;6116:67513",
+                    "name": "a29_EN-5dfdfddfdsf713232361.mp3",
+                    "type": "TEXT",
+                    "visible": true,
+                    "bbox": {
+                      "x": 28,
+                      "y": 3,
+                      "w": 194,
+                      "h": 18
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "hex": "#FFFFFF",
+                        "opacity": 0.8999999761581421
+                      }
+                    ],
+                    "text": {
+                      "characters": "a29_EN-5dfdfddfdsf713232361.mp3",
+                      "fontSize": 12,
+                      "fontWeight": 400,
+                      "overrides": []
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "I39:10823;6116:67514",
+                    "name": "30%",
+                    "type": "TEXT",
+                    "visible": false,
+                    "bbox": {
+                      "x": 134,
+                      "y": 3,
+                      "w": 25,
+                      "h": 18
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "hex": "#FFFFFF",
+                        "opacity": 0.8999999761581421
+                      }
+                    ],
+                    "text": {
+                      "characters": "30%",
+                      "fontSize": 12,
+                      "fontWeight": 700,
+                      "overrides": []
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "I39:10823;6116:67515",
+                "name": "Frame 2117132492",
+                "type": "FRAME",
+                "visible": true,
+                "bbox": {
+                  "x": 318,
+                  "y": 1,
+                  "w": 22,
+                  "h": 22
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10823;6116:67516",
+                    "name": "icon/清除 Clear",
+                    "type": "INSTANCE",
+                    "visible": true,
+                    "bbox": {
+                      "x": 318,
+                      "y": 1,
+                      "w": 22,
+                      "h": 22
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10823;6116:67516;361:2153",
+                        "name": "Exclude",
+                        "type": "BOOLEAN_OPERATION",
+                        "visible": true,
+                        "bbox": {
+                          "x": 320,
+                          "y": 3,
+                          "w": 18,
+                          "h": 18
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#4D4D4D",
+                            "opacity": 1
+                          }
+                        ],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10823;6116:67516;361:2154",
+                            "name": "Frame 2117130777",
+                            "type": "FRAME",
+                            "visible": true,
+                            "bbox": {
+                              "x": 320,
+                              "y": 3,
+                              "w": 18,
+                              "h": 18
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10823;6116:67516;361:2155",
+                                "name": "Ellipse",
+                                "type": "ELLIPSE",
+                                "visible": false,
+                                "bbox": {
+                                  "x": 320,
+                                  "y": 3,
+                                  "w": 18,
+                                  "h": 18
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [
+                                  {
+                                    "type": "SOLID",
+                                    "hex": "#000000",
+                                    "opacity": 0.25999999046325684
+                                  }
+                                ],
+                                "text": null,
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "I39:10823;6116:67516;361:2158",
+                        "name": "Union",
+                        "type": "VECTOR",
+                        "visible": false,
+                        "bbox": {
+                          "x": 324.8984375,
+                          "y": 7.8984375,
+                          "w": 8.203128325752687,
+                          "h": 8.202852713891843
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": [
+                          0,
+                          0,
+                          0,
+                          0
+                        ],
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#FFFFFF",
+                            "opacity": 1
+                          }
+                        ],
+                        "text": null,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I39:10823;6116:67517",
+                    "name": "Loading 加载 Fill",
+                    "type": "INSTANCE",
+                    "visible": false,
+                    "bbox": {
+                      "x": 319,
+                      "y": 2,
+                      "w": 20,
+                      "h": 20
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10823;6116:67517;54303:5946",
+                        "name": "Union",
+                        "type": "BOOLEAN_OPERATION",
+                        "visible": true,
+                        "bbox": {
+                          "x": 320.1742706298828,
+                          "y": 3.17431640625,
+                          "w": 17.6513671875,
+                          "h": 17.6513671875
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#FFFFFF",
+                            "opacity": 0.6000000238418579
+                          }
+                        ],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10823;6116:67517;54303:5947",
+                            "name": "Ellipse 1329130730",
+                            "type": "VECTOR",
+                            "visible": true,
+                            "bbox": {
+                              "x": 321.0833282470703,
+                              "y": 4.08349609375,
+                              "w": 15.833333015441895,
+                              "h": 15.833333015441895
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "I39:10823;6116:67518",
+            "name": "icon/清除 Clear",
+            "type": "INSTANCE",
+            "visible": true,
+            "bbox": {
+              "x": 316.5,
+              "y": 1,
+              "w": 22,
+              "h": 22
+            },
+            "layoutMode": "NONE",
+            "padding": {
+              "l": 0,
+              "t": 0,
+              "r": 0,
+              "b": 0
+            },
+            "itemSpacing": 0,
+            "cornerRadii": null,
+            "fills": [],
+            "text": null,
+            "children": [
+              {
+                "id": "I39:10823;6116:67518;361:2153",
+                "name": "Exclude",
+                "type": "BOOLEAN_OPERATION",
+                "visible": true,
+                "bbox": {
+                  "x": 318.5,
+                  "y": 3,
+                  "w": 18,
+                  "h": 18
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#4D4D4D",
+                    "opacity": 1
+                  }
+                ],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10823;6116:67518;361:2154",
+                    "name": "Frame 2117130777",
+                    "type": "FRAME",
+                    "visible": true,
+                    "bbox": {
+                      "x": 318.5,
+                      "y": 3,
+                      "w": 18,
+                      "h": 18
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10823;6116:67518;361:2155",
+                        "name": "Ellipse",
+                        "type": "ELLIPSE",
+                        "visible": false,
+                        "bbox": {
+                          "x": 318.5,
+                          "y": 3,
+                          "w": 18,
+                          "h": 18
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#000000",
+                            "opacity": 0.25999999046325684
+                          }
+                        ],
+                        "text": null,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "I39:10823;6116:67518;361:2158",
+                "name": "Union",
+                "type": "VECTOR",
+                "visible": true,
+                "bbox": {
+                  "x": 323.3984375,
+                  "y": 7.8984375,
+                  "w": 8.203128325752687,
+                  "h": 8.202852713891843
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#FFFFFF",
+                    "opacity": 1
+                  }
+                ],
+                "text": null,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "39:10824",
+        "name": "ct_cover",
+        "type": "INSTANCE",
+        "visible": true,
+        "bbox": {
+          "x": 16,
+          "y": 40,
+          "w": 100,
+          "h": 100
+        },
+        "layoutMode": "NONE",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 0,
+        "cornerRadii": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "fills": [
+          {
+            "type": "SOLID",
+            "hex": "#FFFFFF",
+            "opacity": 0.10000000149011612
+          }
+        ],
+        "text": null,
+        "children": [
+          {
+            "id": "I39:10824;10164:72636",
+            "name": "item_txt",
+            "type": "FRAME",
+            "visible": true,
+            "bbox": {
+              "x": 16,
+              "y": 115,
+              "w": 100,
+              "h": 25
+            },
+            "layoutMode": "HORIZONTAL",
+            "primaryAxisAlignItems": "CENTER",
+            "padding": {
+              "l": 10,
+              "t": 4,
+              "r": 10,
+              "b": 4
+            },
+            "itemSpacing": 10,
+            "cornerRadii": null,
+            "fills": [
+              {
+                "type": "SOLID",
+                "hex": "#1F1F1F",
+                "opacity": 0.4000000059604645
+              }
+            ],
+            "text": null,
+            "children": [
+              {
+                "id": "I39:10824;10164:72637",
+                "name": "cover",
+                "type": "TEXT",
+                "visible": true,
+                "bbox": {
+                  "x": 47,
+                  "y": 119,
+                  "w": 38,
+                  "h": 17
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#FFFFFF",
+                    "opacity": 1
+                  }
+                ],
+                "text": {
+                  "characters": "cover",
+                  "fontSize": 14,
+                  "fontWeight": 400,
+                  "overrides": []
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "I39:10824;10284:33354",
+            "name": "ic_add",
+            "type": "INSTANCE",
+            "visible": true,
+            "bbox": {
+              "x": 54,
+              "y": 68,
+              "w": 24,
+              "h": 24
+            },
+            "layoutMode": "NONE",
+            "padding": {
+              "l": 0,
+              "t": 0,
+              "r": 0,
+              "b": 0
+            },
+            "itemSpacing": 0,
+            "cornerRadii": null,
+            "fills": [],
+            "text": null,
+            "children": [
+              {
+                "id": "I39:10824;10284:33354;9060:91726",
+                "name": "Vector 384",
+                "type": "VECTOR",
+                "visible": true,
+                "bbox": {
+                  "x": 58,
+                  "y": 72,
+                  "w": 16,
+                  "h": 16
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [],
+                "text": null,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "39:10825",
+        "name": "ct_title",
+        "type": "INSTANCE",
+        "visible": true,
+        "bbox": {
+          "x": 16,
+          "y": 156,
+          "w": 328,
+          "h": 180
+        },
+        "layoutMode": "VERTICAL",
+        "primaryAxisAlignItems": "SPACE_BETWEEN",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 12
+        },
+        "itemSpacing": 2,
+        "cornerRadii": [
+          12,
+          12,
+          12,
+          12
+        ],
+        "fills": [
+          {
+            "type": "SOLID",
+            "hex": "#FFFFFF",
+            "opacity": 0.03999999910593033
+          }
+        ],
+        "text": null,
+        "children": [
+          {
+            "id": "I39:10825;10221:94188",
+            "name": "input_title",
+            "type": "INSTANCE",
+            "visible": true,
+            "bbox": {
+              "x": 16,
+              "y": 156,
+              "w": 328,
+              "h": 92
+            },
+            "layoutMode": "VERTICAL",
+            "padding": {
+              "l": 0,
+              "t": 12,
+              "r": 0,
+              "b": 12
+            },
+            "itemSpacing": 12,
+            "cornerRadii": null,
+            "fills": [],
+            "text": null,
+            "children": [
+              {
+                "id": "I39:10825;10221:94188;10224:94816",
+                "name": ".输入状态 Input state",
+                "type": "FRAME",
+                "visible": true,
+                "bbox": {
+                  "x": 16,
+                  "y": 168,
+                  "w": 328,
+                  "h": 22
+                },
+                "layoutMode": "HORIZONTAL",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 16,
+                "cornerRadii": null,
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#FFFFFF",
+                    "opacity": 1
+                  }
+                ],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10825;10221:94188;10224:94817",
+                    "name": "Add tittle",
+                    "type": "TEXT",
+                    "visible": true,
+                    "bbox": {
+                      "x": 16,
+                      "y": 168,
+                      "w": 328,
+                      "h": 22
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "hex": "#FFFFFF",
+                        "opacity": 0.8999999761581421
+                      }
+                    ],
+                    "text": {
+                      "characters": "Add tittle",
+                      "fontSize": 18,
+                      "fontWeight": 400,
+                      "overrides": [
+                        {
+                          "start": 0,
+                          "end": 10,
+                          "style": {
+                            "fontFamily": "Helvetica",
+                            "fontPostScriptName": "Helvetica-Bold",
+                            "fontStyle": "Bold",
+                            "fontWeight": 700,
+                            "textCase": "TITLE",
+                            "textAutoResize": "WIDTH_AND_HEIGHT",
+                            "isOverrideOverTextStyle": true,
+                            "semanticWeight": "BOLD",
+                            "fontSize": 18,
+                            "letterSpacing": 0,
+                            "lineHeightPx": 22,
+                            "lineHeightPercent": 106.28922271728516,
+                            "lineHeightPercentFontSize": 122.22222137451172,
+                            "lineHeightUnit": "PIXELS",
+                            "inheritTextStyleId": "0:143"
+                          }
+                        }
+                      ]
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "I39:10825;10221:94188;10224:94818",
+                    "name": ".附加操作 Trailing",
+                    "type": "INSTANCE",
+                    "visible": false,
+                    "bbox": {
+                      "x": 234,
+                      "y": 168,
+                      "w": 22,
+                      "h": 22
+                    },
+                    "layoutMode": "HORIZONTAL",
+                    "primaryAxisAlignItems": "MAX",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10825;10221:94188;10224:94818;240934:58054",
+                        "name": "清除 Clear",
+                        "type": "FRAME",
+                        "visible": true,
+                        "bbox": {
+                          "x": 234,
+                          "y": 168,
+                          "w": 22,
+                          "h": 22
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10825;10221:94188;10224:94818;240934:58455",
+                            "name": "Exclude",
+                            "type": "BOOLEAN_OPERATION",
+                            "visible": true,
+                            "bbox": {
+                              "x": 236,
+                              "y": 170,
+                              "w": 18,
+                              "h": 18
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [
+                              {
+                                "type": "SOLID",
+                                "hex": "#FFFFFF",
+                                "opacity": 0.4000000059604645
+                              }
+                            ],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10825;10221:94188;10224:94818;240934:58418",
+                                "name": "Frame 2117130777",
+                                "type": "FRAME",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 236,
+                                  "y": 170,
+                                  "w": 18,
+                                  "h": 18
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [],
+                                "text": null,
+                                "children": [
+                                  {
+                                    "id": "I39:10825;10221:94188;10224:94818;240934:58055",
+                                    "name": "Ellipse",
+                                    "type": "ELLIPSE",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 236,
+                                      "y": 170,
+                                      "w": 18,
+                                      "h": 18
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": null,
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#000000",
+                                        "opacity": 0.25999999046325684
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": []
+                                  },
+                                  {
+                                    "id": "I39:10825;10221:94188;10224:94818;240934:58056",
+                                    "name": "Union",
+                                    "type": "VECTOR",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 240.8984375,
+                                      "y": 174.8984375,
+                                      "w": 8.203128325752687,
+                                      "h": 8.202852713891843
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": [
+                                      0,
+                                      0,
+                                      0,
+                                      0
+                                    ],
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#FFFFFF",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "I39:10825;10221:94188;10221:94182",
+                "name": "description",
+                "type": "INSTANCE",
+                "visible": true,
+                "bbox": {
+                  "x": 16,
+                  "y": 202,
+                  "w": 328,
+                  "h": 34
+                },
+                "layoutMode": "HORIZONTAL",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 16,
+                "cornerRadii": null,
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#FFFFFF",
+                    "opacity": 1
+                  }
+                ],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10825;10221:94188;10221:94182;225716:27918",
+                    "name": "Resting",
+                    "type": "TEXT",
+                    "visible": true,
+                    "bbox": {
+                      "x": 16,
+                      "y": 202,
+                      "w": 328,
+                      "h": 34
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "hex": "#FFFFFF",
+                        "opacity": 0.8999999761581421
+                      }
+                    ],
+                    "text": {
+                      "characters": "Add description：Paste your AI prompt here, or tell a story ",
+                      "fontSize": 14,
+                      "fontWeight": 400,
+                      "overrides": []
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "I39:10825;10221:94188;10221:94182;304694:62694",
+                    "name": ".附加操作 Trailing",
+                    "type": "INSTANCE",
+                    "visible": false,
+                    "bbox": {
+                      "x": 234,
+                      "y": 202,
+                      "w": 22,
+                      "h": 22
+                    },
+                    "layoutMode": "HORIZONTAL",
+                    "primaryAxisAlignItems": "MAX",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10825;10221:94188;10221:94182;304694:62694;240934:58054",
+                        "name": "清除 Clear",
+                        "type": "FRAME",
+                        "visible": true,
+                        "bbox": {
+                          "x": 234,
+                          "y": 202,
+                          "w": 22,
+                          "h": 22
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10825;10221:94188;10221:94182;304694:62694;240934:58455",
+                            "name": "Exclude",
+                            "type": "BOOLEAN_OPERATION",
+                            "visible": true,
+                            "bbox": {
+                              "x": 236,
+                              "y": 204,
+                              "w": 18,
+                              "h": 18
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [
+                              {
+                                "type": "SOLID",
+                                "hex": "#FFFFFF",
+                                "opacity": 0.4000000059604645
+                              }
+                            ],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10825;10221:94188;10221:94182;304694:62694;240934:58418",
+                                "name": "Frame 2117130777",
+                                "type": "FRAME",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 236,
+                                  "y": 204,
+                                  "w": 18,
+                                  "h": 18
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [],
+                                "text": null,
+                                "children": [
+                                  {
+                                    "id": "I39:10825;10221:94188;10221:94182;304694:62694;240934:58055",
+                                    "name": "Ellipse",
+                                    "type": "ELLIPSE",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 236,
+                                      "y": 204,
+                                      "w": 18,
+                                      "h": 18
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": null,
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#000000",
+                                        "opacity": 0.25999999046325684
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": []
+                                  },
+                                  {
+                                    "id": "I39:10825;10221:94188;10221:94182;304694:62694;240934:58056",
+                                    "name": "Union",
+                                    "type": "VECTOR",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 240.8984375,
+                                      "y": 208.8984375,
+                                      "w": 8.203128325752687,
+                                      "h": 8.202852713891843
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": [
+                                      0,
+                                      0,
+                                      0,
+                                      0
+                                    ],
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#FFFFFF",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "I39:10825;10221:94070",
+            "name": "ct_hashtag_bar",
+            "type": "INSTANCE",
+            "visible": true,
+            "bbox": {
+              "x": 16,
+              "y": 292,
+              "w": 328,
+              "h": 32
+            },
+            "layoutMode": "HORIZONTAL",
+            "padding": {
+              "l": 0,
+              "t": 0,
+              "r": 0,
+              "b": 0
+            },
+            "itemSpacing": 12,
+            "cornerRadii": null,
+            "fills": [],
+            "text": null,
+            "children": [
+              {
+                "id": "I39:10825;10221:94070;10221:94523",
+                "name": "btn_hashtag",
+                "type": "FRAME",
+                "visible": true,
+                "bbox": {
+                  "x": 16,
+                  "y": 292,
+                  "w": 284,
+                  "h": 32
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10825;10221:94070;10221:94052",
+                    "name": "btn_add_hashtag",
+                    "type": "FRAME",
+                    "visible": true,
+                    "bbox": {
+                      "x": 16,
+                      "y": 292,
+                      "w": 260,
+                      "h": 32
+                    },
+                    "layoutMode": "HORIZONTAL",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 8,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10825;10221:94070;10221:94053",
+                        "name": "btn_add_hashtag",
+                        "type": "INSTANCE",
+                        "visible": true,
+                        "bbox": {
+                          "x": 16,
+                          "y": 292,
+                          "w": 44,
+                          "h": 32
+                        },
+                        "layoutMode": "VERTICAL",
+                        "primaryAxisAlignItems": "CENTER",
+                        "padding": {
+                          "l": 12,
+                          "t": 6,
+                          "r": 12,
+                          "b": 6
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": [
+                          100,
+                          100,
+                          100,
+                          100
+                        ],
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#FFFFFF",
+                            "opacity": 0.10000000149011612
+                          }
+                        ],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10825;10221:94070;10221:94053;10154:58636",
+                            "name": "ic&text",
+                            "type": "FRAME",
+                            "visible": true,
+                            "bbox": {
+                              "x": 28,
+                              "y": 298,
+                              "w": 78,
+                              "h": 20
+                            },
+                            "layoutMode": "HORIZONTAL",
+                            "primaryAxisAlignItems": "CENTER",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 2,
+                            "cornerRadii": [
+                              12,
+                              12,
+                              12,
+                              12
+                            ],
+                            "fills": [],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10825;10221:94070;10221:94053;10154:58637",
+                                "name": "ic_add_hashtag",
+                                "type": "INSTANCE",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 28,
+                                  "y": 298,
+                                  "w": 20,
+                                  "h": 20
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [],
+                                "text": null,
+                                "children": [
+                                  {
+                                    "id": "I39:10825;10221:94070;10221:94053;10154:58637;10154:64512",
+                                    "name": "#",
+                                    "type": "VECTOR",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 33.364776611328125,
+                                      "y": 302.16650390625,
+                                      "w": 9.26974105834961,
+                                      "h": 11.666666030883789
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": null,
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#FFFFFF",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "I39:10825;10221:94070;10221:94053;10154:58638",
+                                "name": "Hashtag",
+                                "type": "TEXT",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 50,
+                                  "y": 298,
+                                  "w": 56,
+                                  "h": 20
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [
+                                  {
+                                    "type": "SOLID",
+                                    "hex": "#FFFFFF",
+                                    "opacity": 0.8999999761581421
+                                  }
+                                ],
+                                "text": {
+                                  "characters": "Hashtag",
+                                  "fontSize": 14,
+                                  "fontWeight": 700,
+                                  "overrides": []
+                                },
+                                "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "I39:10825;10221:94070;10221:94274",
+                        "name": ".hashtag",
+                        "type": "INSTANCE",
+                        "visible": false,
+                        "bbox": {
+                          "x": 126,
+                          "y": 292,
+                          "w": 76,
+                          "h": 32
+                        },
+                        "layoutMode": "VERTICAL",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": [
+                          30,
+                          30,
+                          30,
+                          30
+                        ],
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#FFFFFF",
+                            "opacity": 0.03999999910593033
+                          }
+                        ],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10825;10221:94070;10221:94274;10219:93405",
+                            "name": "最小宽度",
+                            "type": "RECTANGLE",
+                            "visible": true,
+                            "bbox": {
+                              "x": 174,
+                              "y": 292,
+                              "w": 60,
+                              "h": 1
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94274;10219:93406",
+                            "name": "Small  button",
+                            "type": "FRAME",
+                            "visible": true,
+                            "bbox": {
+                              "x": 126,
+                              "y": 293,
+                              "w": 76,
+                              "h": 30
+                            },
+                            "layoutMode": "HORIZONTAL",
+                            "primaryAxisAlignItems": "CENTER",
+                            "padding": {
+                              "l": 16,
+                              "t": 0,
+                              "r": 8,
+                              "b": 0
+                            },
+                            "itemSpacing": 4,
+                            "cornerRadii": [
+                              14,
+                              14,
+                              14,
+                              14
+                            ],
+                            "fills": [],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10825;10221:94070;10221:94274;10219:93407",
+                                "name": "TEXT",
+                                "type": "TEXT",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 142,
+                                  "y": 299.5,
+                                  "w": 26,
+                                  "h": 17
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [
+                                  {
+                                    "type": "SOLID",
+                                    "hex": "#FFFFFF",
+                                    "opacity": 0.8999999761581421
+                                  }
+                                ],
+                                "text": {
+                                  "characters": "rap",
+                                  "fontSize": 14,
+                                  "fontWeight": 400,
+                                  "overrides": []
+                                },
+                                "children": []
+                              },
+                              {
+                                "id": "I39:10825;10221:94070;10221:94274;10219:93408",
+                                "name": "icon/清除 Clear",
+                                "type": "INSTANCE",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 172,
+                                  "y": 297,
+                                  "w": 22,
+                                  "h": 22
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [],
+                                "text": null,
+                                "children": [
+                                  {
+                                    "id": "I39:10825;10221:94070;10221:94274;10219:93408;361:2153",
+                                    "name": "Exclude",
+                                    "type": "BOOLEAN_OPERATION",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 174,
+                                      "y": 299,
+                                      "w": 18,
+                                      "h": 18
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": null,
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#4D4D4D",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": [
+                                      {
+                                        "id": "I39:10825;10221:94070;10221:94274;10219:93408;361:2154",
+                                        "name": "Frame 2117130777",
+                                        "type": "FRAME",
+                                        "visible": true,
+                                        "bbox": {
+                                          "x": 174,
+                                          "y": 299,
+                                          "w": 18,
+                                          "h": 18
+                                        },
+                                        "layoutMode": "NONE",
+                                        "padding": {
+                                          "l": 0,
+                                          "t": 0,
+                                          "r": 0,
+                                          "b": 0
+                                        },
+                                        "itemSpacing": 0,
+                                        "cornerRadii": null,
+                                        "fills": [],
+                                        "text": null,
+                                        "children": [
+                                          {
+                                            "id": "I39:10825;10221:94070;10221:94274;10219:93408;361:2155",
+                                            "name": "Ellipse",
+                                            "type": "ELLIPSE",
+                                            "visible": false,
+                                            "bbox": {
+                                              "x": 174,
+                                              "y": 299,
+                                              "w": 18,
+                                              "h": 18
+                                            },
+                                            "layoutMode": "NONE",
+                                            "padding": {
+                                              "l": 0,
+                                              "t": 0,
+                                              "r": 0,
+                                              "b": 0
+                                            },
+                                            "itemSpacing": 0,
+                                            "cornerRadii": null,
+                                            "fills": [
+                                              {
+                                                "type": "SOLID",
+                                                "hex": "#000000",
+                                                "opacity": 0.25999999046325684
+                                              }
+                                            ],
+                                            "text": null,
+                                            "children": []
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "id": "I39:10825;10221:94070;10221:94274;10219:93408;361:2158",
+                                    "name": "Union",
+                                    "type": "VECTOR",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 178.8984375,
+                                      "y": 303.8984375,
+                                      "w": 8.203128325752687,
+                                      "h": 8.202852713891843
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": [
+                                      0,
+                                      0,
+                                      0,
+                                      0
+                                    ],
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#FFFFFF",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94274;10219:93409",
+                            "name": "最小宽度",
+                            "type": "RECTANGLE",
+                            "visible": true,
+                            "bbox": {
+                              "x": 174,
+                              "y": 323,
+                              "w": 60,
+                              "h": 1
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "id": "I39:10825;10221:94070;10221:94275",
+                        "name": "hashtag3",
+                        "type": "INSTANCE",
+                        "visible": false,
+                        "bbox": {
+                          "x": 220,
+                          "y": 292,
+                          "w": 302,
+                          "h": 32
+                        },
+                        "layoutMode": "VERTICAL",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": [
+                          30,
+                          30,
+                          30,
+                          30
+                        ],
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#FFFFFF",
+                            "opacity": 0.03999999910593033
+                          }
+                        ],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10825;10221:94070;10221:94275;10219:93411",
+                            "name": "最小宽度",
+                            "type": "RECTANGLE",
+                            "visible": true,
+                            "bbox": {
+                              "x": 341,
+                              "y": 292,
+                              "w": 60,
+                              "h": 1
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94275;10219:93412",
+                            "name": "Small  button",
+                            "type": "FRAME",
+                            "visible": true,
+                            "bbox": {
+                              "x": 220,
+                              "y": 293,
+                              "w": 302,
+                              "h": 30
+                            },
+                            "layoutMode": "HORIZONTAL",
+                            "primaryAxisAlignItems": "CENTER",
+                            "padding": {
+                              "l": 16,
+                              "t": 0,
+                              "r": 8,
+                              "b": 0
+                            },
+                            "itemSpacing": 4,
+                            "cornerRadii": [
+                              14,
+                              14,
+                              14,
+                              14
+                            ],
+                            "fills": [],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10825;10221:94070;10221:94275;10219:93413",
+                                "name": "#hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+                                "type": "TEXT",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 236,
+                                  "y": 299.5,
+                                  "w": 252,
+                                  "h": 17
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [
+                                  {
+                                    "type": "SOLID",
+                                    "hex": "#FFFFFF",
+                                    "opacity": 0.8999999761581421
+                                  }
+                                ],
+                                "text": {
+                                  "characters": "#hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+                                  "fontSize": 14,
+                                  "fontWeight": 400,
+                                  "overrides": []
+                                },
+                                "children": []
+                              },
+                              {
+                                "id": "I39:10825;10221:94070;10221:94275;10219:93414",
+                                "name": "icon/清除 Clear",
+                                "type": "INSTANCE",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 492,
+                                  "y": 297,
+                                  "w": 22,
+                                  "h": 22
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [],
+                                "text": null,
+                                "children": [
+                                  {
+                                    "id": "I39:10825;10221:94070;10221:94275;10219:93414;361:2153",
+                                    "name": "Exclude",
+                                    "type": "BOOLEAN_OPERATION",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 494,
+                                      "y": 299,
+                                      "w": 18,
+                                      "h": 18
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": null,
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#4D4D4D",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": [
+                                      {
+                                        "id": "I39:10825;10221:94070;10221:94275;10219:93414;361:2154",
+                                        "name": "Frame 2117130777",
+                                        "type": "FRAME",
+                                        "visible": true,
+                                        "bbox": {
+                                          "x": 494,
+                                          "y": 299,
+                                          "w": 18,
+                                          "h": 18
+                                        },
+                                        "layoutMode": "NONE",
+                                        "padding": {
+                                          "l": 0,
+                                          "t": 0,
+                                          "r": 0,
+                                          "b": 0
+                                        },
+                                        "itemSpacing": 0,
+                                        "cornerRadii": null,
+                                        "fills": [],
+                                        "text": null,
+                                        "children": [
+                                          {
+                                            "id": "I39:10825;10221:94070;10221:94275;10219:93414;361:2155",
+                                            "name": "Ellipse",
+                                            "type": "ELLIPSE",
+                                            "visible": false,
+                                            "bbox": {
+                                              "x": 494,
+                                              "y": 299,
+                                              "w": 18,
+                                              "h": 18
+                                            },
+                                            "layoutMode": "NONE",
+                                            "padding": {
+                                              "l": 0,
+                                              "t": 0,
+                                              "r": 0,
+                                              "b": 0
+                                            },
+                                            "itemSpacing": 0,
+                                            "cornerRadii": null,
+                                            "fills": [
+                                              {
+                                                "type": "SOLID",
+                                                "hex": "#000000",
+                                                "opacity": 0.25999999046325684
+                                              }
+                                            ],
+                                            "text": null,
+                                            "children": []
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "id": "I39:10825;10221:94070;10221:94275;10219:93414;361:2158",
+                                    "name": "Union",
+                                    "type": "VECTOR",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 498.8984375,
+                                      "y": 303.8984375,
+                                      "w": 8.203128325752687,
+                                      "h": 8.202852713891843
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": [
+                                      0,
+                                      0,
+                                      0,
+                                      0
+                                    ],
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#FFFFFF",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94275;10219:93415",
+                            "name": "最小宽度",
+                            "type": "RECTANGLE",
+                            "visible": true,
+                            "bbox": {
+                              "x": 341,
+                              "y": 323,
+                              "w": 60,
+                              "h": 1
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "id": "I39:10825;10221:94070;10221:94276",
+                        "name": "hashtag2",
+                        "type": "INSTANCE",
+                        "visible": false,
+                        "bbox": {
+                          "x": 56,
+                          "y": 292,
+                          "w": 100,
+                          "h": 32
+                        },
+                        "layoutMode": "VERTICAL",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": [
+                          30,
+                          30,
+                          30,
+                          30
+                        ],
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#FFFFFF",
+                            "opacity": 0.03999999910593033
+                          }
+                        ],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10825;10221:94070;10221:94276;10219:93417",
+                            "name": "最小宽度",
+                            "type": "RECTANGLE",
+                            "visible": true,
+                            "bbox": {
+                              "x": 76,
+                              "y": 292,
+                              "w": 60,
+                              "h": 1
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94276;10219:93418",
+                            "name": "Small  button",
+                            "type": "FRAME",
+                            "visible": true,
+                            "bbox": {
+                              "x": 56,
+                              "y": 293,
+                              "w": 100,
+                              "h": 30
+                            },
+                            "layoutMode": "HORIZONTAL",
+                            "primaryAxisAlignItems": "CENTER",
+                            "padding": {
+                              "l": 16,
+                              "t": 0,
+                              "r": 8,
+                              "b": 0
+                            },
+                            "itemSpacing": 4,
+                            "cornerRadii": [
+                              14,
+                              14,
+                              14,
+                              14
+                            ],
+                            "fills": [],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10825;10221:94070;10221:94276;10219:93419",
+                                "name": "#Inspire",
+                                "type": "TEXT",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 72,
+                                  "y": 299.5,
+                                  "w": 50,
+                                  "h": 17
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [
+                                  {
+                                    "type": "SOLID",
+                                    "hex": "#FFFFFF",
+                                    "opacity": 0.8999999761581421
+                                  }
+                                ],
+                                "text": {
+                                  "characters": "#Inspire",
+                                  "fontSize": 14,
+                                  "fontWeight": 400,
+                                  "overrides": []
+                                },
+                                "children": []
+                              },
+                              {
+                                "id": "I39:10825;10221:94070;10221:94276;10219:93420",
+                                "name": "icon/清除 Clear",
+                                "type": "INSTANCE",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 126,
+                                  "y": 297,
+                                  "w": 22,
+                                  "h": 22
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [],
+                                "text": null,
+                                "children": [
+                                  {
+                                    "id": "I39:10825;10221:94070;10221:94276;10219:93420;361:2153",
+                                    "name": "Exclude",
+                                    "type": "BOOLEAN_OPERATION",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 128,
+                                      "y": 299,
+                                      "w": 18,
+                                      "h": 18
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": null,
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#4D4D4D",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": [
+                                      {
+                                        "id": "I39:10825;10221:94070;10221:94276;10219:93420;361:2154",
+                                        "name": "Frame 2117130777",
+                                        "type": "FRAME",
+                                        "visible": true,
+                                        "bbox": {
+                                          "x": 128,
+                                          "y": 299,
+                                          "w": 18,
+                                          "h": 18
+                                        },
+                                        "layoutMode": "NONE",
+                                        "padding": {
+                                          "l": 0,
+                                          "t": 0,
+                                          "r": 0,
+                                          "b": 0
+                                        },
+                                        "itemSpacing": 0,
+                                        "cornerRadii": null,
+                                        "fills": [],
+                                        "text": null,
+                                        "children": [
+                                          {
+                                            "id": "I39:10825;10221:94070;10221:94276;10219:93420;361:2155",
+                                            "name": "Ellipse",
+                                            "type": "ELLIPSE",
+                                            "visible": false,
+                                            "bbox": {
+                                              "x": 128,
+                                              "y": 299,
+                                              "w": 18,
+                                              "h": 18
+                                            },
+                                            "layoutMode": "NONE",
+                                            "padding": {
+                                              "l": 0,
+                                              "t": 0,
+                                              "r": 0,
+                                              "b": 0
+                                            },
+                                            "itemSpacing": 0,
+                                            "cornerRadii": null,
+                                            "fills": [
+                                              {
+                                                "type": "SOLID",
+                                                "hex": "#000000",
+                                                "opacity": 0.25999999046325684
+                                              }
+                                            ],
+                                            "text": null,
+                                            "children": []
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "id": "I39:10825;10221:94070;10221:94276;10219:93420;361:2158",
+                                    "name": "Union",
+                                    "type": "VECTOR",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 132.89843559265137,
+                                      "y": 303.8984375,
+                                      "w": 8.203128325752687,
+                                      "h": 8.202852713891843
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": [
+                                      0,
+                                      0,
+                                      0,
+                                      0
+                                    ],
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#FFFFFF",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94276;10219:93421",
+                            "name": "最小宽度",
+                            "type": "RECTANGLE",
+                            "visible": true,
+                            "bbox": {
+                              "x": 76,
+                              "y": 323,
+                              "w": 60,
+                              "h": 1
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I39:10825;10221:94070;10221:94783",
+                    "name": "Rectangle 8438",
+                    "type": "RECTANGLE",
+                    "visible": false,
+                    "bbox": {
+                      "x": 276,
+                      "y": 292,
+                      "w": 24,
+                      "h": 32
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [
+                      {
+                        "type": "GRADIENT_LINEAR",
+                        "hex": null,
+                        "opacity": 1
+                      }
+                    ],
+                    "text": null,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "I39:10825;10221:94070;10221:94058",
+                "name": "btn_fullscreen",
+                "type": "INSTANCE",
+                "visible": true,
+                "bbox": {
+                  "x": 312,
+                  "y": 292,
+                  "w": 32,
+                  "h": 32
+                },
+                "layoutMode": "HORIZONTAL",
+                "primaryAxisAlignItems": "CENTER",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 10,
+                "cornerRadii": [
+                  100,
+                  100,
+                  100,
+                  100
+                ],
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#FFFFFF",
+                    "opacity": 0.10000000149011612
+                  }
+                ],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10825;10221:94070;10221:94058;10213:92865",
+                    "name": "ic_add_hashtag_fullscren",
+                    "type": "INSTANCE",
+                    "visible": true,
+                    "bbox": {
+                      "x": 316,
+                      "y": 296,
+                      "w": 24,
+                      "h": 24
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10825;10221:94070;10221:94058;10213:92865;10164:73101",
+                        "name": "Union",
+                        "type": "BOOLEAN_OPERATION",
+                        "visible": true,
+                        "bbox": {
+                          "x": 320.2998046875,
+                          "y": 300.2998046875,
+                          "w": 15.400390625,
+                          "h": 15.400390625
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#FFFFFF",
+                            "opacity": 1
+                          }
+                        ],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10825;10221:94070;10221:94058;10213:92865;10164:73102",
+                            "name": "Vector 2917",
+                            "type": "VECTOR",
+                            "visible": false,
+                            "bbox": {
+                              "x": 318.9998016357422,
+                              "y": 311,
+                              "w": 6,
+                              "h": 6
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": [
+                              1.2999999523162842,
+                              1.2999999523162842,
+                              1.2999999523162842,
+                              1.2999999523162842
+                            ],
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94058;10213:92865;10164:73103",
+                            "name": "Vector 2918",
+                            "type": "VECTOR",
+                            "visible": true,
+                            "bbox": {
+                              "x": 321,
+                              "y": 301,
+                              "w": 6,
+                              "h": 6
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": [
+                              1.2999999523162842,
+                              1.2999999523162842,
+                              1.2999999523162842,
+                              1.2999999523162842
+                            ],
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94058;10213:92865;10164:73104",
+                            "name": "Vector 2919",
+                            "type": "VECTOR",
+                            "visible": false,
+                            "bbox": {
+                              "x": 330.9998016357422,
+                              "y": 299,
+                              "w": 6,
+                              "h": 6
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": [
+                              1.2999999523162842,
+                              1.2999999523162842,
+                              1.2999999523162842,
+                              1.2999999523162842
+                            ],
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          },
+                          {
+                            "id": "I39:10825;10221:94070;10221:94058;10213:92865;10164:73105",
+                            "name": "Vector 2920",
+                            "type": "VECTOR",
+                            "visible": true,
+                            "bbox": {
+                              "x": 329,
+                              "y": 309,
+                              "w": 6,
+                              "h": 6
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": [
+                              1.2999999523162842,
+                              1.2999999523162842,
+                              1.2999999523162842,
+                              1.2999999523162842
+                            ],
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "39:10826",
+        "name": "ct_language_select",
+        "type": "FRAME",
+        "visible": true,
+        "bbox": {
+          "x": 16,
+          "y": 352,
+          "w": 328,
+          "h": 48
+        },
+        "layoutMode": "HORIZONTAL",
+        "primaryAxisAlignItems": "SPACE_BETWEEN",
+        "padding": {
+          "l": 0,
+          "t": 7.5,
+          "r": 0,
+          "b": 7.5
+        },
+        "itemSpacing": 16,
+        "cornerRadii": null,
+        "fills": [],
+        "text": null,
+        "children": [
+          {
+            "id": "39:10827",
+            "name": "Text",
+            "type": "TEXT",
+            "visible": true,
+            "bbox": {
+              "x": 16,
+              "y": 367.5,
+              "w": 63,
+              "h": 17
+            },
+            "layoutMode": "NONE",
+            "padding": {
+              "l": 0,
+              "t": 0,
+              "r": 0,
+              "b": 0
+            },
+            "itemSpacing": 0,
+            "cornerRadii": null,
+            "fills": [
+              {
+                "type": "SOLID",
+                "hex": "#FFFFFF",
+                "opacity": 0.8999999761581421
+              }
+            ],
+            "text": {
+              "characters": "Language",
+              "fontSize": 14,
+              "fontWeight": 400,
+              "overrides": []
+            },
+            "children": []
+          },
+          {
+            "id": "39:10828",
+            "name": "ic_arrow",
+            "type": "INSTANCE",
+            "visible": true,
+            "bbox": {
+              "x": 320,
+              "y": 364,
+              "w": 24,
+              "h": 24
+            },
+            "layoutMode": "NONE",
+            "padding": {
+              "l": 0,
+              "t": 0,
+              "r": 0,
+              "b": 0
+            },
+            "itemSpacing": 0,
+            "cornerRadii": null,
+            "fills": [],
+            "text": null,
+            "children": [
+              {
+                "id": "I39:10828;9100:73500",
+                "name": "Vector",
+                "type": "VECTOR",
+                "visible": true,
+                "bbox": {
+                  "x": 329,
+                  "y": 370.5,
+                  "w": 6.000000476837158,
+                  "h": 11.999999046325684
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [],
+                "text": null,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "39:10829",
+        "name": "ct_lyrics",
+        "type": "FRAME",
+        "visible": true,
+        "bbox": {
+          "x": 16,
+          "y": 416,
+          "w": 328,
+          "h": 114
+        },
+        "layoutMode": "VERTICAL",
+        "padding": {
+          "l": 0,
+          "t": 0,
+          "r": 0,
+          "b": 0
+        },
+        "itemSpacing": 8,
+        "cornerRadii": null,
+        "fills": [],
+        "text": null,
+        "children": [
+          {
+            "id": "39:10830",
+            "name": "item_title",
+            "type": "FRAME",
+            "visible": true,
+            "bbox": {
+              "x": 16,
+              "y": 416,
+              "w": 328,
+              "h": 20
+            },
+            "layoutMode": "HORIZONTAL",
+            "primaryAxisAlignItems": "SPACE_BETWEEN",
+            "padding": {
+              "l": 0,
+              "t": 0,
+              "r": 0,
+              "b": 0
+            },
+            "itemSpacing": 16,
+            "cornerRadii": null,
+            "fills": [],
+            "text": null,
+            "children": [
+              {
+                "id": "39:10831",
+                "name": "Text",
+                "type": "TEXT",
+                "visible": true,
+                "bbox": {
+                  "x": 16,
+                  "y": 417.5,
+                  "w": 98,
+                  "h": 17
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#FFFFFF",
+                    "opacity": 0.8999999761581421
+                  }
+                ],
+                "text": {
+                  "characters": "Lyrics(Optional)",
+                  "fontSize": 14,
+                  "fontWeight": 400,
+                  "overrides": []
+                },
+                "children": []
+              },
+              {
+                "id": "39:10832",
+                "name": "btn_ic_upload",
+                "type": "INSTANCE",
+                "visible": true,
+                "bbox": {
+                  "x": 324,
+                  "y": 416,
+                  "w": 20,
+                  "h": 20
+                },
+                "layoutMode": "NONE",
+                "padding": {
+                  "l": 0,
+                  "t": 0,
+                  "r": 0,
+                  "b": 0
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10832;9060:91255",
+                    "name": "Union",
+                    "type": "BOOLEAN_OPERATION",
+                    "visible": true,
+                    "bbox": {
+                      "x": 324.0301055908203,
+                      "y": 418.5009765625,
+                      "w": 19.10546875,
+                      "h": 15.626953125
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "hex": "#FFFFFF",
+                        "opacity": 0.8999999761581421
+                      }
+                    ],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10832;9060:91256",
+                        "name": "Vector",
+                        "type": "VECTOR",
+                        "visible": true,
+                        "bbox": {
+                          "x": 333.5833282470703,
+                          "y": 424.1886329650879,
+                          "w": 4.625426299753599e-7,
+                          "h": 9.27816390991211
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [],
+                        "text": null,
+                        "children": []
+                      },
+                      {
+                        "id": "I39:10832;9060:91257",
+                        "name": "Subtract",
+                        "type": "BOOLEAN_OPERATION",
+                        "visible": true,
+                        "bbox": {
+                          "x": 324.0301055908203,
+                          "y": 418.5009765625,
+                          "w": 19.10546875,
+                          "h": 14.4677734375
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#000000",
+                            "opacity": 1
+                          }
+                        ],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10832;9060:91258",
+                            "name": "Union",
+                            "type": "BOOLEAN_OPERATION",
+                            "visible": true,
+                            "bbox": {
+                              "x": 324.6916961669922,
+                              "y": 419.16162109375,
+                              "w": 17.78327751159668,
+                              "h": 13.145344734191895
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10832;9060:91259",
+                                "name": "Rectangle 1329134929",
+                                "type": "RECTANGLE",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 324.6917266845703,
+                                  "y": 423.80224609375,
+                                  "w": 17.78314781188965,
+                                  "h": 8.504982948303223
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": [
+                                  4.639081954956055,
+                                  4.639081954956055,
+                                  4.639081954956055,
+                                  4.639081954956055
+                                ],
+                                "fills": [
+                                  {
+                                    "type": "SOLID",
+                                    "hex": "#D9D9D9",
+                                    "opacity": 1
+                                  }
+                                ],
+                                "text": null,
+                                "children": []
+                              },
+                              {
+                                "id": "I39:10832;9060:91260",
+                                "name": "Ellipse 1329130703",
+                                "type": "ELLIPSE",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 328.32879638671875,
+                                  "y": 419.16162109375,
+                                  "w": 10.508223533630371,
+                                  "h": 10.05134391784668
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [
+                                  {
+                                    "type": "SOLID",
+                                    "hex": "#D9D9D9",
+                                    "opacity": 1
+                                  }
+                                ],
+                                "text": null,
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "id": "I39:10832;9060:91261",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "visible": true,
+                            "bbox": {
+                              "x": 333.5833282470703,
+                              "y": 424.1886329650879,
+                              "w": 4.2399736344123085e-7,
+                              "h": 9.27816390991211
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "id": "I39:10832;9060:91262",
+                        "name": "Vector",
+                        "type": "VECTOR",
+                        "visible": true,
+                        "bbox": {
+                          "x": 331.15813758631134,
+                          "y": 423.453408241272,
+                          "w": 4.849949571891813,
+                          "h": 2.3195413830399048
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [],
+                        "text": null,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "39:10833",
+            "name": "item_input",
+            "type": "FRAME",
+            "visible": true,
+            "bbox": {
+              "x": 16,
+              "y": 444,
+              "w": 328,
+              "h": 86
+            },
+            "layoutMode": "VERTICAL",
+            "padding": {
+              "l": 12,
+              "t": 0,
+              "r": 12,
+              "b": 0
+            },
+            "itemSpacing": 16,
+            "cornerRadii": [
+              12,
+              12,
+              12,
+              12
+            ],
+            "fills": [
+              {
+                "type": "SOLID",
+                "hex": "#FFFFFF",
+                "opacity": 0.03999999910593033
+              }
+            ],
+            "text": null,
+            "children": [
+              {
+                "id": "39:10834",
+                "name": "txt_placeholder",
+                "type": "INSTANCE",
+                "visible": true,
+                "bbox": {
+                  "x": 28,
+                  "y": 444,
+                  "w": 304,
+                  "h": 48
+                },
+                "layoutMode": "VERTICAL",
+                "primaryAxisAlignItems": "CENTER",
+                "padding": {
+                  "l": 0,
+                  "t": 10,
+                  "r": 0,
+                  "b": 10
+                },
+                "itemSpacing": 0,
+                "cornerRadii": null,
+                "fills": [],
+                "text": null,
+                "children": [
+                  {
+                    "id": "I39:10834;303960:95760",
+                    "name": ".输入状态 Input state",
+                    "type": "INSTANCE",
+                    "visible": true,
+                    "bbox": {
+                      "x": 28,
+                      "y": 459.5,
+                      "w": 304,
+                      "h": 17
+                    },
+                    "layoutMode": "HORIZONTAL",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 16,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10834;303960:95760;225716:27920",
+                        "name": "Helper text",
+                        "type": "TEXT",
+                        "visible": true,
+                        "bbox": {
+                          "x": 28,
+                          "y": 459.5,
+                          "w": 304,
+                          "h": 17
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#FFFFFF",
+                            "opacity": 0.8999999761581421
+                          }
+                        ],
+                        "text": {
+                          "characters": "Add the lyrics for the song",
+                          "fontSize": 14,
+                          "fontWeight": 400,
+                          "overrides": []
+                        },
+                        "children": []
+                      },
+                      {
+                        "id": "I39:10834;303960:95760;304694:61599",
+                        "name": ".附加操作 Trailing",
+                        "type": "INSTANCE",
+                        "visible": false,
+                        "bbox": {
+                          "x": 326,
+                          "y": 459.5,
+                          "w": 22,
+                          "h": 22
+                        },
+                        "layoutMode": "HORIZONTAL",
+                        "primaryAxisAlignItems": "MAX",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [],
+                        "text": null,
+                        "children": [
+                          {
+                            "id": "I39:10834;303960:95760;304694:61599;240934:59084",
+                            "name": "可见 Visible",
+                            "type": "FRAME",
+                            "visible": true,
+                            "bbox": {
+                              "x": 326,
+                              "y": 459.5,
+                              "w": 22,
+                              "h": 22
+                            },
+                            "layoutMode": "NONE",
+                            "padding": {
+                              "l": 0,
+                              "t": 0,
+                              "r": 0,
+                              "b": 0
+                            },
+                            "itemSpacing": 0,
+                            "cornerRadii": null,
+                            "fills": [],
+                            "text": null,
+                            "children": [
+                              {
+                                "id": "I39:10834;303960:95760;304694:61599;240934:59085",
+                                "name": "Union",
+                                "type": "BOOLEAN_OPERATION",
+                                "visible": true,
+                                "bbox": {
+                                  "x": 326.001220703125,
+                                  "y": 462.46484375,
+                                  "w": 21.9990234375,
+                                  "h": 16.07256507873535
+                                },
+                                "layoutMode": "NONE",
+                                "padding": {
+                                  "l": 0,
+                                  "t": 0,
+                                  "r": 0,
+                                  "b": 0
+                                },
+                                "itemSpacing": 0,
+                                "cornerRadii": null,
+                                "fills": [
+                                  {
+                                    "type": "SOLID",
+                                    "hex": "#FFFFFF",
+                                    "opacity": 0.4000000059604645
+                                  }
+                                ],
+                                "text": null,
+                                "children": [
+                                  {
+                                    "id": "I39:10834;303960:95760;304694:61599;240934:59086",
+                                    "name": "Subtract",
+                                    "type": "BOOLEAN_OPERATION",
+                                    "visible": true,
+                                    "bbox": {
+                                      "x": 326.001220703125,
+                                      "y": 462.46484375,
+                                      "w": 21.998779296875,
+                                      "h": 16.072664260864258
+                                    },
+                                    "layoutMode": "NONE",
+                                    "padding": {
+                                      "l": 0,
+                                      "t": 0,
+                                      "r": 0,
+                                      "b": 0
+                                    },
+                                    "itemSpacing": 0,
+                                    "cornerRadii": null,
+                                    "fills": [
+                                      {
+                                        "type": "SOLID",
+                                        "hex": "#000000",
+                                        "opacity": 1
+                                      }
+                                    ],
+                                    "text": null,
+                                    "children": [
+                                      {
+                                        "id": "I39:10834;303960:95760;304694:61599;240934:59087",
+                                        "name": "Vector",
+                                        "type": "VECTOR",
+                                        "visible": true,
+                                        "bbox": {
+                                          "x": 326.001220703125,
+                                          "y": 462.46484375,
+                                          "w": 21.998779296875,
+                                          "h": 16.072664260864258
+                                        },
+                                        "layoutMode": "NONE",
+                                        "padding": {
+                                          "l": 0,
+                                          "t": 0,
+                                          "r": 0,
+                                          "b": 0
+                                        },
+                                        "itemSpacing": 0,
+                                        "cornerRadii": null,
+                                        "fills": [
+                                          {
+                                            "type": "SOLID",
+                                            "hex": "#000000",
+                                            "opacity": 1
+                                          }
+                                        ],
+                                        "text": null,
+                                        "children": []
+                                      },
+                                      {
+                                        "id": "I39:10834;303960:95760;304694:61599;240934:59088",
+                                        "name": "Vector",
+                                        "type": "VECTOR",
+                                        "visible": true,
+                                        "bbox": {
+                                          "x": 332.9822540283203,
+                                          "y": 466.48486328125,
+                                          "w": 8.03608226776123,
+                                          "h": 8.03608226776123
+                                        },
+                                        "layoutMode": "NONE",
+                                        "padding": {
+                                          "l": 0,
+                                          "t": 0,
+                                          "r": 0,
+                                          "b": 0
+                                        },
+                                        "itemSpacing": 0,
+                                        "cornerRadii": null,
+                                        "fills": [],
+                                        "text": null,
+                                        "children": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I39:10834;225745:52709",
+                    "name": "分割线 Divider",
+                    "type": "INSTANCE",
+                    "visible": false,
+                    "bbox": {
+                      "x": 28,
+                      "y": 491,
+                      "w": 304,
+                      "h": 1
+                    },
+                    "layoutMode": "VERTICAL",
+                    "primaryAxisAlignItems": "MAX",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [],
+                    "text": null,
+                    "children": [
+                      {
+                        "id": "I39:10834;225745:52709;185303:205163",
+                        "name": "Rectangle",
+                        "type": "RECTANGLE",
+                        "visible": false,
+                        "bbox": {
+                          "x": 28,
+                          "y": 491.669921875,
+                          "w": 320,
+                          "h": 0.33000001311302185
+                        },
+                        "layoutMode": "NONE",
+                        "padding": {
+                          "l": 0,
+                          "t": 0,
+                          "r": 0,
+                          "b": 0
+                        },
+                        "itemSpacing": 0,
+                        "cornerRadii": null,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "hex": "#000000",
+                            "opacity": 0.11999999731779099
+                          }
+                        ],
+                        "text": null,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "39:10835",
+                "name": "Frame 2147206756",
+                "type": "FRAME",
+                "visible": true,
+                "bbox": {
+                  "x": 28,
+                  "y": 508,
+                  "w": 53,
+                  "h": 22
+                },
+                "layoutMode": "HORIZONTAL",
+                "primaryAxisAlignItems": "CENTER",
+                "padding": {
+                  "l": 10,
+                  "t": 4,
+                  "r": 10,
+                  "b": 4
+                },
+                "itemSpacing": 10,
+                "cornerRadii": [
+                  20,
+                  20,
+                  20,
+                  20
+                ],
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "hex": "#242424",
+                    "opacity": 1
+                  }
+                ],
+                "text": null,
+                "children": [
+                  {
+                    "id": "39:10836",
+                    "name": "Paste",
+                    "type": "TEXT",
+                    "visible": true,
+                    "bbox": {
+                      "x": 38,
+                      "y": 512,
+                      "w": 33,
+                      "h": 14
+                    },
+                    "layoutMode": "NONE",
+                    "padding": {
+                      "l": 0,
+                      "t": 0,
+                      "r": 0,
+                      "b": 0
+                    },
+                    "itemSpacing": 0,
+                    "cornerRadii": null,
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "hex": "#FFFFFF",
+                        "opacity": 1
+                      }
+                    ],
+                    "text": {
+                      "characters": "Paste",
+                      "fontSize": 12,
+                      "fontWeight": 700,
+                      "overrides": []
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
