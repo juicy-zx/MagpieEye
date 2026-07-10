@@ -22,7 +22,7 @@ export interface FigmaNode {
 export interface SemNode {
   testTag: string | null; text: string | null;
   positionInRoot: { x: number; y: number }; size: { width: number; height: number };
-  touchBoundsInRoot: { left: number; top: number; right: number; bottom: number };
+  touchBoundsInRoot?: { left: number; top: number; right: number; bottom: number } | null; // T4.4:放宽为可缺省/可 null(触控盒缺席=纯可用性判断,touchTarget 门跳过)
   colorHex: string | null; fontSizeSp: number | null; cornerRadiusPx: number | null;
   boundsInRoot?: { left: number; top: number; right: number; bottom: number }; // px, clipped;与 unclipped positionInRoot+size 作差判被裁(childClipped)
   hasVisualOverflow?: boolean | null;   // 文本可视溢出(ellipsis);非文本节点为 null
@@ -37,7 +37,7 @@ export interface SemanticsDump { density: number; root: SemNode; graphicsMode?: 
 export interface SemDp {
   testTag: string | null; text: string | null;
   positionDp: { x: number; y: number }; sizeDp: { width: number; height: number };
-  touchBoundsDp: { left: number; top: number; right: number; bottom: number };
+  touchBoundsDp?: { left: number; top: number; right: number; bottom: number }; // T4.4:仅 touchBoundsInRoot 有值时产出(exactOptionalPropertyTypes 条件 spread)
   colorHex: string | null; fontSizeSp: number | null; cornerRadiusDp: number | null;
   boundsDp?: { left: number; top: number; right: number; bottom: number }; // ÷density
   hasVisualOverflow?: boolean | null;

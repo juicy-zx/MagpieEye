@@ -15,10 +15,13 @@ export function toDp(n: SemNode, density: number): SemDp {
     testTag: n.testTag, text: n.text,
     positionDp: { x: d(n.positionInRoot.x), y: d(n.positionInRoot.y) },
     sizeDp: { width: d(n.size.width), height: d(n.size.height) },
-    touchBoundsDp: {
-      left: d(n.touchBoundsInRoot.left), top: d(n.touchBoundsInRoot.top),
-      right: d(n.touchBoundsInRoot.right), bottom: d(n.touchBoundsInRoot.bottom),
-    },
+    // T4.4:touchBoundsInRoot 缺省/null 统一归一化为 touchBoundsDp 不产出(undefined);有值才换算 DP。
+    ...(n.touchBoundsInRoot != null ? {
+      touchBoundsDp: {
+        left: d(n.touchBoundsInRoot.left), top: d(n.touchBoundsInRoot.top),
+        right: d(n.touchBoundsInRoot.right), bottom: d(n.touchBoundsInRoot.bottom),
+      },
+    } : {}),
     colorHex: n.colorHex, fontSizeSp: n.fontSizeSp,           // sp 不换算
     cornerRadiusDp: n.cornerRadiusPx === null ? null : d(n.cornerRadiusPx),
     // T3.4 invariant 字段透传:boundsInRoot(clipped px)÷density;布尔/字符串原样,undefined 保持 undefined(exactOptionalPropertyTypes)。

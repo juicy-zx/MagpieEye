@@ -62,7 +62,8 @@ export function runInvariants(dump: SemanticsDump): InvariantResult {
       }
     }
     // 2. touchTargetTooSmall:clickable,读 touchBoundsDp(CS3:必须读触控盒,layout 几何会误杀外扩小图标)。
-    if (n.clickable === true) {
+    //    T4.4:touchBoundsDp 缺席(可用性判断不适用)则跳过 touchTarget 门,不计数不承重。
+    if (n.clickable === true && n.touchBoundsDp !== undefined) {
       executed += 1;
       const w = n.touchBoundsDp.right - n.touchBoundsDp.left;
       const h = n.touchBoundsDp.bottom - n.touchBoundsDp.top;
