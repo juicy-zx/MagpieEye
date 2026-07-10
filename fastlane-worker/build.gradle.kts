@@ -26,6 +26,9 @@ android {
 // demo-android 组件源单一事实源:构建期同步进本模块,禁止手工副本漂移(钉版本硬门禁的一部分)。
 val syncSharedSource = tasks.register<Sync>("syncSharedSource") {
     from(rootProject.file("../demo-android/app/src/main/java"))
+    // 只同步 worker 白名单消费的组件源(CalibCard 自足于 androidx.compose.*);
+    // demo 其余源(如 FixtureCard 依赖 coil)超出 worker 钉版本依赖面,不得纳入。
+    include("com/magpie/uiv/demo/CalibCard.kt")
     into(layout.buildDirectory.dir("uiv-shared-src"))
 }
 tasks.named("preBuild").configure { dependsOn(syncSharedSource) }

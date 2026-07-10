@@ -6,9 +6,9 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "vitest run",
+    "test": "npm run build && vitest run",
     "build": "tsc -b packages/uiv-core packages/uiv-cli packages/ui-verify-mcp",
-    "typecheck": "tsc -b packages/uiv-core packages/uiv-cli packages/ui-verify-mcp --noEmit false --dry"
+    "typecheck": "tsc -b packages/uiv-core packages/uiv-cli packages/ui-verify-mcp --force"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
