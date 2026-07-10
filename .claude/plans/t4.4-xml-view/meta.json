@@ -1,0 +1,40 @@
+{
+  "task": "t4.4-xml-view",
+  "created": "2026-07-10",
+  "origin": "用户 2026-07-10 决定完整做 T4.4 XML View 接入(此前 Codex 裁定 backlog, 无真实消费者延期; 用户选择 full T4.4 over 最小冒烟/保持 backlog)",
+  "goal": "让鹊眼验证管线泛化到传统 Android XML View 体系: ViewDumpRule 递归 View 树→同 schema JSON + tag 挂载(android:tag/resource-id→fig:<id>) + SemNode 逐字段 View 映射 + CS2 textOverflow(getEllipsisCount)重钉。验证靶: yanhao 某节点在 demo-android 实现为 XML 布局跑通管线(默认, 与 Compose 验证交叉印证; 若用户给真实 XML 页面则改靶)",
+  "codex": {
+    "threadId": "019f4bdc-0b79-7b03-af85-dcb33aad7f5d",
+    "channel": "codex-agent MCP",
+    "note": "2026-07-10 开新会话(自包含), Codex 宿主缺 codex-code-mode-host 依实证判断"
+  },
+  "decisions_frozen": [
+    "D1 CS2 textOverflow: 选 B 直接复用 NATIVE hard-gate(不 advisory 不按来源降级, 破坏 same-in→same-out 契约)。要求: 主靶 39:10826 不承担 CS2; 另设明显 overflow/non-overflow 真实 TextView 正负对照; 覆盖 measure/layout→dump→invariant/runL2 且断言 overflow 是 hard violation; 通用实现遍历所有 layout 行 getEllipsisCount(i) 不能只查第 0 行 + 补末行 ellipsis 多行样本; lineCount>maxLines 仅补充不替代 ellipsis; 非 TextView 的 hasVisualOverflow 为 null/缺省不用 false",
+    "D2 tag 契约: 锁死 android:tag=\"fig:<raw nodeId>\", View.getTag() 原样写 testTag, join.ts:54 精确匹配; 不清洗/转义/映射 resource-id; fig: 前缀必需; 同 dump 内 tag 唯一(重复失败不覆盖); 非字符串/非 fig: tag 不参与匹配",
+    "D3 touchTarget/touchBounds: XML 首期排除且 touchBoundsInRoot 置 null/缺省(禁伪填视觉盒, 数据填入引擎即当真); 补契约测试: 小图标配父 TouchDelegate 后 dump touch bounds 仍 null 且不产 touchTarget violation; 能力缺口登记后续不改 L2 引擎",
+    "D4 clickable: 保留平台事实(可填 View.isClickable)但不作跨来源等值门禁; touchBounds 已空故 XML 首期不触发 touchTarget; 禁用 hasOnClickListeners(); recon 须钉死所有 clickable 引用, 若除 touchTarget 外有独立 hard-gate 先回审",
+    "D5 XML 行号归因: 本期后置, XML violation.source 允许 null(不影响 join/assert/severity/verdict); 禁止只把扫描后缀扩 .xml(跨行属性/命名空间/qualifier/同 nodeId 来源歧义); 本期测试须确认 XML violation 不被误归因到同 nodeId 的 Compose .kt",
+    "D6 验证靶 39:10826 + 弱+交叉印证: 不另写 Compose fixture, 复用 39:10822 整页结果但不只比最终 PASS——比子树匹配 tag 集/共享 invariant+assertion 执行集/归一化测量值/severity/verdict, 排除 touchBounds 等来源专属字段; 仅当无法可靠投影子树才升级独立 fixture",
+    "D7 baseline: 复用 39:10822 冻结 spec 子树(禁独立 pull 39:10826 防版本漂移); 允许从冻结快照确定性提取子树为测试文件但保留来源/hash; XML 只对该子树负责不把兄弟节点判缺失",
+    "D8 full 档边界+硬验收: 真实 inflate/measure/layout 后 dump(根+关键节点尺寸非零); fig 根 rebase (0,0) 只遍历该子树; 固定 density2.0/fontScale/locale/主题/API/viewport; 走 runL2.ts:119 正式 semantics 文件发现路径(不只测 serializer); ≥1 稳定 XML 几何负例(改 vector 尺寸/padding 证 violation 真现, 恢复后过); types/join/invariant/assert/report/runL2 零改(必须改则单独回审); cornerRadius=null 与非 TextView 文本字段 null 诚实表达。排除本期: 混合树(Compose 嵌 AndroidView/View 嵌 ComposeView)/TouchDelegate per-child/getGlobalVisibleRect 屏边裁剪通用标定/RecyclerView 离屏/图片像素+Coil+corner radius"
+  ],
+  "known_gaps": "缺口清单见 milestone-4.md:453-462: ViewDumpRule(全新)/tag 挂载(全新)/SemNode 逐字段 View 映射(全新+返工风险: clickable/touchBounds/color/字号/cornerRadius 与 Compose 不对等)/textOverflow getEllipsisCount CS2 重钉(全新+口径重演)/inflate 渲染(Roborazzi 官方支持, 低风险)/像素通道+convention plugin(已有可复用)/fastlane 快车道不改也不受益(D-05)",
+  "phase": "complete",
+  "consensus_reached": true,
+  "completed": "2026-07-10",
+  "commits": [
+    "3766cca fix(l2): relax touchBounds to optional for non-Compose producers (引擎前置, Codex 单独回审批准)",
+    "ce4125b feat(demo): XML View producer + L2 全链接入 (引擎零改, 2 轮 diff 审查)",
+    "dff6aea feat(uiv): XML 靶 39:10826 真实 CLI 全链接入 (Codex 裁定 A 收口)"
+  ],
+  "outcome": "XML/View 侧产出同 schema semantics.json → L2 引擎零改通吃, same-in→same-out 经交叉印证(与 39:10822 Compose 同子树 tagged 节点逐门/测量/verdict 全等)。真实 uiv check --node 39:10826 端到端 pass(cold gradle inflate→dump→v0→L2)。CS2 textOverflow NATIVE hard-gate 重钉、tag fail-fast、touchBounds 诚实 null、boundsInRoot getGlobalVisibleRect、裁剪负例 childClipped 真产真消。残余: 真实 CLI 裸跑受既有'陈旧产物门'影响(UIV_RERUN=1/cold gradle 必过), 属已登记 followup 非 XML 特有。",
+  "conflict_resolutions": [
+    "CR1(2026-07-10): D3(touchBounds 置 null)与 D8⑥(引擎零改)物理互斥——touchBoundsInRoot 必填非空(types.ts:25), toDp 对每节点无条件解引用(join.ts:16-21)先于 clickable 判定, null/omit 均抛 TypeError(实证)。裁定=B 授权改引擎(否决 A: A 把真实可点语言行建模不可点+静默关 missingCd 属 fixture 规避不符 full 档)。D8⑥ 修订: 除本次 touchBounds 可缺席 schema 放宽外引擎继续零改, 后续 XML producer/fixture commit 不得再碰引擎。B 精确口径: SemNode.touchBoundsInRoot?: Bounds|null; XML producer 输出显式 null 读取端容忍 omit; SemDp.touchBoundsDp?: Bounds(null/omit 归一 undefined); join.ts nullish 守卫后换算全树不崩; invariant.ts 仅 touchTargetTooSmall 加 touchBoundsDp!==undefined 前置, missingContentDescription 不加继续承重; assert/report/runL2 不改。clickable 口径: XML 如实输出 View.isClickable(不置 false/不缺省/不用 hasOnClickListeners); 语言行若触发 missingCd 不得抹 clickable 或塞假描述, 真缺可及名就修 fixture, 若 Android 已由子文本/labelFor 形成有效名而 invariant 不识别再独立回审。commit1 验收门: null/omit 任意层不抛; clickable+tb缺席+有desc→两 high 均不产; clickable+tb缺席+无desc→只产 missingCd; clickable+24dp tb→仍产 touchTarget high; 现有 Compose 冻结 fixtures 的 DP/violation/severity/verdict 完全不变; 扫全仓两字段读取点+typecheck+单测+clean build; dist gitignored 无需提交但本地重建供 e2e"
+  ],
+  "review_rounds": 1,
+  "max_review_rounds": 10,
+  "review_history": [
+    "commit1(2026-07-10): 批准入库 3766cca(引擎 touchBounds 放宽, 单独回审无修改)",
+    "commit2 R1(2026-07-10): 需窄幅修改。Codex 校正: getGlobalVisibleRect 排除项仅指屏边/滚动通用标定, 非整体排除 boundsInRoot——固定完全可见 ActivityScenario 下可靠可观测。要求: ①ViewDumpRule 对 getGlobalVisibleRect=true 可见节点输出 boundsInRoot(以 fig 根 global rect 原点重钉, 勿混 global/screen 与 window 原点)②测试确认 fig 根完全可见+根 global visible rect==根实际尺寸 ③非裁剪节点 boundsInRoot==positionInRoot+size ④修后 XML executed=4/Compose=5, 唯一差=Compose fig:39:10826 childClipped(10827/10828 两侧都执行且无违规)⑤补受控父裁剪 child 负例证 XML bounds 能真产 childClipped violation 非仅加计数 ⑥屏边/滚动/根不完全可见继续登记未标定, 引擎六文件零改。不新增 rooted-at-10826 Compose fixture。其余(CS2/tag/touch-clickable matrix/source=null/冻结 baseline/正式 runL2/几何负例)认可"
+  ]
+}

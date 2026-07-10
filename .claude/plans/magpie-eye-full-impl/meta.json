@@ -227,7 +227,6 @@
     "M2 审查建议: fast-stage 文件名改 request/pid 级防并发覆盖。触发: 真实并发调用 uiv check(CI 并行矩阵 / 多 loop session 同仓库并跑)",
     "M2 审查建议: fastlane worker 命令协议改 JSON line/长度前缀。触发: 工作区或 CI 路径出现空格",
     "M2 审查建议: fused 态 score 固定 0 使防震荡趋势信号变粗(D-06 延后优化, 改门禁口径需 Codex)。触发: fused 态实测造成停滞误判的真实案例",
-    "backlog: T4.4 XML View 完整接入(字段语义对齐+CS2 重钉)。触发: demo-android 或 loop 侧出现真实 XML 页面验收需求(2026-07-10 侦查: demo 纯 Compose 无 XML 消费者, YAGNI 不成立, Codex 推迟裁定仍有效, effort XL/risk high)",
     "backlog: T4.5 对比度 report 注入+关键 UI 声明面+阻断门禁(三层, 需 Codex 复议 + 关键UI声明面口径先拍板 + useRealAni 全局扰动标定防误杀)。触发: 下游明确要求对比度阻断关键页面的真实需求(2026-07-10 侦查: Codex 已裁定 B/C 层推迟, 无真实消费者, effort L/risk high)",
     "非 base 设备(fontScale1.3/smallPhone/tablet 及 pixel5-dark 无 pin 态)× invariant-only 态仍路由 render-only(verifyPage.ts routeCell), milestone-3.md:23/695 原计划「M4 全格化」未做。触发: 非 base 设备需要结构断言、或出现非 base 设备漏检回归时",
     "report 的 unresolvedKnownDeviations 类型 never[] 恒空(report.ts:41 注释「M4 填」未填, 唯一赋值点 verifyPage.ts:153 硬编码空数组)。触发: 首次需要登记已知偏差豁免时, 连带把类型从 never[] 放开",
@@ -242,7 +241,7 @@
     "normalize honesty(Codex 裁定 P2 契约迁移): layoutMode NONE 节点 padding/itemSpacing 伪造 0 而非缺省字段(数据契约撒谎, 当前被 runL2 NONE 门拦截, 该门已有正反控单测钉住)。触发: spec 升版/specVersion 议题一并",
     "node-level opacity 未纳入 effective alpha(Codex 裁定 P2): 当前 effective alpha = paint opacity(spec v0 无 node opacity 字段), 半透明跳过判定对 node 级透明度不可见。触发: 真实设计出现 node 级半透明导致 ΔE 误判时",
     "itemSpacing 仅校验首对相邻子(Codex 非阻断建议): 未来升级为设计侧及语义侧所有相邻 flow pair 均满足, 整条属性仍计 1 executed。触发: 多子容器间距假阴性实例出现时",
-    "check 单格默认不防陈旧测试产物(2026-07-10 盲修闭环实证烧掉 1/3 轮): gradle up-to-date/build cache 回填旧渲染+语义产物, check 拿旧数据出一份看似正常的报告且无任何字段暴露产物时间戳; T3.3 semanticsMinMtimeMs 陈旧门仅 verify-page 启用, run.ts:113-115 有 UIV_RERUN=1 逃生门但默认不设防。修法方向: 单格 check 默认启用陈旧门(陈旧→semantics_export_failed)或 report 暴露 renderTimestamp。触发: loop 自动化/无人值守启用前必须(该坑对自动修正者不可自察)",
+    "check 单格默认不防陈旧测试产物(2026-07-10 盲修闭环+T4.4 XML CLI 两次实证): gradle up-to-date/build cache 回填旧渲染+语义产物(build/uiv 是测试副作用写入非 gradle 声明产物, 清它 gradle 不知重跑), check 拿旧数据出报告且无字段暴露产物时间戳; T3.3 semanticsMinMtimeMs 陈旧门仅 verify-page 启用, run.ts:113-115 有 UIV_RERUN=1 逃生门但默认不设防。修法方向: 单格 check 默认启用陈旧门(陈旧→semantics_export_failed)或 report 暴露 renderTimestamp。触发: loop 自动化/无人值守启用前必须(该坑对自动修正者不可自察)",
     "report 可用性(盲修者一手反馈, 2026-07-10): ①position 违规建议附直接父容器内局部坐标(深嵌套沿链回推易错) ②L1 diffRatio 大数值(透明底 baseline 口径下 0.98 无意义)出现在报告头部但不参与判定, 对修正者有误导——建议标注 advisory 属性或口径异常时置 null。触发: report schema 演进(v2)或第二个盲修消费者出现时"
   ],
   "calibration": {
