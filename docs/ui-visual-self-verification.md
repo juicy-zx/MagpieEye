@@ -1,11 +1,13 @@
 ---
 id: design-ui-visual-self-verification
-status: draft
+status: implemented
 owner: "agent"
 tags: ["android", "compose", "figma", "ui-validation", "loop", "rendering", "sandbox"]
 created: 2026-06-12
 verified: 2026-06-12
 ---
+
+> 实现状态以 `.claude/plans/magpie-eye-full-impl/meta.json` 为准；§8 分阶段计划与 §2.5 CLI 示例为设计期历史口径（CLI 示例重写已单独落账 pending_followups）。
 
 # 鹊眼（Magpie Eye）：安卓 UI 还原度自检与纠错工具链
 
