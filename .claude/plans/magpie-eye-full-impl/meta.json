@@ -228,7 +228,12 @@
     "M2 审查建议: fastlane worker 命令协议改 JSON line/长度前缀。触发: 工作区或 CI 路径出现空格",
     "M2 审查建议: fused 态 score 固定 0 使防震荡趋势信号变粗(D-06 延后优化, 改门禁口径需 Codex)。触发: fused 态实测造成停滞误判的真实案例",
     "backlog: T4.4 XML View 完整接入(字段语义对齐+CS2 重钉)。触发: demo-android 或 loop 侧出现真实 XML 页面验收需求(2026-07-10 侦查: demo 纯 Compose 无 XML 消费者, YAGNI 不成立, Codex 推迟裁定仍有效, effort XL/risk high)",
-    "backlog: T4.5 对比度 report 注入+关键 UI 声明面+阻断门禁(三层, 需 Codex 复议 + 关键UI声明面口径先拍板 + useRealAni 全局扰动标定防误杀)。触发: 下游明确要求对比度阻断关键页面的真实需求(2026-07-10 侦查: Codex 已裁定 B/C 层推迟, 无真实消费者, effort L/risk high)"
+    "backlog: T4.5 对比度 report 注入+关键 UI 声明面+阻断门禁(三层, 需 Codex 复议 + 关键UI声明面口径先拍板 + useRealAni 全局扰动标定防误杀)。触发: 下游明确要求对比度阻断关键页面的真实需求(2026-07-10 侦查: Codex 已裁定 B/C 层推迟, 无真实消费者, effort L/risk high)",
+    "非 base 设备(fontScale1.3/smallPhone/tablet 及 pixel5-dark 无 pin 态)× invariant-only 态仍路由 render-only(verifyPage.ts routeCell), milestone-3.md:23/695 原计划「M4 全格化」未做。触发: 非 base 设备需要结构断言、或出现非 base 设备漏检回归时",
+    "report 的 unresolvedKnownDeviations 类型 never[] 恒空(report.ts:41 注释「M4 填」未填, 唯一赋值点 verifyPage.ts:153 硬编码空数组)。触发: 首次需要登记已知偏差豁免时, 连带把类型从 never[] 放开",
+    "runInvariants 未从 uiv-core barrel(src/index.ts)导出, 验收脚本 scripts/check-t34.mjs:11 直读 dist/l2/invariant.js 内部路径。触发: 出现 uiv-core 外部消费方、或下次调整 uiv-core 公共 API 时一并入 barrel 并改脚本走公共入口",
+    "主设计文档 docs/ui-visual-self-verification.md §2.5/§8 CLI 示例全部过期(9 条示例均无法通过 args.ts 解析: 漏必填 --test/--demo/--session/--in, 写了不存在的 --scale、check --state, --matrix default5 非法, 缺 l3-attach 子命令)。触发: 文档面向外部用户/新人发布前重写示例",
+    "CI 真实 REST /meta 定期漂移检查: 设计口径在 milestone-4.md:261、docs/ci-gate.md:35(「真实定期轮询 REST /meta 是 pending_followups(B1)」), 但 B1 已 resolved 且 resolution 只覆盖 /nodes 交叉标定与 /v1/images, /meta 轮询从未落账——本条补账。触发: 与「真实远程 CI 接入」(现有条目一)同时"
   ],
   "calibration": {
     "channel": "mcp+rest",
