@@ -1,35 +1,24 @@
 ---
 name: orchestrating-agent-fleets
-description: Use when orchestrating multiple subagents or worker models in one project — dispatching parallel tasks on a shared git worktree, choosing per-task capability tiers (any vendor - Claude, Codex, GLM, etc.), or coordinating long-running agent work. 当主会话要派发多个子 agent/异构模型 worker(并发/共享工作树/长任务等待/选档位)时使用;症状包括 agent 悬死不收尾、并发提交互相卷入、token 爆炸。
+description: Use when orchestrating multiple subagents or worker models in one project — dispatching parallel tasks on a shared git worktree or coordinating long-running agent work, with any vendor (Claude, Codex, GLM, etc.). 当主 agent 要派发多个从 agent/异构模型 worker(并发/共享工作树/长任务等待)时使用;症状包括 agent 悬死不收尾、并发提交互相卷入、token 爆炸。
 ---
 
 # 编排 agent 舰队
 
 ## Overview
 
-主会话是编排者,不是执行者。两条核心律:**一切执行派 worker;等待靠前台阻塞或主动轮询,永远不靠"停机等通知"**。
+角色只有两种:**主 agent(编排者)与从 agent(执行 worker)**。两条核心律:主 agent 一切执行派从 agent;等待靠前台阻塞或主动轮询,永远不靠"停机等通知"。
 
-**违反字面即违反精神**——"我这个场景特殊"不成立,下面每条纪律都来自真实事故。
+**违反字面即违反精神**——"我这个场景特殊"不成立,每条纪律都来自真实事故。
 
-## 主会话职责边界(只做四件事)
+## 主 agent:只做四件事
 
-1. 任务分解与派发;2. 验收把关(亲自跑验收命令/抽查产物,不轻信 worker 报告);3. 外部协同与仲裁(评审、冲突裁决、升级用户);4. 状态账本维护(**唯一写者**)。
-其余一切——写代码、跑构建、执行子计划步骤——派 worker。主会话上下文是最稀缺资源。
+1. 任务分解与派发;2. 验收把关(亲自跑验收命令/抽查产物,不轻信从 agent 报告);3. 外部协同与仲裁(评审、冲突裁决、升级用户);4. 状态账本维护(**唯一写者**)。
+其余一切——写代码、跑构建、执行子计划步骤——派从 agent。主 agent 上下文是最稀缺资源。
 
-## 能力档位(按判断密集度,不按"重要性";家族无关)
+选型一句话:按任务判断密集度就近选模型,机械任务不用强模型(浪费),拿不准就升档,质量由验收门兜底;不达标升档时同家族优先,跨家族必须打**交接包**(规格+现有 diff+已尝试路径+失败复现),不假设任何会话记忆继承;独立评审类任务的从 agent 与实现方**不同源**(disjoint)。
 
-| 档位 | 定义 | 例 | 示例映射(以在场舰队为准) |
-|---|---|---|---|
-| T1 机械 | 纯机械零判断 | grep 巡检、符号核验、产物收集、批量格式转换 | Claude haiku;GLM flash |
-| T2 照单 | 规格已写死,照单执行 | 按已批准子计划实现、fixture 编写、精确指令修订 | Claude sonnet;Codex(代码实现对口);GLM 旗舰 |
-| T3 攻坚 | 规格钉死但实现复杂/中等疑难 | 引擎与公式实现、构建疑难首轮、含实测解读 | Claude opus;Codex(代码域) |
-| T4 裁量 | 判断密集 | 子计划起草、对抗审查、口径裁量、下档两轮未解升级 | 主模型(编排者同款) |
-
-- 档位是逻辑层:**任何家族的模型都按判断密集度映射进档位**,厂商特长做二次修正(代码实现/评审→Codex 加分;中文批量→GLM 性价比;架构裁量未经验证的家族不入 T4)。新 worker 入列不确定档位时,先高一档试跑一个小任务校准再降。
-- effort 同步分层(机械 low/执行 medium/评审疑难 high);拿不准就近升档,验收兜底。
-- 升档链:**同家族内先升档**(T1→T2→T3→T4);同家族顶档仍不达标才跨家族,且跨家族**必须打交接包**(规格+现有 diff+已尝试路径+失败复现步骤)——不能假设任何会话记忆继承。独立评审类任务遵循 **disjoint 原则**:评审 worker 与实现 worker 不同源(同家族左右手互审有同源偏置)。
-
-## 派发词五条款(每个派发词必须原文携带)
+## 从 agent 派发五条款(每个派发词必须原文携带)
 
 1. **等待纪律**:禁止"启动后台任务后停机等通知"。已结束回合的 agent 收不到任何通知,任务悬死(实证 4 次复现,最长挂 22+ 分钟人工 kill)。长命令必须前台跑(显式大 timeout)或循环"短前台命令+读输出文件尾部"主动轮询,保持回合活跃直至交付。
 2. **精确路径 git add**,严禁 `git add -A` / `git add .`(共享工作树防卷入他人改动)。
@@ -37,15 +26,15 @@ description: Use when orchestrating multiple subagents or worker models in one p
 4. **双重止损**:逻辑止损(同一问题 ≤2 轮定位不了即停)+ 时间止损(30 分钟无法自解即停止报告)。
 5. **写偏排他**:会故意改坏共享 fixture 的验收类任务之间必须排他串行,不得与任何写偏任务并发。
 
-## 异构 worker(经 MCP/CLI 接入的外部模型)附加纪律
+## 外部从 agent(经 MCP/CLI 接入的非本家族模型)附加纪律
 
 - **条款原文内嵌**:外部 worker 不预装本 skill 体系,五条款必须逐条写进派发 prompt 本体,路径引用形同虚设。
-- **等待更致命**:CLI 型 worker(codex exec、GLM CLI)无任何通知机制——对编排者而言它就是一条前台命令,显式大 timeout 跑到完,或同回合内哨兵轮询;"后台起了等下次想起来"= 真悬死,无补救路径。
-- **止损外部强制**:不信外部 worker 的自我报告("卡住了/我放弃了"),由编排者用 timeout/挂钟计时判定,到点即 kill。
+- **等待更致命**:CLI 型 worker(codex exec、GLM CLI 等)无任何通知机制——对主 agent 而言它就是一条前台命令,显式大 timeout 跑到完,或同回合内哨兵轮询;"后台起了等下次想起来"= 真悬死,无补救路径。
+- **止损外部强制**:不信外部 worker 的自我报告("卡住了/我放弃了"),由主 agent 用 timeout/挂钟计时判定,到点即 kill。
 - **黑盒产出严核验**:无工具调用轨迹可查,收尾集成前必须逐文件比对"交付登记清单 vs 实际 `git diff --stat`",防越界改动。
-- 持久 session 的 worker(如 codex threadId)其会话 id 记入状态账本,进程崩溃后可续。
+- 持久 session 的 worker(如 codex threadId)其会话 id 记入状态账本,进程崩溃后可续;无持久会话的,每轮派发词完整携带上下文,不假设记忆延续。
 
-## 主会话侧等待与卡死判定
+## 主 agent 侧等待与卡死判定
 
 - 哨兵轮询:`sleep N; git log --oneline -2; ls -l <输出文件>` 后台哨兵,触发后一次性汇总;不空等、不高频查。
 - 卡死判定看**产出证据**(目标文件 mtime、git diff 有无实质推进),不看"是否在运行";确认任务幂等(定点编辑/纯读)才允许 kill+重派,否则先发限时状态询问。
@@ -57,9 +46,8 @@ description: Use when orchestrating multiple subagents or worker models in one p
 | "轮询每次都是工具调用,纯烧 token" | 停机等通知 = 任务悬死直至人工干预;一次悬死的重跑与排障成本远超轮询 token。基线测试的原话说辞就是这句,结局就是悬死。 |
 | "run_in_background 完成后系统会通知我" | 通知只投递给活着的会话;你让出回合那一刻就收不到了;外部 CLI 更是从不存在通知 |
 | "时序隔离够了,不用登记制" | 时序隔离依赖调度永不出错;登记制让共享文件只有一个写者,结构性消灭冲突 |
-| "这任务小,主会话直接做更快" | 执行细节污染编排上下文;"就这一次"会复利成 token 爆炸 |
-| "全用最强模型,质量优先" | 机械任务用大模型是纯浪费;质量由验收门保证,不由模型档位保证 |
-| "舰队里只有 Claude,档位表管不到别家" | 档位是逻辑层,任何家族按判断密集度对号入座;写死型号名的表才是错的 |
+| "这任务小,主 agent 直接做更快" | 执行细节污染编排上下文;"就这一次"会复利成 token 爆炸 |
+| "全用最强模型,质量优先" | 机械任务用强模型是纯浪费;质量由验收门保证,不由模型档位保证 |
 | "外部 worker 会自己读仓库里的 skill/规则" | 它不预装这套体系;条款不内嵌原文 = 不存在 |
 
 ## Red Flags — 出现任何一条立即停下重审
@@ -67,8 +55,8 @@ description: Use when orchestrating multiple subagents or worker models in one p
 - 派发词里没有等待纪律条款
 - 任何方案文本出现"等待完成通知""收到通知后再…"
 - `git add -A` / `git add .`
-- 主会话正在写实现代码/跑长构建
+- 主 agent 正在写实现代码/跑长构建
 - 两个并发任务的改动清单含同一个聚合文件
 - 派发词没写止损条款
 - 给外部 CLI worker 的派发词用"参照 xx 文件执行"代替条款原文
-- 评审 worker 与实现 worker 同源
+- 评审从 agent 与实现从 agent 同源
