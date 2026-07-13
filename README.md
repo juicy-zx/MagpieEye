@@ -36,6 +36,8 @@ Android 侧构建与 render-daemon 启动(launchd 常驻、沙箱 UDS 白名单)
 ## 文档索引
 
 - 主设计文档:`docs/ui-visual-self-verification.md`(架构、设计原则、分层判定口径)
+- 真实接入指南:`docs/onboarding-guide.md`(第二个设计接入者从 pin 到 pass 的
+  全流程与 tag 挂载方法论)
 - 实施台账:`.claude/plans/magpie-eye-full-impl/meta.json`(M0~M4 任务状态、
   遗留项 `pending_followups`、Release Gate 落账)——实现状态以此为准
 - Figma 侧标定结论:`docs/calibration.md`
