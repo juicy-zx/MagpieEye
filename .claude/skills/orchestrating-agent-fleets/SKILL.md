@@ -7,7 +7,7 @@ description: Use when orchestrating multiple subagents or worker models in one p
 
 ## Overview
 
-角色只有两种:**主 agent(编排者)与从 agent(执行 worker)**。两条核心律:主 agent 一切执行派从 agent;等待靠前台阻塞或主动轮询,永远不靠"停机等通知"。
+角色只有两种:**主 agent(编排者,常驻会话)与从 agent(执行 worker,回合制——交付即回合结束)**。两条核心律:主 agent 一切执行派从 agent;**回合制的从 agent 交付前必须保持回合活跃**——等待纪律按角色分设(从 agent 见五条款①,主 agent 见等待节,两者规则相反,不可互套)。
 
 **违反字面即违反精神**——"我这个场景特殊"不成立,每条纪律都来自真实事故。
 
@@ -26,7 +26,7 @@ description: Use when orchestrating multiple subagents or worker models in one p
 4. **双重止损**:逻辑止损(同一问题 ≤2 轮定位不了即停)+ 时间止损(30 分钟无法自解即停止报告)。
 5. **写偏排他**:会故意改坏共享 fixture 的验收类任务之间必须排他串行,不得与任何写偏任务并发。
 
-## 外部从 agent(经 MCP/CLI 接入的非本家族模型)附加纪律
+## 外部从 agent(经 MCP/CLI 接入、不共享本会话 harness/skill 体系的 worker)附加纪律
 
 - **条款原文内嵌**:外部 worker 不预装本 skill 体系,五条款必须逐条写进派发 prompt 本体,路径引用形同虚设。
 - **等待更致命**:CLI 型 worker(codex exec、GLM CLI 等)无任何通知机制——对主 agent 而言它就是一条前台命令,显式大 timeout 跑到完,或同回合内哨兵轮询;"后台起了等下次想起来"= 真悬死,无补救路径。
@@ -36,15 +36,17 @@ description: Use when orchestrating multiple subagents or worker models in one p
 
 ## 主 agent 侧等待与卡死判定
 
-- 哨兵轮询:`sleep N; git log --oneline -2; ls -l <输出文件>` 后台哨兵,触发后一次性汇总;不空等、不高频查。
-- 卡死判定看**产出证据**(目标文件 mtime、git diff 有无实质推进),不看"是否在运行";确认任务幂等(定点编辑/纯读)才允许 kill+重派,否则先发限时状态询问。
+- **harness 跟踪的任务**(派出的从 agent、后台命令):依赖完成通知——常驻会话会被重新唤醒,**不要为其空转轮询**(那才是真烧 token)。
+- **harness 不跟踪的外部状态**(远程 CI、外部进程、从 agent 的中途进度):哨兵轮询 `sleep N; git log --oneline -2; ls -l <输出文件>`,触发后一次性汇总;不空等、不高频查。
+- 卡死判定看**产出证据**(目标文件 mtime、git diff 有无实质推进),不看"是否在运行"、也不看"还没收到通知";确认任务幂等(定点编辑/纯读)才允许 kill+重派,否则先发限时状态询问。
 
 ## 反说辞表
 
 | 说辞 | 现实 |
 |---|---|
-| "轮询每次都是工具调用,纯烧 token" | 停机等通知 = 任务悬死直至人工干预;一次悬死的重跑与排障成本远超轮询 token。基线测试的原话说辞就是这句,结局就是悬死。 |
-| "run_in_background 完成后系统会通知我" | 通知只投递给活着的会话;你让出回合那一刻就收不到了;外部 CLI 更是从不存在通知 |
+| (从 agent)"轮询每次都是工具调用,纯烧 token" | 停机等通知 = 任务悬死直至人工干预;一次悬死的重跑与排障成本远超轮询 token。基线测试的原话说辞就是这句,结局就是悬死。 |
+| (从 agent)"run_in_background 完成后系统会通知我" | 你是回合制:回合结束即死,通知永远投递不到——这就是 4 次悬死事故的成因 |
+| (主 agent)"永不靠通知,全部轮询才安全" | 反向矫枉:harness 跟踪的任务完成会重新唤醒常驻会话,为其空转轮询才是真烧 token;轮询只留给 harness 不跟踪的外部状态 |
 | "时序隔离够了,不用登记制" | 时序隔离依赖调度永不出错;登记制让共享文件只有一个写者,结构性消灭冲突 |
 | "这任务小,主 agent 直接做更快" | 执行细节污染编排上下文;"就这一次"会复利成 token 爆炸 |
 | "全用最强模型,质量优先" | 机械任务用强模型是纯浪费;质量由验收门保证,不由模型档位保证 |
@@ -53,7 +55,7 @@ description: Use when orchestrating multiple subagents or worker models in one p
 ## Red Flags — 出现任何一条立即停下重审
 
 - 派发词里没有等待纪律条款
-- 任何方案文本出现"等待完成通知""收到通知后再…"
+- **从 agent 的派发词或其方案**出现"等待完成通知""收到通知后再…"(主 agent 依赖 harness 通知属正常工作方式)
 - `git add -A` / `git add .`
 - 主 agent 正在写实现代码/跑长构建
 - 两个并发任务的改动清单含同一个聚合文件
