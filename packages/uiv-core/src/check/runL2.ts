@@ -9,6 +9,7 @@ import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
 import { atomicCopyFileSync, atomicWriteFileSync } from '../util/atomic.js';
+import { resolveModuleDir } from '../util/module.js';
 import { baselineDirName } from '../baseline/pull.js';
 import { FigmaSpecInvalidError } from '../figma/types.js';
 import type { Spec, SpecNode } from '../figma/types.js';
@@ -122,7 +123,9 @@ export async function runCheckL2(
   // semantics.json 来源:慢车道 = SemanticsDumpRule 落 demo build/uiv/<shortName>.semantics.json;
   // 快车道 = worker 导出的同格式语义树(opts.preRendered.semanticsPath)。
   const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '').replace(/Test$/, '');
-  const semSrc = opts.preRendered?.semanticsPath ?? join(opts.demoDir, 'app', 'build', 'uiv', `${shortName}.semantics.json`);
+  // P0-8 批次②:semantics dump 路径 = 所选模块目录 + 固定后缀 build/uiv(慢车道)。
+  const moduleDir = resolveModuleDir(opts.demoDir, opts.moduleDir, opts.moduleName);
+  const semSrc = opts.preRendered?.semanticsPath ?? join(moduleDir, 'build', 'uiv', `${shortName}.semantics.json`);
   // P0-2 陈旧产物门(默认启用):文件缺失 → semantics_export_failed(导出真失败);
   // 存在但早于本轮 gradle 启动 → stale_artifact(gradle up-to-date 回填上一轮 dump)。
   // 阈值:显式 semanticsMinMtimeMs(verify-page 逐格)精确沿用;否则慢车道默认 t0-1000ms;

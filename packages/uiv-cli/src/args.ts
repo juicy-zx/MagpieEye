@@ -8,7 +8,10 @@ export interface CliIgnoreRegion { x: number; y: number; w: number; h: number }
 
 export interface BaselinePullCmd { kind: 'baseline-pull'; fixture: string; file: string; node: string }
 export interface BaselineCheckVersionCmd { kind: 'baseline-check-version'; file: string; metaFixture: string | null }
-export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; version: string | null; ignoreRegion: CliIgnoreRegion | null; record: boolean }
+/** P0-8 批次②:demo=工程根(--demo 或 --project,后者为规范名);module=Gradle project path(默认 :app);variant 默认 debug。 */
+export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; module: string; variant: string; version: string | null; ignoreRegion: CliIgnoreRegion | null; record: boolean }
+/** P0-8 批次②:环境静态预检(不跑 gradle)。demo=工程根;module=Gradle project path(默认 :app);--json 输出单个 envelope。 */
+export interface PreflightCmd { kind: 'preflight'; demo: string; module: string; json: boolean }
 export interface PinStateArg { name: string; judgePath: 'parity'; figmaVariantNodeId: string }
 export interface PinCmd {
   kind: 'pin';
@@ -18,13 +21,13 @@ export interface PinCmd {
 }
 export interface VerifyPageCmd {
   kind: 'verify-page';
-  test: string; node: string; demo: string; session: string;
+  test: string; node: string; demo: string; module: string; variant: string; session: string;
   version: string | null;   // D-02/M3 消歧：可选，给定时按 nodeId+version 唯一命中 mapping entry
   states: string[]; matrix: string; json: boolean; out: string | null;
 }
 export interface ReportCmd { kind: 'report'; junit: boolean; in: string; out: string | null; suite: string | null }
 export interface L3AttachCmd { kind: 'l3-attach'; report: string; verdicts: string; pack: string }
-export type ParsedCommand = BaselinePullCmd | BaselineCheckVersionCmd | CheckCmd | PinCmd | VerifyPageCmd | ReportCmd | L3AttachCmd;
+export type ParsedCommand = BaselinePullCmd | BaselineCheckVersionCmd | CheckCmd | PreflightCmd | PinCmd | VerifyPageCmd | ReportCmd | L3AttachCmd;
 
 const PIN_MATRIX_RE = /^(l-shape|full|custom:.+)$/;
 
@@ -48,6 +51,13 @@ function collectFlags(rest: string[], allowed: readonly string[]): Map<string, s
 function required(flags: Map<string, string>, flag: string): string {
   const v = flags.get(flag);
   if (v === undefined) throw new CliUsageError(`missing required flag: ${flag}`);
+  return v;
+}
+
+/** P0-8 批次②:工程根 = --project(规范名)或 --demo(向后兼容别名);二者皆缺即报错。 */
+function requiredProjectRoot(flags: Map<string, string>): string {
+  const v = flags.get('--project') ?? flags.get('--demo');
+  if (v === undefined) throw new CliUsageError('missing required flag: --project (or --demo)');
   return v;
 }
 
@@ -127,16 +137,31 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
     // --record 是无值布尔旗标(T2.6),先剔除再走 --flag value 成对解析。
     const record = rest.includes('--record');
     const rest2 = rest.filter((a) => a !== '--record');
-    const flags = collectFlags(rest2, ['--preview', '--node', '--demo', '--version', '--ignore-region']);
+    // P0-8 批次②:--project 等价 --demo(工程根);--module(Gradle project path,默认 :app)/--variant(默认 debug)。
+    const flags = collectFlags(rest2, ['--preview', '--node', '--demo', '--project', '--module', '--variant', '--version', '--ignore-region']);
     const rawRegion = flags.get('--ignore-region');
     return {
       kind: 'check',
       preview: required(flags, '--preview'),
       node: required(flags, '--node'),
-      demo: required(flags, '--demo'),
+      demo: requiredProjectRoot(flags),
+      module: flags.get('--module') ?? ':app',
+      variant: flags.get('--variant') ?? 'debug',
       version: flags.get('--version') ?? null,
       ignoreRegion: rawRegion === undefined ? null : parseIgnoreRegion(rawRegion),
       record,
+    };
+  }
+  if (cmd === 'preflight') {
+    // P0-8 批次②:环境静态预检。--json 无值布尔旗标(先剔除);--project/--demo 择一必填;--module 默认 :app。
+    const json = rest.includes('--json');
+    const rest2 = rest.filter((a) => a !== '--json');
+    const flags = collectFlags(rest2, ['--demo', '--project', '--module']);
+    return {
+      kind: 'preflight',
+      demo: requiredProjectRoot(flags),
+      module: flags.get('--module') ?? ':app',
+      json,
     };
   }
   if (cmd === 'pin') {
@@ -171,13 +196,16 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
     // --json 是无值布尔旗标(同 --record 剔除法),其余成对解析。--test/--node/--demo/--session 必填。
     const json = rest.includes('--json');
     const rest2 = rest.filter((a) => a !== '--json');
-    const flags = collectFlags(rest2, ['--test', '--node', '--demo', '--session', '--version', '--states', '--matrix', '--out']);
+    // P0-8 批次②:--project 等价 --demo;--module(默认 :app)/--variant(默认 debug)。
+    const flags = collectFlags(rest2, ['--test', '--node', '--demo', '--project', '--module', '--variant', '--session', '--version', '--states', '--matrix', '--out']);
     const statesRaw = flags.get('--states');
     return {
       kind: 'verify-page',
       test: required(flags, '--test'),
       node: required(flags, '--node'),
-      demo: required(flags, '--demo'),
+      demo: requiredProjectRoot(flags),
+      module: flags.get('--module') ?? ':app',
+      variant: flags.get('--variant') ?? 'debug',
       session: required(flags, '--session'),
       version: flags.get('--version') ?? null,
       states: statesRaw === undefined ? [] : statesRaw.split(',').map((s) => s.trim()).filter(Boolean),
@@ -210,5 +238,5 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       pack: required(flags, '--pack'),
     };
   }
-  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, pin, verify-page, report, l3-attach)`);
+  throw new CliUsageError(`unknown command: ${[cmd, rest[0]].filter(Boolean).join(' ') || '(none)'} (available: baseline pull, check, preflight, pin, verify-page, report, l3-attach)`);
 }

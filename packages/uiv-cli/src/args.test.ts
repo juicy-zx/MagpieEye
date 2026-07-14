@@ -35,7 +35,7 @@ describe('parseCliArgs: baseline pull --check-version(T4.3 哨兵,与 baseline-p
 describe('parseCliArgs: check', () => {
   it('解析 --preview/--node/--demo(无 ignore-region 时为 null,缺省 record=false,version=null)', () => {
     expect(parseCliArgs(['check', '--preview', 'com.magpie.uiv.demo.CalibCardPreview', '--node', '1:100', '--demo', 'demo-android'])).toEqual({
-      kind: 'check', preview: 'com.magpie.uiv.demo.CalibCardPreview', node: '1:100', demo: 'demo-android', version: null, ignoreRegion: null, record: false,
+      kind: 'check', preview: 'com.magpie.uiv.demo.CalibCardPreview', node: '1:100', demo: 'demo-android', module: ':app', variant: 'debug', version: null, ignoreRegion: null, record: false,
     });
   });
   it('check 解析可选 --version(D-02/M3 消歧;缺省 null)', () => {
@@ -53,6 +53,20 @@ describe('parseCliArgs: check', () => {
     const b = ['check', '--preview', 'a.BPreview', '--node', '1:1', '--demo', 'd'];
     expect((parseCliArgs([...b, '--record']) as CheckCmd).record).toBe(true);
     expect((parseCliArgs(b) as CheckCmd).record).toBe(false);
+  });
+  // P0-8 批次②:参数化旗标(--project 等价 --demo;--module 默认 :app;--variant 默认 debug)。
+  it('check --module/--variant 解析;缺省 :app / debug', () => {
+    const c = parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:1', '--demo', 'd', '--module', ':feature:login', '--variant', 'freeDebug']) as CheckCmd;
+    expect(c.module).toBe(':feature:login');
+    expect(c.variant).toBe('freeDebug');
+    const d = parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:1', '--demo', 'd']) as CheckCmd;
+    expect(d.module).toBe(':app');
+    expect(d.variant).toBe('debug');
+  });
+  it('check --project 等价 --demo(工程根),二者皆缺抛 CliUsageError', () => {
+    const c = parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:1', '--project', 'proj-root']) as CheckCmd;
+    expect(c.demo).toBe('proj-root');
+    expect(() => parseCliArgs(['check', '--preview', 'a.BPreview', '--node', '1:1'])).toThrow(/--project.*--demo|--demo/);
   });
 });
 
@@ -89,12 +103,13 @@ describe('parseCliArgs: verify-page', () => {
       '--demo', 'demo-android', '--session', 'S1', '--states', 'empty,longText', '--matrix', 'full',
       '--out', '/tmp/r.json', '--json'])).toEqual({
         kind: 'verify-page', test: 'com.magpie.uiv.demo.CalibPageScreenshotTest', node: '1:100', demo: 'demo-android',
+        module: ':app', variant: 'debug',
         session: 'S1', version: null, states: ['empty', 'longText'], matrix: 'full', json: true, out: '/tmp/r.json',
       });
   });
   it('缺省:version=null、states=[]、matrix=l-shape、json=false、out=null', () => {
     expect(parseCliArgs(['verify-page', '--test', 'T', '--node', '1:100', '--demo', 'd', '--session', 'standalone']))
-      .toEqual({ kind: 'verify-page', test: 'T', node: '1:100', demo: 'd', session: 'standalone',
+      .toEqual({ kind: 'verify-page', test: 'T', node: '1:100', demo: 'd', module: ':app', variant: 'debug', session: 'standalone',
         version: null, states: [], matrix: 'l-shape', json: false, out: null });
   });
   it('解析可选 --version(D-02/M3 消歧;给定即取值)', () => {
@@ -124,6 +139,21 @@ describe('parseCliArgs: report', () => {
   });
   it('缺 --in 抛 CliUsageError', () => {
     expect(() => parseCliArgs(['report', '--junit'])).toThrow(/--in/);
+  });
+});
+
+describe('parseCliArgs: preflight(P0-8 批次②)', () => {
+  it('解析 --project/--module/--json;module 缺省 :app,json 缺省 false', () => {
+    expect(parseCliArgs(['preflight', '--project', 'proj', '--module', ':app', '--json'])).toEqual({
+      kind: 'preflight', demo: 'proj', module: ':app', json: true,
+    });
+    expect(parseCliArgs(['preflight', '--project', 'proj'])).toEqual({
+      kind: 'preflight', demo: 'proj', module: ':app', json: false,
+    });
+  });
+  it('--demo 向后兼容工程根;--project/--demo 皆缺抛 CliUsageError', () => {
+    expect((parseCliArgs(['preflight', '--demo', 'demo-android']) as { demo: string }).demo).toBe('demo-android');
+    expect(() => parseCliArgs(['preflight'])).toThrow(CliUsageError);
   });
 });
 

@@ -11,6 +11,7 @@
 import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { atomicCopyFileSync, atomicWriteFileSync } from '../util/atomic.js';
+import { resolveModuleDir } from '../util/module.js';
 import { baselineDirName } from '../baseline/pull.js';
 import type { MappingStateRef } from '../baseline/mapping.js';
 import { SEVERITY_WEIGHT } from '../l2/constants.js';
@@ -37,6 +38,8 @@ export interface VerifyPageOpts {
   matrix: string; states: readonly string[]; minScore?: number; outPath?: string;
   pinnedStates?: readonly MappingStateRef[];   // T3.2/T3.4 mapping.states[](states[] canonical schema)
   vlmProvider?: VlmProvider;                    // T4.2:provider 形态(B3);缺省=不注入=零 LLM 调用(轻量形态)
+  /** P0-8 批次②:所选模块目录/Gradle project path/variant(缺省 <demoDir>/app、:app、debug),透传逐格 runCheck(L2)。 */
+  moduleDir?: string; moduleName?: string; variant?: string;
 }
 
 interface CellRoute { judgePath: PageJudgePath; assertionScope: PageAssertionScope }
@@ -88,6 +91,9 @@ export async function verifyPage(
   const classifyInput: Array<{ cellId: string; report: ReportV1 }> = [];
   const l3Candidates: L3Candidate[] = [];   // T4.2:parity 格 L3 候选(合格性由 buildL3InputPack 按 artifacts 三路径过滤)
   const shortName = shortNameOf(opts.testFqn);
+  // P0-8 批次②:统一解析所选模块目录(缺省 <demoDir>/app),透传逐格 runCheck(L2) 与 source 归因。
+  const moduleDir = resolveModuleDir(opts.demoDir, opts.moduleDir, opts.moduleName);
+  const variant = opts.variant ?? 'debug';
 
   for (const cell of cells) {
     const t0 = Date.now();
@@ -95,6 +101,7 @@ export async function verifyPage(
     const route = routeCell(cell.device, cell.state, ref);
     const common = {
       demoDir: opts.demoDir, testFqn: opts.testFqn, uiVerifyDir: opts.uiVerifyDir,
+      moduleDir, variant,
       artifactSubdir: cell.cellId, skipL1: cell.device !== 'base',
       extraGradleArgs: [`-Puiv.device=${cell.device}`, `-Puiv.state=${cell.state}`, '--rerun'],
     };
@@ -120,7 +127,7 @@ export async function verifyPage(
       // base × 无 pin 态:先 runCheck 渲染产 semantics dump,再 runInvariantOnly 取真实 pass/violations。
       const rc = await runCheck(runner, { ...common, nodeId: opts.nodeId, version: opts.version });
       reportPath = rc.reportPath;
-      const semPath = join(opts.demoDir, 'app', 'build', 'uiv', `${shortName}.semantics.json`);
+      const semPath = join(moduleDir, 'build', 'uiv', `${shortName}.semantics.json`);
       if (rc.report.pass && existsSync(semPath) && statSync(semPath).mtimeMs >= t0) {
         const dump = JSON.parse(readFileSync(semPath, 'utf8')) as SemanticsDump;
         report = runInvariantOnly(dump, opts.minScore !== undefined ? { minScore: opts.minScore, prevState: null } : { prevState: null });
@@ -135,7 +142,7 @@ export async function verifyPage(
       report = renderOnlyReport(rc.report); reportPath = rc.reportPath;
     }
 
-    if (report.structural) enrichViolations(report.structural.violations, opts.demoDir);
+    if (report.structural) enrichViolations(report.structural.violations, opts.demoDir, moduleDir);
     const topViolations = [...(report.structural?.violations ?? [])].sort(bySeverity).slice(0, 5);
     perCell.push({
       cellId: cell.cellId, device: cell.device, state: cell.state, qualifiers: cell.qualifiers,

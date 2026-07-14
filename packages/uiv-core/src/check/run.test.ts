@@ -237,6 +237,39 @@ describe('T3.3 复用面扩展:artifactSubdir 隔离 + skipL1', () => {
   });
 });
 
+describe('P0-8 批次②:参数化(--module 目录 / --variant 任务派生)', () => {
+  it('moduleDir 覆写 → 产物路径基于所选模块目录(非 demoDir/app),render 收集自该目录', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();
+    const moduleDir = join(demoDir, 'features', 'login');   // :features:login 约定映射目标
+    const outDir = join(moduleDir, 'build', 'outputs', 'roborazzi');
+    mkdirSync(outDir, { recursive: true });
+    writeWhitePng(join(outDir, 'com.magpie.uiv.demo.CalibCardScreenshotTest.card.png'));
+    const r = await runCheck(new FakeRunner(0, ''), { ...opts(demoDir, uiVerifyDir), moduleDir });
+    expect(r.report.pass).toBe(true);
+    expect(r.report.artifacts.render).not.toBeNull();
+  });
+
+  it('moduleName(:features:login)→ 约定映射 demoDir/features/login;默认 app 目录无产物则 render_harness_error', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();
+    const outDir = join(demoDir, 'features', 'login', 'build', 'outputs', 'roborazzi');
+    mkdirSync(outDir, { recursive: true });
+    writeWhitePng(join(outDir, 'com.magpie.uiv.demo.CalibCardScreenshotTest.card.png'));
+    const hit = await runCheck(new FakeRunner(0, ''), { ...opts(demoDir, uiVerifyDir), moduleName: ':features:login' });
+    expect(hit.report.pass).toBe(true);
+    // 默认 :app 目录下无产物 → 找不到即失败(render_harness_error),不跨目录猜测搜索。
+    const miss = await runCheck(new FakeRunner(0, ''), opts(demoDir, uiVerifyDir));
+    expect(miss.report.pass).toBe(false);
+    expect(miss.report.subReason).toBe('render_harness_error');
+  });
+
+  it('variant=release → 任务派生 testReleaseUnitTest', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();
+    const runner = new FakeRunner(1, 'infra');
+    await runCheck(runner, { ...opts(demoDir, uiVerifyDir), variant: 'release' });
+    expect(runner.calls[0]!.args[0]).toBe('testReleaseUnitTest');
+  });
+});
+
 describe('D-07(c): L1 advisory 失败隔离(不污染已成功的渲染主链/L2 verdict)', () => {
   it('baseline.png 损坏致 L1(server+spawn 双降级)全链路抛错: pass 仍 true,pixel/diff 置 null', async () => {
     const { demoDir, uiVerifyDir } = makeDirs();

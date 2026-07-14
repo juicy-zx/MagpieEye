@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url)
 export const UIV_CORE_VERSION: string = require('../package.json').version
 
 export * from './util/atomic.js'
+export * from './util/module.js'
 export * from './figma/types.js'
 export * from './figma/normalize.js'
 export * from './figma/client.js'
@@ -19,6 +20,10 @@ export * from './l1/ignore.js'
 export * from './baseline/pull.js'
 export * from './check/run.js'
 export * from './check/runL2.js'
+
+// P0-8 批次②:preflight 静态探测 + environment.preflight envelope(共用层,CLI/MCP 复用)
+export * from './preflight/detect.js'
+export * from './preflight/preflight.js'
 
 // L2 结构裁判引擎(T1.3)
 export * from './l2/types.js'

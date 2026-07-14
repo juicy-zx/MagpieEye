@@ -17,7 +17,7 @@ import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
-  atomicWriteFileSync, attachL3Verdicts, detectVersionDrift, extractMetaVersion, pinBaseline, runRecord, toJUnitXml,
+  atomicWriteFileSync, attachL3Verdicts, detectVersionDrift, extractMetaVersion, pinBaseline, runPreflight, runRecord, toJUnitXml,
   validatePageReport, validateReportV1,
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
@@ -73,6 +73,29 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (cmd.kind === 'preflight') {
+    // P0-8 批次②:环境静态预检(不跑 gradle,只读工程声明文件)。exitCode 由 envelope 决定:
+    //   基线匹配/声明失配 → 0(失配含 W_DECLARED_STACK_UNVERIFIED 警告,标未验证);硬前置不满足 → ≠0 + error.code。
+    const envelope = runPreflight(path.resolve(cwd, cmd.demo), { projectPath: cmd.module });
+    process.exitCode = envelope.exitCode;
+    if (cmd.json) {
+      console.log(JSON.stringify(envelope));   // --json:单个可 JSON.parse 的 envelope,stdout 无其它行
+      return;
+    }
+    // 人读摘要:逐轴 checks + 警告/错误(stdout);Kotlin/KGP 恒 unknown 由 result.kotlin 明示。
+    for (const c of envelope.result.checks) {
+      console.log(`${c.ok ? 'OK  ' : 'DIFF'} ${c.id}: expected ${c.expected}, actual ${c.actual}`);
+    }
+    console.log(`kotlin: unknown (KGP not used as proxy; see composeCompilerPlugin)`);
+    for (const w of envelope.result.warnings) console.log(`WARN ${w.code}: ${w.message}`);
+    if (envelope.error !== null) {
+      console.error(`uiv preflight: ${envelope.error.code}: ${envelope.error.message}`);
+    } else {
+      console.log(envelope.result.supported ? 'preflight: supported (matches verified baseline)' : 'preflight: UNVERIFIED (declared stack outside verified baseline; not proven compatible)');
+    }
+    return;
+  }
+
   if (cmd.kind === 'pin') {
     // P0-9:pin 写 spec.json/mapping.json(+.uiv-cache)持锁(CLI-only 写命令,锁边界在此)。
     await withWorkspaceLock(uiVerifyDir, async () => {
@@ -108,6 +131,7 @@ async function main(): Promise<void> {
   if (cmd.kind === 'verify-page') {
     const { report, reportPath } = await runVerifyPageCommand({
       test: cmd.test, node: cmd.node, demo: cmd.demo, session: cmd.session,
+      module: cmd.module, variant: cmd.variant,
       states: cmd.states, matrix: cmd.matrix,
       ...(cmd.version !== null ? { version: cmd.version } : {}),
       ...(cmd.out !== null ? { out: cmd.out } : {}),
@@ -157,6 +181,7 @@ async function main(): Promise<void> {
   // check
   const { report, reportPath } = await runCheckCommand({
     preview: cmd.preview, node: cmd.node, demo: cmd.demo,
+    module: cmd.module, variant: cmd.variant,
     ...(cmd.version !== null ? { version: cmd.version } : {}),
     ...(cmd.ignoreRegion !== null ? { ignoreRegion: cmd.ignoreRegion } : {}),
   }, cwd);
@@ -168,7 +193,9 @@ async function main(): Promise<void> {
     await withWorkspaceLock(uiVerifyDir, async () => {
       const sel = await selectGradleRunner(uiVerifyDir);
       const { goldenPath } = await runRecord(
-        sel.runner, { demoDir: path.resolve(cwd, cmd.demo), testFqn: previewToTestFqn(cmd.preview) }, report.pass,
+        sel.runner,
+        { demoDir: path.resolve(cwd, cmd.demo), testFqn: previewToTestFqn(cmd.preview), moduleName: cmd.module, variant: cmd.variant },
+        report.pass,
       );
       console.log(`golden recorded: ${goldenPath}\nhint: git add ${goldenPath} && git commit`);
     });

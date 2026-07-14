@@ -7,6 +7,7 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { atomicCopyFileSync, atomicWriteFileSync } from '../util/atomic.js';
+import { resolveModuleDir, unitTestTask } from '../util/module.js';
 import { baselineDirName } from '../baseline/pull.js';
 import { runL1 } from '../l1/engine.js';
 import { loadIgnoreRegions } from '../l1/ignore.js';
@@ -18,6 +19,13 @@ export interface GradleRunner {          // 生产实现用 node:child_process.s
 }
 export interface CheckOpts {
   demoDir: string; testFqn: string; nodeId: string; version: string; uiVerifyDir: string;
+  /** P0-8 批次②:所选模块目录(绝对路径)。缺省 = resolveModuleDir(demoDir, moduleName ?? ':app') = <demoDir>/app,
+   *  与既有硬编码 'app' 等价(向后兼容)。产物路径(build/outputs/roborazzi、src/test/snapshots)均以此为基。 */
+  moduleDir?: string;
+  /** P0-8 批次②:Gradle project path(默认 :app),仅在 moduleDir 未显式给定时用于约定映射出 moduleDir。 */
+  moduleName?: string;
+  /** P0-8 批次②:Android 单测 variant(默认 debug),派生 test<Variant>UnitTest 任务名。 */
+  variant?: string;
   /** T2.8 快车道:worker 已产出的 PNG 绝对路径;设置则跳过 gradle 与收集,直接进 L1/报告(与慢车道同一路径)。 */
   preRenderedPng?: string;
   /** T3.3:baseline 存在也不跑 L1(逐格页验证:非 base 设备尺寸/配色不同,L1 纯噪声)。 */
@@ -107,15 +115,18 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     // _actual/_compare 必属本轮,采集口径无歧义;新鲜度门作为二道防线保留。record 链路(runRecord 写
     // snapshots/ golden,不读 _actual)在独立 gradle 调用中执行,不受此清理影响。
     const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '');
-    const roboDir = join(opts.demoDir, 'app', 'build', 'outputs', 'roborazzi');
+    // P0-8 批次②:产物路径 = 所选模块目录 + 固定后缀(codex C:固定约定+契约测试,找不到即失败)。
+    const moduleDir = resolveModuleDir(opts.demoDir, opts.moduleDir, opts.moduleName);
+    const roboDir = join(moduleDir, 'build', 'outputs', 'roborazzi');
     pruneRoborazziArtifacts(roboDir, shortName);
 
     const t0 = Date.now();
     // T2.1(D-07):UIV_RERUN=1 追加 --rerun,供测量脚本强制忽略 up-to-date/build cache 真实重跑
     // (默认不追加,不影响正常 check 的增量构建性能)。
     const rerunArgs = process.env.UIV_RERUN === '1' ? ['--rerun'] : [];
+    // P0-8 批次②:task 按 variant 标准派生(debug → testDebugUnitTest)。
     const { exitCode, stderr } = await runner.run(opts.demoDir, [
-      'testDebugUnitTest', '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs, ...(opts.extraGradleArgs ?? []),
+      unitTestTask(opts.variant ?? 'debug'), '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs, ...(opts.extraGradleArgs ?? []),
     ]);
 
     if (exitCode !== 0) {
@@ -129,7 +140,7 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     // exit 0:收集 rendered.png(测试类短名去 ScreenshotTest 后缀 = 组件短名)。
     // T2.6 三级优先+新鲜度门(章内设计):①本轮 _actual ②本轮非 _compare(旧 added 形态)③golden(unchanged 零产物);
     // 叠加跑前清理后,①②只可能命中本轮产物;mtime 早于本轮 gradle 启动(t0)的候选仍一律拒收(二道防线)。
-    const goldenPath = join(opts.demoDir, 'app', 'src', 'test', 'snapshots', `${shortName}.png`);
+    const goldenPath = join(moduleDir, 'src', 'test', 'snapshots', `${shortName}.png`);
     const actualCand = findNewestPng(roboDir, `${shortName}_actual`);
     const nonCompareCand = findNewestPng(roboDir, shortName, (n) => n.endsWith('_compare.png'));
     const fresh = (p: string | null): string | null => (p !== null && statSync(p).mtimeMs >= t0 - 1000 ? p : null);

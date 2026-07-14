@@ -42,6 +42,8 @@ async function readMappingEntry(uiVerifyDir: string, nodeId: string, version?: s
 
 export interface CheckParams {
   preview: string; node: string; demo: string; version?: string; ignoreRegion?: CliIgnoreRegion;
+  /** P0-8 批次②:Gradle project path(默认 :app,由 core 约定映射出模块目录)/ variant(默认 debug)。 */
+  module?: string; variant?: string;
 }
 
 /** = `uiv check`(无 --record);返回 v1 report + 盘上路径。exitCode/record/末行打印由调用方处理。 */
@@ -89,6 +91,9 @@ export async function runCheckCommand(
       uiVerifyDir,
       minScore: entry.minScore,
       lane,
+      // P0-8 批次②:moduleName(Gradle project path)/ variant 透传,core 约定映射出模块目录 + 派生 task。
+      moduleName: p.module ?? ':app',
+      variant: p.variant ?? 'debug',
       ...(preRendered ? { preRendered } : {}),
     });
     return { report, reportPath };
@@ -103,6 +108,8 @@ export async function runCheckCommand(
 export interface VerifyPageParams {
   test: string; node: string; demo: string; session: string;
   version?: string; states?: string[]; matrix?: string; out?: string;
+  /** P0-8 批次②:Gradle project path(默认 :app)/ variant(默认 debug),透传逐格 runCheck(L2)。 */
+  module?: string; variant?: string;
 }
 
 /** = `uiv verify-page`(恒返回 report,无 --json 打印分支)。exitCode/末行打印由调用方处理。 */
@@ -129,6 +136,9 @@ export async function runVerifyPageCommand(
       matrix,
       states,
       minScore: entry.minScore,
+      // P0-8 批次②:moduleName / variant 透传逐格。
+      moduleName: p.module ?? ':app',
+      variant: p.variant ?? 'debug',
       ...(entry.states ? { pinnedStates: entry.states } : {}),
       ...(p.out !== undefined ? { outPath: path.resolve(cwd, p.out) } : {}),
     });
