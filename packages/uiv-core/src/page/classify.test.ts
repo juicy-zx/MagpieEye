@@ -45,8 +45,8 @@ describe('classifyCell', () => {
     expect(classifyCell(both)).toEqual(['implementation_gap', 'behavior_drift']);
   });
 
-  it('④ compileError → [environment_gap]', () => {
-    expect(classifyCell(mkReport({ compileError: 'e: boom', structural: null }))).toEqual(['environment_gap']);
+  it('④ compileError → [implementation_gap]', () => {
+    expect(classifyCell(mkReport({ compileError: 'e: boom', structural: null }))).toEqual(['implementation_gap']);
   });
 
   it('⑤ pass=true → []', () => {
@@ -73,5 +73,15 @@ describe('classifyPage', () => {
     expect(mixed.retryNoteCandidate).toContain('[base__typical]');
     expect(mixed.retryNoteCandidate).toContain('expected #FF9900 actual #0000FF');
     expect(mixed.retryNoteCandidate).toContain('CalibCard.kt:63');
+  });
+
+  it('⑦ compileError 格 → classes 含 implementation_gap;retryNoteCandidate 含编译摘要首行,不含次行', () => {
+    const cell = { cellId: 'base__typical', report: mkReport({ compileError: 'e: X.kt:1:1 boom\nsecond line', structural: null }) };
+    const result = classifyPage([cell]);
+    expect(result.classes).toContain('implementation_gap');
+    expect(result.actionable).toBe(true);
+    expect(result.retryNoteCandidate).toContain('[base__typical] compile: e: X.kt:1:1 boom');
+    expect(result.retryNoteCandidate).not.toContain('second line');
+    expect(result.environmentCells).toEqual([]);
   });
 });

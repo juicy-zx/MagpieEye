@@ -2,6 +2,7 @@
  * T3.3:失败分类映射(设计文档 3.2C)。逐格 SubReason/结构信号 → FailureClass;
  * 页级聚合产 classification(classes/actionable/retryNoteCandidate/environmentCells)。
  * retryNoteCandidate 只由 implementation_gap/behavior_drift 证据构建(口径⑥);仅 env 格进 environmentCells。
+ * 编译失败归 implementation_gap,摘要行进 retryNoteCandidate。
  */
 import { SEVERITY_WEIGHT } from '../l2/constants.js';
 import type { SubReason, Violation } from '../l2/types.js';
@@ -23,7 +24,7 @@ export const SUBREASON_CLASS: Record<SubReason, FailureClass> = {
 export function classifyCell(r: ReportV1): FailureClass[] {
   if (r.pass) return [];
   const hit = new Set<FailureClass>();
-  if (r.compileError !== null) hit.add('environment_gap');       // 编译失败
+  if (r.compileError !== null) hit.add('implementation_gap');    // 编译失败=模型代码写坏,可行动
   if (r.reason === 'inconclusive' && r.subReason !== null) hit.add(SUBREASON_CLASS[r.subReason]);
   if ((r.structural?.missing.length ?? 0) > 0) hit.add('implementation_gap');
   if ((r.structural?.violations.length ?? 0) > 0) hit.add('behavior_drift');
@@ -70,6 +71,9 @@ export function classifyPage(cells: ReadonlyArray<{ cellId: string; report: Repo
       }
       for (const m of (report.structural?.missing ?? []).slice(0, 3)) {
         lines.push(`[${cellId}] missing: ${m.name} ${m.figmaId}`);
+      }
+      if (report.compileError !== null) {
+        lines.push(`[${cellId}] compile: ${report.compileError.split('\n')[0]}`);
       }
     }
   }

@@ -67,6 +67,15 @@ class WritingRunner implements GradleRunner {
   }
 }
 
+/** stderr 首行匹配 run.ts 的 COMPILE_ERROR_RE(`^e: `),第二行为不匹配的干扰行——验证真实提取链。 */
+class CompileFailRunner implements GradleRunner {
+  calls: string[][] = [];
+  async run(cwd: string, args: string[]): Promise<{ exitCode: number; stderr: string }> {
+    this.calls.push(args);
+    return { exitCode: 1, stderr: 'e: /src/CalibCard.kt:5:10 Unresolved reference: foo\nFAILURE: Build failed with an exception.' };
+  }
+}
+
 async function setup(): Promise<{ demoDir: string; uiVerifyDir: string }> {
   const root = mkdtempSync(join(tmpdir(), 'uiv-page-'));
   const demoDir = join(root, 'demo-android');
@@ -117,6 +126,17 @@ describe('verifyPage', () => {
     expect(report.classification.retryNoteCandidate).toBeNull();
     expect(report.classification.classes).toEqual(['environment_gap']);
     expect(report.classification.environmentCells).toEqual(['base__typical', 'pixel5-dark__typical']);
+  });
+
+  it('编译失败格 → 页 fail、分类含 implementation_gap、retryNoteCandidate 含编译摘要首行', async () => {
+    const { demoDir, uiVerifyDir } = await setup();
+    const { report } = await verifyPage(new CompileFailRunner(), baseOpts(demoDir, uiVerifyDir, { matrix: 'custom:base/typical' }));
+    expect(report.pass).toBe(false);
+    expect(report.classification.classes).toContain('implementation_gap');
+    expect(report.classification.actionable).toBe(true);
+    expect(report.classification.retryNoteCandidate).toContain('Unresolved reference: foo');
+    expect(report.classification.retryNoteCandidate).not.toContain('FAILURE: Build failed');
+    expect(report.classification.environmentCells).toEqual([]);
   });
 
   it('base×invariant-only 态(pinnedStates 命中)→ invariant-only;非 base 同态仍 render-only', async () => {
