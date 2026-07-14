@@ -85,10 +85,13 @@ export interface PixelDiagnostic {
  * report.json 顶层 reason=inconclusive 时的细分(设计文档 2.4 节/步骤 5)。
  * stale_artifact(P0-2):本轮渲染 PNG/semantics 未真生成(gradle up-to-date 回填上一轮 / golden 回退),
  * 与 semantics_export_failed(导出真失败/文件缺失)区分——陈旧=基础设施未刷新,非模型代码可闭合。
+ * module_dir_missing(P0-8 批次②-fix,codex 019f6029):所选模块目录不存在 → check/verify-page 在 gradle
+ * 调用前 fail-closed(不惰性建目录);目录结构是环境事实,非模型可闭合 → environment_gap。
  */
 export type SubReason =
   | 'tag_coverage_low' | 'matching_rate_low'
   | 'semantics_export_failed' | 'render_harness_error' | 'stale_artifact'
+  | 'module_dir_missing'
   | 'figma_spec_invalid' | 'native_graphics_unverified' | 'fixture_unavailable';
 
 /** 语义导出/挽具类不可判定错误(join 遇 density≠2.0 抛出)。 */

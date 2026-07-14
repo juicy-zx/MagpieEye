@@ -209,6 +209,7 @@ describe('P0-2 陈旧产物门(渲染 PNG + semantics 双门,默认启用)', () 
     const uiVerifyDir = join(root, '.ui-verify');
     mkdirSync(demoDir, { recursive: true });
     mkdirSync(uiVerifyDir, { recursive: true });
+    mkdirSync(join(demoDir, 'app'), { recursive: true });   // 修正②:默认 :app 模块目录须在 gradle 调用前存在(fail-closed fixture)
     await pullBaseline(new FixtureFigmaClient(FIXTURE), 'FILEKEY', '1:100', uiVerifyDir);
     return { demoDir, uiVerifyDir };
   }

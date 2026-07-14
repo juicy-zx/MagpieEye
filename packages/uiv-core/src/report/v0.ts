@@ -8,7 +8,7 @@ export interface ReportV0 {
   schemaVersion: 0;
   pass: boolean;
   reason: 'inconclusive' | null;
-  subReason: 'render_harness_error' | 'figma_spec_invalid' | 'stale_artifact' | null;   // P0-2:陈旧产物门(run.ts 收集层可产 stale_artifact)
+  subReason: 'render_harness_error' | 'figma_spec_invalid' | 'stale_artifact' | 'module_dir_missing' | null;   // P0-2:陈旧产物门(run.ts 收集层可产 stale_artifact);P0-8 批次②-fix:module_dir_missing(gradle 调用前模块目录缺失)
   compileError: string | null;
   pixel: PixelResult | null;                       // advisory,不参与 pass
   artifacts: { baseline: string | null; render: string | null; diff: string | null };
@@ -53,8 +53,9 @@ export function validateReportV0(x: unknown): ReportV0 {
     fail('reason', "'inconclusive' | null", r['reason']);
   }
   if (r['subReason'] !== null && r['subReason'] !== 'render_harness_error'
-    && r['subReason'] !== 'figma_spec_invalid' && r['subReason'] !== 'stale_artifact') {
-    fail('subReason', "'render_harness_error' | 'figma_spec_invalid' | 'stale_artifact' | null", r['subReason']);
+    && r['subReason'] !== 'figma_spec_invalid' && r['subReason'] !== 'stale_artifact'
+    && r['subReason'] !== 'module_dir_missing') {
+    fail('subReason', "'render_harness_error' | 'figma_spec_invalid' | 'stale_artifact' | 'module_dir_missing' | null", r['subReason']);
   }
   checkStringOrNull(r['compileError'], 'compileError');
   checkPixel(r['pixel'], 'pixel');

@@ -139,4 +139,18 @@ describe('preflight 六状态表', () => {
       'gradle', 'agp', 'composeBom', 'robolectric', 'roborazzi', 'composeCompilerPlugin', 'compileSdk', 'minSdk', 'moduleType',
     ]);
   });
+
+  // 修正③(codex 019f6029)正控:JDK/OS 机器可读标 not_evaluated(ok:null≠true,不伪装通过),
+  // 经 JSON 往返仍在(ok:null 保真),且不影响基线匹配态 supported:true(未评估≠不兼容,也≠已验证)。
+  it('⑨ jdk/os 机器可读 not_evaluated(ok:null,不计入 pass;不破坏基线匹配 supported:true)', () => {
+    const e = runPreflight(scaffold(), { projectPath: ':app' });
+    const round = JSON.parse(JSON.stringify(e)) as PreflightEnvelope;
+    expect(round.result.supported).toBe(true);   // 未评估轴不破坏基线匹配态
+    const ne = round.result.notEvaluated;
+    expect(ne.map((x) => x.id).sort()).toEqual(['jdk', 'os']);
+    expect(ne.every((x) => x.actual === 'not_evaluated')).toBe(true);
+    expect(ne.every((x) => x.ok === null)).toBe(true);   // ok≠true:不伪装通过
+    // not_evaluated 轴不进 checks[](不参与 supported/声明失配计算)
+    expect(round.result.checks.some((c) => c.id === 'jdk' || c.id === 'os')).toBe(false);
+  });
 });

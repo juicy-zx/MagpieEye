@@ -47,7 +47,7 @@ export interface ReportV1 {
 }
 
 const SUB_REASONS: readonly string[] = [
-  'tag_coverage_low', 'matching_rate_low', 'semantics_export_failed', 'stale_artifact',
+  'tag_coverage_low', 'matching_rate_low', 'semantics_export_failed', 'stale_artifact', 'module_dir_missing',
   'render_harness_error', 'figma_spec_invalid', 'native_graphics_unverified', 'fixture_unavailable',
 ];
 

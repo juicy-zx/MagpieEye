@@ -13,11 +13,12 @@ export type FailureClass = 'environment_gap' | 'implementation_gap' | 'behavior_
 const ORDER: readonly FailureClass[] = ['environment_gap', 'implementation_gap', 'behavior_drift'];
 
 /** 3.2C 完整映射;末两项(native_graphics_unverified/fixture_unavailable)为 3.2C 未列,按语义归类(⑤)。
- *  stale_artifact(P0-2):陈旧=构建缓存未刷新的基础设施问题,非模型可行动 → environment_gap(actionable:false)。 */
+ *  stale_artifact(P0-2):陈旧=构建缓存未刷新的基础设施问题,非模型可行动 → environment_gap(actionable:false)。
+ *  module_dir_missing(P0-8 批次②-fix,codex 019f6029):模块目录是环境事实,非模型可闭合 → environment_gap。 */
 export const SUBREASON_CLASS: Record<SubReason, FailureClass> = {
   tag_coverage_low: 'implementation_gap', matching_rate_low: 'implementation_gap',
   semantics_export_failed: 'environment_gap', render_harness_error: 'environment_gap',
-  stale_artifact: 'environment_gap',
+  stale_artifact: 'environment_gap', module_dir_missing: 'environment_gap',
   figma_spec_invalid: 'environment_gap',
   native_graphics_unverified: 'environment_gap', fixture_unavailable: 'implementation_gap',
 };

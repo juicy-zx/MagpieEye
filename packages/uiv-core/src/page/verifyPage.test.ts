@@ -82,6 +82,7 @@ async function setup(): Promise<{ demoDir: string; uiVerifyDir: string }> {
   const uiVerifyDir = join(root, '.ui-verify');
   mkdirSync(demoDir, { recursive: true });
   mkdirSync(uiVerifyDir, { recursive: true });
+  mkdirSync(join(demoDir, 'app'), { recursive: true });   // 修正②:默认 :app 模块目录须在 gradle 调用前存在(fail-closed fixture)
   await pullBaseline(new FixtureFigmaClient(FIXTURE), 'FILEKEY', '1:100', uiVerifyDir);
   return { demoDir, uiVerifyDir };
 }
@@ -157,6 +158,20 @@ describe('verifyPage', () => {
     const { report } = await verifyPage(new WritingRunner(), baseOpts(demoDir, uiVerifyDir, { sessionId: 'S1', outPath }));
     expect(existsSync(outPath)).toBe(true);
     expect(report.sessionId).toBe('S1');
+  });
+
+  // 修正②(codex 019f6029)正控:所选模块目录不存在 → gradle 调用前 fail-closed,逐格 module_dir_missing、
+  // 页级 env-only,且 gradle runner 未被调用(WritingRunner.calls 为空,证"执行前"失败);不惰性建目录。
+  it('模块目录不存在 → 页 fail、逐格 module_dir_missing、env-only、gradle 未被调用', async () => {
+    const { demoDir, uiVerifyDir } = await setup();   // 仅建 demoDir/app;:ghost 映射目录不存在
+    const runner = new WritingRunner();
+    const { report } = await verifyPage(runner, baseOpts(demoDir, uiVerifyDir, { moduleName: ':ghost' }));
+    expect(report.pass).toBe(false);
+    expect(runner.calls).toHaveLength(0);   // gradle 调用前失败:runner 零调用
+    expect(report.perCell.map((c) => c.subReason)).toEqual(['module_dir_missing', 'module_dir_missing']);
+    expect(report.classification.classes).toEqual(['environment_gap']);
+    expect(report.classification.actionable).toBe(false);
+    expect(existsSync(join(demoDir, 'ghost'))).toBe(false);   // 不惰性建目录
   });
 });
 

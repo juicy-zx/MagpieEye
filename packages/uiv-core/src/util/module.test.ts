@@ -27,15 +27,22 @@ describe('resolveModuleDir(显式 moduleDir 优先,否则 projectPath 默认 :ap
   });
 });
 
-describe('unitTestTask(variant → test<Variant>UnitTest)', () => {
-  it('debug → testDebugUnitTest(与既有硬编码等价)', () => {
-    expect(unitTestTask('debug')).toBe('testDebugUnitTest');
+describe('unitTestTask(限定式 <moduleName>:test<Variant>UnitTest)', () => {
+  it('默认 :app + debug → :app:testDebugUnitTest', () => {
+    expect(unitTestTask(':app', 'debug')).toBe(':app:testDebugUnitTest');
   });
-  it('flavor 拼接 variant 仅首字母大写', () => {
-    expect(unitTestTask('freeDebug')).toBe('testFreeDebugUnitTest');
-    expect(unitTestTask('release')).toBe('testReleaseUnitTest');
+  it('flavor 拼接 variant 仅首字母大写(限定于 :app)', () => {
+    expect(unitTestTask(':app', 'freeDebug')).toBe(':app:testFreeDebugUnitTest');
+    expect(unitTestTask(':app', 'release')).toBe(':app:testReleaseUnitTest');
+  });
+  it('非默认 module(project path 真进任务串,非仅 :app 表面通过)', () => {
+    expect(unitTestTask(':feature:login', 'freeDebug')).toBe(':feature:login:testFreeDebugUnitTest');
   });
   it('空 variant 抛错', () => {
-    expect(() => unitTestTask('  ')).toThrow();
+    expect(() => unitTestTask(':app', '  ')).toThrow();
+  });
+  it('moduleName 为空/仅冒号抛错(复用既有校验)', () => {
+    expect(() => unitTestTask(':', 'debug')).toThrow();
+    expect(() => unitTestTask('', 'debug')).toThrow();
   });
 });

@@ -49,6 +49,7 @@ describe('T2.1 双车道 runner', () => {
     expect(s.lane).toBe('cold');
     expect(s.runner).toBeInstanceOf(SpawnGradleRunner);
     expect((s.runner as SpawnGradleRunner).extraArgs).toContain('--no-daemon');
+    expect((s.runner as SpawnGradleRunner).extraArgs).toContain('--offline');   // 修正④:冷道显式 --offline
   });
 
   it('selectGradleRunner: P0-1 硬禁用 —— 即便 daemon 存活(ping 可通)仍恒返回冷道', async () => {

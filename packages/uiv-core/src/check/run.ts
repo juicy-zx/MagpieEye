@@ -117,6 +117,11 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '');
     // P0-8 批次②:产物路径 = 所选模块目录 + 固定后缀(codex C:固定约定+契约测试,找不到即失败)。
     const moduleDir = resolveModuleDir(opts.demoDir, opts.moduleDir, opts.moduleName);
+    // P0-8 批次②-fix(修正②,codex 019f6029):模块目录不存在 = 环境事实,须在 gradle 调用前 fail-closed,
+    // 且不惰性创建目录(preflight 保留诊断职责但非唯一守门;E2E 在调用前预建 fixture)。
+    if (!existsSync(moduleDir)) {
+      return writeReport(reportsDir, { ...base, reason: 'inconclusive', subReason: 'module_dir_missing' });
+    }
     const roboDir = join(moduleDir, 'build', 'outputs', 'roborazzi');
     pruneRoborazziArtifacts(roboDir, shortName);
 
@@ -124,9 +129,9 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     // T2.1(D-07):UIV_RERUN=1 追加 --rerun,供测量脚本强制忽略 up-to-date/build cache 真实重跑
     // (默认不追加,不影响正常 check 的增量构建性能)。
     const rerunArgs = process.env.UIV_RERUN === '1' ? ['--rerun'] : [];
-    // P0-8 批次②:task 按 variant 标准派生(debug → testDebugUnitTest)。
+    // P0-8 批次②-fix(修正①):task 按所选模块 project path + variant 限定派生(:app + debug → :app:testDebugUnitTest)。
     const { exitCode, stderr } = await runner.run(opts.demoDir, [
-      unitTestTask(opts.variant ?? 'debug'), '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs, ...(opts.extraGradleArgs ?? []),
+      unitTestTask(opts.moduleName ?? ':app', opts.variant ?? 'debug'), '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs, ...(opts.extraGradleArgs ?? []),
     ]);
 
     if (exitCode !== 0) {

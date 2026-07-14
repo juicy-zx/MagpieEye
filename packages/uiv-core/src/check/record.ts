@@ -14,7 +14,7 @@ export async function runRecord(
   const short = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '');
   const moduleDir = resolveModuleDir(opts.demoDir, opts.moduleDir, opts.moduleName);
   const goldenPath = join(moduleDir, 'src', 'test', 'snapshots', `${short}.png`);
-  const { exitCode, stderr } = await runner.run(opts.demoDir, [unitTestTask(opts.variant ?? 'debug'), '--tests', opts.testFqn, '-Proborazzi.test.record=true', '--rerun']);
+  const { exitCode, stderr } = await runner.run(opts.demoDir, [unitTestTask(opts.moduleName ?? ':app', opts.variant ?? 'debug'), '--tests', opts.testFqn, '-Proborazzi.test.record=true', '--rerun']);
   if (exitCode !== 0) throw new Error(`record gradle failed (exit ${exitCode}): ${stderr.slice(-400)}`);
   if (!existsSync(goldenPath)) throw new Error(`golden not found after record: ${goldenPath}`);
   return { goldenPath };

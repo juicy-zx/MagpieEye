@@ -234,5 +234,7 @@ export async function renderPreviewViaDaemon(
 export async function selectGradleRunner(
   _uiVerifyDir: string,
 ): Promise<{ runner: GradleRunner; lane: 'hot' | 'cold'; reason: string }> {
-  return { runner: new SpawnGradleRunner(['--no-daemon']), lane: 'cold', reason: 'P0-1: daemon disabled (cold-path sandbox only)' };
+  // P0-8 批次②-fix(修正④,codex 019f6029):冷道显式 --offline(约束依赖解析拒网,与沙箱拒网互补非替代;
+  // 满足"预热后 --offline 跑通"的 D 判据)。仅沙箱冷道自动加,不加面向用户的 uiv --offline 参数。
+  return { runner: new SpawnGradleRunner(['--no-daemon', '--offline']), lane: 'cold', reason: 'P0-1: daemon disabled (cold-path sandbox only); P0-8 fix: --offline' };
 }

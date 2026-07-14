@@ -46,7 +46,7 @@ export interface PageReport {
 const JUDGE_PATHS: readonly string[] = ['parity', 'render-only', 'invariant-only'];
 const ASSERTION_SCOPES: readonly string[] = ['full', 'geometry-only', 'render-only', 'invariant-only'];
 const SUB_REASONS: readonly string[] = [
-  'tag_coverage_low', 'matching_rate_low', 'semantics_export_failed', 'stale_artifact',
+  'tag_coverage_low', 'matching_rate_low', 'semantics_export_failed', 'stale_artifact', 'module_dir_missing',
   'render_harness_error', 'figma_spec_invalid', 'native_graphics_unverified', 'fixture_unavailable',
 ];
 

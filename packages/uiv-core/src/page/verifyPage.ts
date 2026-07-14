@@ -94,6 +94,13 @@ export async function verifyPage(
   // P0-8 批次②:统一解析所选模块目录(缺省 <demoDir>/app),透传逐格 runCheck(L2) 与 source 归因。
   const moduleDir = resolveModuleDir(opts.demoDir, opts.moduleDir, opts.moduleName);
   const variant = opts.variant ?? 'debug';
+  // P0-8 批次②-fix(修正②,codex 019f6029):模块目录不存在 = 环境事实,须在 gradle 调用前 fail-closed,
+  // 且不惰性建目录(E2E 在调用前预建 fixture)。执行前判定一次,逐格短路为 module_dir_missing(runner 零调用)。
+  const moduleDirMissing = !existsSync(moduleDir);
+  const missingModuleV0: ReportV0 = {
+    schemaVersion: 0, pass: false, reason: 'inconclusive', subReason: 'module_dir_missing',
+    compileError: null, pixel: null, artifacts: { baseline: null, render: null, diff: null },
+  };
 
   for (const cell of cells) {
     const t0 = Date.now();
@@ -108,7 +115,11 @@ export async function verifyPage(
 
     let report: ReportV1;
     let reportPath: string;
-    if (route.judgePath === 'parity') {
+    if (moduleDirMissing) {
+      // 修正②:模块目录缺失 → gradle 调用前 fail-closed(不建目录),逐格 module_dir_missing;runner 零调用。
+      report = inconclusiveReport('module_dir_missing', missingModuleV0);
+      reportPath = '';
+    } else if (route.judgePath === 'parity') {
       // parity 可用态:variant 基准 nodeDir(命中 pin 且 figmaVariantNodeId)否则页 nodeId。
       const parityNodeId = ref?.judgePath === 'parity' && ref.figmaVariantNodeId ? ref.figmaVariantNodeId : opts.nodeId;
       const rc = await runCheckL2(runner, {

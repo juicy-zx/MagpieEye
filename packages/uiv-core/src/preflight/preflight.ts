@@ -12,7 +12,8 @@
 import { detectStack } from './detect.js';
 import type { DetectedStack, ModuleType, SdkValue } from './detect.js';
 
-/** 完整实测基线。JDK(Corretto21/Java17)与 OS(macOS arm64)非工程声明文件可静态解析,故不入 checks,仅留档。 */
+/** 完整实测基线。JDK(Corretto21/Java17)与 OS(macOS arm64)非工程声明文件可静态解析,故不入 checks;
+ *  修正③:改以机器可读 result.notEvaluated 标 not_evaluated(ok:null,不计入 supported),不再仅留注释。 */
 export const PREFLIGHT_BASELINE = {
   gradle: '9.5.1',
   agp: '9.0.1',
@@ -43,11 +44,19 @@ const SOFT_AXIS_IDS = ['gradle', 'agp', 'composeBom', 'robolectric', 'roborazzi'
 export interface PreflightCheck { id: string; expected: string; actual: string; ok: boolean }
 export interface PreflightWarning { code: string; message: string }
 export interface PreflightError { code: string; message: string; retryable: boolean }
+/**
+ * P0-8 批次②-fix(修正③,codex 019f6029):JDK/OS 非工程声明文件可静态解析,alpha 不做静态硬门,
+ * 但不得把"未检查"伪装成"通过"。故以机器可读(非注释)字段标 not_evaluated:ok 恒 null(≠true,不计入 pass),
+ * 独立于 checks[](不进 supported 计算);实际兼容性由 ③a 预热+冷道执行证明,此处不宣称兼容。
+ */
+export interface PreflightNotEvaluated { id: string; expected: string; actual: 'not_evaluated'; ok: null }
 export interface PreflightResult {
   supported: boolean;
   /** codex 决断:Kotlin/KGP 恒 unknown(不由 composeCompilerPlugin 代理)。 */
   kotlin: 'unknown';
   checks: PreflightCheck[];
+  /** 修正③:未评估轴(jdk/os)机器可读登记;既非 pass 也非 fail,不进 supported 计算。 */
+  notEvaluated: PreflightNotEvaluated[];
   warnings: PreflightWarning[];
 }
 export interface PreflightEnvelope {
@@ -125,7 +134,12 @@ export function buildPreflightEnvelope(s: DetectedStack): PreflightEnvelope {
 
   const supported = error === null && warnings.length === 0;
   const exitCode = error === null ? 0 : EXIT_PREFLIGHT_UNSUPPORTED;
-  return { command: 'environment.preflight', exitCode, error, pass: null, artifacts: [], result: { supported, kotlin: 'unknown', checks, warnings } };
+  // 修正③:JDK/OS 机器可读标 not_evaluated(ok:null,不计入 supported)。expected 取实测基线(见文件头/PREFLIGHT_BASELINE 注释)。
+  const notEvaluated: PreflightNotEvaluated[] = [
+    { id: 'jdk', expected: 'Corretto21', actual: 'not_evaluated', ok: null },
+    { id: 'os', expected: 'macOS-arm64', actual: 'not_evaluated', ok: null },
+  ];
+  return { command: 'environment.preflight', exitCode, error, pass: null, artifacts: [], result: { supported, kotlin: 'unknown', checks, notEvaluated, warnings } };
 }
 
 /** 静态探测目标工程声明栈 → environment.preflight envelope(共用层入口:CLI/MCP/commands 复用)。 */

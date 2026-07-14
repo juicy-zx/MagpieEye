@@ -24,6 +24,7 @@ function makeDirs(): { demoDir: string; uiVerifyDir: string } {
   const uiVerifyDir = join(root, '.ui-verify');
   mkdirSync(demoDir, { recursive: true });
   mkdirSync(uiVerifyDir, { recursive: true });
+  mkdirSync(join(demoDir, 'app'), { recursive: true });   // 修正②:默认 :app 模块目录须在 gradle 调用前存在(fail-closed fixture)
   return { demoDir, uiVerifyDir };
 }
 
@@ -54,10 +55,10 @@ describe('runCheck (injectable gradle runner)', () => {
     expect(report.pass).toBe(false);
     expect(report.compileError).toContain('e: CalibCard.kt:5: unresolved');
     expect(report.subReason).toBeNull();
-    // 固定 gradle 参数契约
+    // 固定 gradle 参数契约(修正①:限定式 :app:testDebugUnitTest)
     expect(runner.calls[0]).toEqual({
       cwd: demoDir,
-      args: ['testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true'],
+      args: [':app:testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true'],
     });
   });
   it('挽具失败(无编译特征): reason=inconclusive + subReason=render_harness_error', async () => {
@@ -114,7 +115,7 @@ describe('T2.1(D-07): UIV_RERUN=1 强制 --rerun(测量脚本专用,默认不影
     }
     expect(runner.calls[0]).toEqual({
       cwd: demoDir,
-      args: ['testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true', '--rerun'],
+      args: [':app:testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true', '--rerun'],
     });
   });
 });
@@ -136,7 +137,7 @@ describe('T2.6: runRecord(check 全过后录 golden)', () => {
     expect(r0.calls.length).toBe(0);
     const { demoDir } = makeDirs();
     const { goldenPath } = await runRecord(okRunner, { demoDir, testFqn: TEST_FQN }, true);
-    expect(rec[0]).toEqual(['testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.record=true', '--rerun']);
+    expect(rec[0]).toEqual([':app:testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.record=true', '--rerun']);
     expect(goldenPath).toBe(join(demoDir, 'app/src/test/snapshots/CalibCard.png'));
   });
 });
@@ -266,7 +267,20 @@ describe('P0-8 批次②:参数化(--module 目录 / --variant 任务派生)', (
     const { demoDir, uiVerifyDir } = makeDirs();
     const runner = new FakeRunner(1, 'infra');
     await runCheck(runner, { ...opts(demoDir, uiVerifyDir), variant: 'release' });
-    expect(runner.calls[0]!.args[0]).toBe('testReleaseUnitTest');
+    expect(runner.calls[0]!.args[0]).toBe(':app:testReleaseUnitTest');
+  });
+
+  // 修正②(codex 019f6029)正控:所选模块目录不存在 → gradle 调用前 fail-closed(module_dir_missing),
+  // 且 gradle runner 未被调用(calls 为空,证"执行前"失败);不惰性建目录。
+  it('模块目录不存在 → module_dir_missing 且 gradle 未被调用(执行前 fail-closed)', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();   // 仅建 demoDir/app;:ghost 映射目录不存在
+    const runner = new FakeRunner(0, '');
+    const { report } = await runCheck(runner, { ...opts(demoDir, uiVerifyDir), moduleName: ':ghost' });
+    expect(report.pass).toBe(false);
+    expect(report.reason).toBe('inconclusive');
+    expect(report.subReason).toBe('module_dir_missing');
+    expect(runner.calls.length).toBe(0);   // gradle 调用前失败:runner 零调用
+    expect(existsSync(join(demoDir, 'ghost'))).toBe(false);   // 不惰性建目录
   });
 });
 

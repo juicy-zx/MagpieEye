@@ -41,6 +41,7 @@ function makeFixture(): string {
   ));
   const demo = join(workdir, 'demo');
   mkdirSync(demo, { recursive: true });
+  mkdirSync(join(demo, 'app'), { recursive: true });   // 修正②:默认 :app 模块目录须在 CLI(gradle)调用前存在;mock gradlew 仍照常写 app/build/... 产物
   const template = join(workdir, 'render-template.png');   // 放 roboDir 外,免被跑前清理删除
   writePng(template, 32);
   const gradlew = join(demo, 'gradlew');

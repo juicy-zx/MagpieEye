@@ -26,9 +26,18 @@ export function resolveModuleDir(demoDir: string, moduleDir?: string, moduleName
   return projectPathToModuleDir(demoDir, moduleName ?? ':app');
 }
 
-/** Android 标准 JVM 单测任务名:variant → test<Variant>UnitTest(仅首字母大写,支持 flavor 拼接的 variant)。 */
-export function unitTestTask(variant: string): string {
+/**
+ * P0-8 批次②-fix(codex 019f6029 修正①):限定式 Gradle 单测任务名。
+ * 未限定 test<Variant>UnitTest 从工程根执行会命中多模块同名任务、--module 未真参与任务选择;
+ * 故让已解析的 Gradle project path 进任务串 → `<moduleName>:test<Variant>UnitTest`
+ * (moduleName 含前导冒号,如 :app → `:app:testDebugUnitTest`、:feature:login → `:feature:login:testFreeDebugUnitTest`)。
+ * moduleName 为空/仅冒号即抛(复用 projectPathToModuleDir 同款校验);variant 仅首字母大写,支持 flavor 拼接。
+ */
+export function unitTestTask(moduleName: string, variant: string): string {
+  if (moduleName.split(':').filter((s) => s.length > 0).length === 0) {
+    throw new Error(`invalid Gradle module path: "${moduleName}"`);
+  }
   const v = variant.trim();
   if (v.length === 0) throw new Error('variant must be non-empty');
-  return `test${v.charAt(0).toUpperCase()}${v.slice(1)}UnitTest`;
+  return `${moduleName}:test${v.charAt(0).toUpperCase()}${v.slice(1)}UnitTest`;
 }
