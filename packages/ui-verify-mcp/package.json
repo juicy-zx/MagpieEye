@@ -2,14 +2,25 @@
   "name": "@magpie-eye/ui-verify-mcp",
   "version": "0.0.1",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "bin": {
     "ui-verify-mcp": "dist/index.js"
   },
   "main": "dist/server.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepack": "tsc -b"
+  },
+  "engines": {
+    "node": ">=26.0.0",
+    "npm": ">=11.0.0"
+  },
   "dependencies": {
-    "@magpie-eye/uiv-cli": "*",
-    "@magpie-eye/uiv-core": "*",
+    "@magpie-eye/uiv-cli": "0.0.1",
+    "@magpie-eye/uiv-core": "0.0.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^3.25.0"
   }

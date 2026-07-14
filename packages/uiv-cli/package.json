@@ -2,6 +2,7 @@
   "name": "@magpie-eye/uiv-cli",
   "version": "0.0.1",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "bin": {
     "uiv": "dist/index.js"
@@ -9,7 +10,17 @@
   "exports": {
     "./commands": "./dist/commands.js"
   },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepack": "tsc -b"
+  },
+  "engines": {
+    "node": ">=26.0.0",
+    "npm": ">=11.0.0"
+  },
   "dependencies": {
-    "@magpie-eye/uiv-core": "*"
+    "@magpie-eye/uiv-core": "0.0.1"
   }
 }

@@ -9,12 +9,16 @@
  *   - pass:false 是正常返回(报告即产品,不置 isError);CliUsageError/其余异常 → isError + 文本 `uiv: <message>`,server 不崩。
  *   - 每次工具调用 finally stopOdiff(口径⑤,防 odiff 子进程 idle 悬挂);工具执行经 promise 队列串行(口径⑥)。
  */
+import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stopOdiffServer } from '@magpie-eye/uiv-core';
 import type { PageReport, ReportV1 } from '@magpie-eye/uiv-core';
 import { runBaselinePullCommand, runCheckCommand, runVerifyPageCommand } from '@magpie-eye/uiv-cli/commands';
 import type { BaselinePullParams, CheckParams, VerifyPageParams } from '@magpie-eye/uiv-cli/commands';
 import { z } from 'zod';
+
+const require = createRequire(import.meta.url);
+const packageVersion: string = require('../package.json').version;
 
 /**
  * 命令实现注入点(委托而非继承):默认绑 uiv-cli/commands 真实现,测试注入 fake(InMemoryTransport)。
@@ -37,7 +41,7 @@ const realImpl: CommandImpl = {
 type TextResult = { content: { type: 'text'; text: string }[]; isError?: true };
 
 export function createUiVerifyServer(impl: CommandImpl = realImpl): McpServer {
-  const server = new McpServer({ name: 'ui-verify', version: '0.0.1' });
+  const server = new McpServer({ name: 'ui-verify', version: packageVersion });
 
   // 口径⑥ 串行队列(~8 行):state.json 读改写 / odiff 全局单例 / demo gradle 锁均非并发安全,
   // 而 MCP 协议允许并发请求 → 尾链 promise 串行化每次工具执行。
