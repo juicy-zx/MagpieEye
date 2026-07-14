@@ -5,7 +5,8 @@
  * - 存活项逐个过 Step 1 checkL3Verdict(形状非法=调用方 bug,直接 throw,与 drop 区分);
  * 写回后全报告 validatePageReport;pass 恒不动。
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { atomicWriteFileSync } from '../../util/atomic.js';
 import { checkL3Verdict, validatePageReport } from '../report.js';
 import type { L3Verdict } from './types.js';
 import type { L3InputPack } from './inputPack.js';
@@ -68,6 +69,6 @@ export function attachL3Verdicts(pageReportPath: string, verdicts: unknown, pack
   const report = JSON.parse(readFileSync(pageReportPath, 'utf8')) as Record<string, unknown>;
   report['l3Verdicts'] = kept;
   validatePageReport(report);   // 全报告重校验(含 kept 逐项);pass 未改
-  writeFileSync(pageReportPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+  atomicWriteFileSync(pageReportPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
   return { attached: kept.length, dropped };
 }

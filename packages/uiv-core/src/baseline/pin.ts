@@ -5,8 +5,9 @@
  * 口径:scope.sourceDocumentHash = 源文档字节 sha1(对齐 magpie hashContent,非 sha256);scope 解析 fail-fast 先于拉取。
  */
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { atomicWriteFileSync } from '../util/atomic.js';
 import type { FigmaClient } from '../figma/client.js';
 import { normalizeNodesResponse } from '../figma/normalize.js';
 import { FigmaSpecInvalidError } from '../figma/types.js';
@@ -55,7 +56,7 @@ function writeSpecFromRaw(raw: unknown, fileKey: string, nodeId: string, uiVerif
   const dir = join(uiVerifyDir, 'baselines', baselineDirName(nodeId, spec.version));
   mkdirSync(dir, { recursive: true });
   const specPath = join(dir, 'spec.json');
-  writeFileSync(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
+  atomicWriteFileSync(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
   return { nodeId, specPath, baselinePngExists: existsSync(join(dir, 'baseline.png')) };
 }
 

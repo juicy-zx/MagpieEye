@@ -3,8 +3,9 @@
  * 合格格(base 设备 parity 格,L1 真产 diff)→ 三联图 + 簇坐标 + 量规 + 回填合同,落 reports/<nodeDir>/l3/。
  * uiv 进程本身零 LLM 调用:输入包供 harness 模型(轻量形态)或 provider(B3)读判。
  */
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { atomicWriteFileSync } from '../../util/atomic.js';
 import { composeTriptych } from './triptych.js';
 import { RUBRIC_ITEMS } from './types.js';
 import type { L3RubricItem } from './types.js';
@@ -78,6 +79,6 @@ export function buildL3InputPack(candidates: L3Candidate[], nodeDir: string,
     cells,
   };
   const packPath = join(l3Dir, 'l3-input.json');
-  writeFileSync(packPath, `${JSON.stringify(pack, null, 2)}\n`, 'utf8');
+  atomicWriteFileSync(packPath, `${JSON.stringify(pack, null, 2)}\n`, 'utf8');
   return { pack, packPath };
 }

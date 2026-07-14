@@ -2,9 +2,10 @@
  * T4.2:L3 三联图拼接(设计文档 2.7,轻量形态素材)。
  * 横拼 基准|渲染|diff,gutter 8px 白(#FFFFFF 不透明),顶对齐,矮图底部白填。pngjs sync API,确定性。
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { PNG } from 'pngjs';
+import { atomicWriteFileSync } from '../../util/atomic.js';
 
 export interface TriptychResult { path: string; width: number; height: number }
 
@@ -25,6 +26,6 @@ export function composeTriptych(baselinePng: string, renderedPng: string,
   PNG.bitblt(d, canvas, 0, 0, d.width, d.height, b.width + r.width + GUTTER * 2, 0);
 
   mkdirSync(dirname(outPath), { recursive: true });
-  writeFileSync(outPath, PNG.sync.write(canvas));
+  atomicWriteFileSync(outPath, PNG.sync.write(canvas));
   return { path: outPath, width, height };
 }

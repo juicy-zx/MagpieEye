@@ -7,6 +7,7 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 export const UIV_CORE_VERSION: string = require('../package.json').version
 
+export * from './util/atomic.js'
 export * from './figma/types.js'
 export * from './figma/normalize.js'
 export * from './figma/client.js'

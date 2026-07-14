@@ -1,5 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { atomicWriteFileSync } from '../util/atomic.js';
 import type { FigmaClient } from './client.js';
 
 export class CachedFigmaClient implements FigmaClient {   // 口径 1
@@ -16,7 +17,7 @@ export class CachedFigmaClient implements FigmaClient {   // 口径 1
     this.stats.networkCalls++;
     const raw = await this.inner.getNodes(fileKey, nodeId, version);
     const v = version ?? (raw as { version?: string }).version;
-    if (v) { mkdirSync(this.dir, { recursive: true }); writeFileSync(this.file(fileKey, nodeId, v), JSON.stringify(raw), 'utf8'); }
+    if (v) { mkdirSync(this.dir, { recursive: true }); atomicWriteFileSync(this.file(fileKey, nodeId, v), JSON.stringify(raw), 'utf8'); }
     return raw;
   }
   async getImages(fileKey: string, nodeIds: string[], scale: number): Promise<Record<string, string | null>> {

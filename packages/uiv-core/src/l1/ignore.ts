@@ -2,8 +2,9 @@
  * --ignore-region 持久化(T1.2 Step 6)。
  * 格式:.ui-verify/ignore-regions.json = { "<nodeId>": [{x,y,w,h}] };文件不存在视为空表。
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { atomicWriteFileSync } from '../util/atomic.js';
 import type { IgnoreRegion } from './engine.js';
 
 type IgnoreTable = Record<string, IgnoreRegion[]>;
@@ -31,5 +32,5 @@ export function addIgnoreRegion(uiVerifyDir: string, nodeId: string, r: IgnoreRe
   const table = readTable(uiVerifyDir);
   table[nodeId] = [...(table[nodeId] ?? []), r];
   mkdirSync(uiVerifyDir, { recursive: true });
-  writeFileSync(tablePath(uiVerifyDir), `${JSON.stringify(table, null, 2)}\n`, 'utf8');
+  atomicWriteFileSync(tablePath(uiVerifyDir), `${JSON.stringify(table, null, 2)}\n`, 'utf8');
 }

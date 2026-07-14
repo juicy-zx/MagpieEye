@@ -12,6 +12,8 @@ local.properties
 demo-android/.robolectric-deps/
 .ui-verify/daemon.sock
 .ui-verify/daemon.log
+.ui-verify/.uiv.lock
+*.uivtmp
 experiments/fastlane-spike/*/build/
 experiments/fastlane-spike/*/.gradle/
 .uiv-cache/

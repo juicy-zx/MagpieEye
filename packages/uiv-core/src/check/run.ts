@@ -4,8 +4,9 @@
  * v0 pass 语义:pass = 渲染管线成功(gradle exit 0 且 rendered.png 收集到);
  * L1 结果只进 pixel 字段(advisory),不参与判定。
  */
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { atomicCopyFileSync, atomicWriteFileSync } from '../util/atomic.js';
 import { baselineDirName } from '../baseline/pull.js';
 import { runL1 } from '../l1/engine.js';
 import { loadIgnoreRegions } from '../l1/ignore.js';
@@ -73,7 +74,7 @@ function writeReport(reportsDir: string, report: ReportV0): { report: ReportV0; 
   const validated = validateReportV0(report);
   mkdirSync(reportsDir, { recursive: true });
   const reportPath = join(reportsDir, 'report.json');
-  writeFileSync(reportPath, `${JSON.stringify(validated, null, 2)}\n`, 'utf8');
+  atomicWriteFileSync(reportPath, `${JSON.stringify(validated, null, 2)}\n`, 'utf8');
   return { report: validated, reportPath };
 }
 
@@ -139,7 +140,7 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
   }
   mkdirSync(renderDir, { recursive: true });
   const renderedPng = join(renderDir, 'rendered.png');
-  copyFileSync(found, renderedPng);
+  atomicCopyFileSync(found, renderedPng);
 
   let pixel: PixelResult | null = null;
   let diffPng: string | null = null;

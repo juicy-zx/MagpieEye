@@ -22,6 +22,7 @@ import type { CliIgnoreRegion } from './args.js';
 import { selectMappingEntry } from './mapping-entry.js';
 import { isFastLaneEnabled } from './fastlane.js';
 import { renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
+import { withWorkspaceLock } from './workspace-lock.js';
 
 type Lane = 'fast' | 'slow' | 'fast-fallback-slow';
 
@@ -48,6 +49,8 @@ export async function runCheckCommand(
   p: CheckParams, cwd: string,
 ): Promise<{ report: ReportV1; reportPath: string }> {
   const uiVerifyDir = path.resolve(cwd, '.ui-verify');
+  // P0-9:workspace 锁边界(CLI/MCP/直接 import commands 共用变更边界)。整个 check 编排持锁,finally 释放。
+  return withWorkspaceLock(uiVerifyDir, async () => {
   const testFqn = previewToTestFqn(p.preview);
   if (p.ignoreRegion !== undefined) {
     addIgnoreRegion(uiVerifyDir, p.node, p.ignoreRegion);   // 先持久化再执行
@@ -94,6 +97,7 @@ export async function runCheckCommand(
     // Codex 裁定:本层(CLI command)与 MCP wrapper 层的 finally 双调用=幂等双保险(stopOdiffServer 幂等),有意为之,勿删。
     stopOdiffServer();
   }
+  });
 }
 
 export interface VerifyPageParams {
@@ -106,6 +110,8 @@ export async function runVerifyPageCommand(
   p: VerifyPageParams, cwd: string,
 ): Promise<{ report: PageReport; reportPath: string }> {
   const uiVerifyDir = path.resolve(cwd, '.ui-verify');
+  // P0-9:workspace 锁边界(与 CLI/MCP 共用)。整页外循环持锁,finally 释放。
+  return withWorkspaceLock(uiVerifyDir, async () => {
   // 统一调用契约(跨章第 1 条):version/minScore/states 取自 mapping entry。
   const entry = await readMappingEntry(uiVerifyDir, p.node, p.version);
   const states = (p.states && p.states.length > 0) ? p.states : (entry.states?.map((s) => s.name) ?? []);
@@ -131,6 +137,7 @@ export async function runVerifyPageCommand(
     // D-07(a) + Codex 裁定:命令层与 MCP wrapper 层 finally 双调用=幂等双保险,勿删。
     stopOdiffServer();
   }
+  });
 }
 
 export interface BaselinePullParams { fixture: string; file: string; node: string }
@@ -140,7 +147,10 @@ export async function runBaselinePullCommand(
   p: BaselinePullParams, cwd: string,
 ): Promise<{ specPath: string; baselinePngExists: boolean; baselinePngPath: string }> {
   const uiVerifyDir = path.resolve(cwd, '.ui-verify');
-  const client = new FixtureFigmaClient(path.resolve(cwd, p.fixture));
-  const r = await pullBaseline(client, p.file, p.node, uiVerifyDir);
-  return { specPath: r.specPath, baselinePngExists: r.baselinePngExists, baselinePngPath: r.baselinePngPath };
+  // P0-9:workspace 锁边界(与 CLI/MCP 共用)。spec.json/mapping.json 落盘持锁。
+  return withWorkspaceLock(uiVerifyDir, async () => {
+    const client = new FixtureFigmaClient(path.resolve(cwd, p.fixture));
+    const r = await pullBaseline(client, p.file, p.node, uiVerifyDir);
+    return { specPath: r.specPath, baselinePngExists: r.baselinePngExists, baselinePngPath: r.baselinePngPath };
+  });
 }

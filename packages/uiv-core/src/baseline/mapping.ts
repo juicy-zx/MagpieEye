@@ -5,8 +5,9 @@
  * 注:scope.sourceDocumentHash 是源文档 sha1(对齐 magpie hashContent,由 pin 侧写入);sig.digest 是 mapping.json 字节 sha256——两者用途不同不得混用。
  */
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { atomicWriteFileSync } from '../util/atomic.js';
 
 export interface MappingScope { sourceDocumentPath: string; sourceDocumentHash: string; pinnedAt: string }
 export interface MappingStateRef { name: string; judgePath: 'parity' | 'invariant-only'; figmaVariantNodeId?: string }
@@ -25,8 +26,8 @@ export function upsertMappingEntry(uiVerifyDir: string, entry: MappingEntry): st
   const i = entries.findIndex((e) => key(e) === key(entry));
   if (i >= 0) entries[i] = entry; else entries.push(entry);
   const body = `${JSON.stringify(entries, null, 2)}\n`;
-  writeFileSync(mappingPath, body, 'utf8');
-  writeFileSync(`${mappingPath}.sig`,
+  atomicWriteFileSync(mappingPath, body, 'utf8');
+  atomicWriteFileSync(`${mappingPath}.sig`,
     `${JSON.stringify({ schemaVersion: 1, writtenBy: 'uiv', algo: 'sha256', digest: sha256(body) })}\n`, 'utf8');
   return mappingPath;
 }

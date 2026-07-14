@@ -4,8 +4,9 @@
  * baseline.png 只探测存在性不阻断(fixture 模式下 REST images 通道不可用,
  * PNG 由主会话经 MCP 落盘,来源通道待 Codex 决断)。
  */
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { atomicWriteFileSync } from '../util/atomic.js';
 import type { FigmaClient } from '../figma/client.js';
 import { normalizeNodesResponse } from '../figma/normalize.js';
 import { L2Error } from '../l2/types.js';
@@ -43,7 +44,7 @@ export async function pullBaseline(client: FigmaClient, fileKey: string, nodeId:
   mkdirSync(dir, { recursive: true });
 
   const specPath = join(dir, 'spec.json');
-  writeFileSync(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
+  atomicWriteFileSync(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
 
   const baselinePngPath = join(dir, 'baseline.png');
   const baselinePngExists = existsSync(baselinePngPath);

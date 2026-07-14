@@ -13,17 +13,18 @@
  * 本入口只负责 argv 解析 / IO 呈现(末行路径、--json、WARN 打印)/ exitCode / 退出治理;
  * check/verify-page/baseline-pull 的实际编排复用 commands.ts(与 MCP server 同源)。
  */
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
-  attachL3Verdicts, detectVersionDrift, extractMetaVersion, pinBaseline, runRecord, toJUnitXml,
+  atomicWriteFileSync, attachL3Verdicts, detectVersionDrift, extractMetaVersion, pinBaseline, runRecord, toJUnitXml,
   validatePageReport, validateReportV1,
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
 import { selectGradleRunner } from './gradle-runner.js';
 import { runBaselinePullCommand, runCheckCommand, runVerifyPageCommand } from './commands.js';
+import { EXIT_WORKSPACE_LOCKED, WorkspaceLockedError, withWorkspaceLock } from './workspace-lock.js';
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
@@ -73,6 +74,8 @@ async function main(): Promise<void> {
   }
 
   if (cmd.kind === 'pin') {
+    // P0-9:pin 写 spec.json/mapping.json(+.uiv-cache)持锁(CLI-only 写命令,锁边界在此)。
+    await withWorkspaceLock(uiVerifyDir, async () => {
     // 口径 4:--fixture→Fixture,否则 FIGMA_PAT→Rest,双缺→usage error(B1);统一经 CachedFigmaClient 缓存。
     let inner: FigmaClient;
     if (cmd.fixture !== null) inner = new FixtureFigmaClient(path.resolve(cmd.fixture));
@@ -98,6 +101,7 @@ async function main(): Promise<void> {
       ? 'uiv: re-persist requested (.magpie/uiv-repersist.json)'
       : r.entry.scope ? 'uiv: scoped pin' : 'uiv: standalone pin');
     console.log(r.mappingPath);   // 最后一行 = mapping.json 绝对路径;成功 exit 0
+    });
     return;
   }
 
@@ -115,6 +119,8 @@ async function main(): Promise<void> {
   }
 
   if (cmd.kind === 'report') {
+    // P0-9:report --junit 读 .ui-verify 报告 + 落 junit.xml,持锁 + 原子写。
+    await withWorkspaceLock(uiVerifyDir, async () => {
     // T4.3:纯转换器,exit 恒 0(转换成功语义;门禁职责在 verify-page,--in 内容 schema 非法走异常 exit 2)。
     const inPath = path.resolve(cwd, cmd.in);
     const raw: unknown = JSON.parse(await readFile(inPath, 'utf8'));
@@ -123,14 +129,17 @@ async function main(): Promise<void> {
     const xml = toJUnitXml(report, cmd.suite !== null ? { suiteName: cmd.suite } : {});
     const outPath = cmd.out !== null ? path.resolve(cwd, cmd.out) : path.join(path.dirname(inPath), 'junit.xml');
     await mkdir(path.dirname(outPath), { recursive: true });   // --out 目录未必已存在(同 pin/verify-page 惯例)
-    await writeFile(outPath, xml, 'utf8');
+    atomicWriteFileSync(outPath, xml, 'utf8');
     console.log(outPath);   // 最后一行 = junit.xml 绝对路径
+    });
     return;
   }
 
   if (cmd.kind === 'l3-attach') {
     // T4.2 轻量形态回填:读 verdicts.json → attachL3Verdicts 证据锚定过滤 → 打印计数。
     // §2.3:命令合法调用后执行期发现的数据问题(非法 JSON / 内部校验 throw)→ exit 1(独立于 CliUsageError=exit 2)。
+    // P0-9:attachL3Verdicts 写回 page-report.json 持锁(数据错误仍走内层 try→exit 1,锁获取失败走外层→exit 75)。
+    await withWorkspaceLock(uiVerifyDir, async () => {
     try {
       const reportPath = path.resolve(cwd, cmd.report);
       const packPath = path.resolve(cwd, cmd.pack);
@@ -141,6 +150,7 @@ async function main(): Promise<void> {
       console.error(`uiv: ${(e as Error).message}`);
       process.exitCode = 1;
     }
+    });
     return;
   }
 
@@ -154,11 +164,14 @@ async function main(): Promise<void> {
   if (cmd.record) {
     // --record 罕用(T2.6 录 golden),不入 MCP 工具面;抽取后 runCheckCommand 不回传 runner,
     // record 分支就地重选一次(选路确定性,行为等价:cold=纯 SpawnGradleRunner 构造,hot=一次 500ms ping)。
-    const sel = await selectGradleRunner(uiVerifyDir);
-    const { goldenPath } = await runRecord(
-      sel.runner, { demoDir: path.resolve(cwd, cmd.demo), testFqn: previewToTestFqn(cmd.preview) }, report.pass,
-    );
-    console.log(`golden recorded: ${goldenPath}\nhint: git add ${goldenPath} && git commit`);
+    // P0-9:record 走 gradle 录 golden = 独立写命令,自持 workspace 锁(check 主体的锁已在 runCheckCommand 内释放)。
+    await withWorkspaceLock(uiVerifyDir, async () => {
+      const sel = await selectGradleRunner(uiVerifyDir);
+      const { goldenPath } = await runRecord(
+        sel.runner, { demoDir: path.resolve(cwd, cmd.demo), testFqn: previewToTestFqn(cmd.preview) }, report.pass,
+      );
+      console.log(`golden recorded: ${goldenPath}\nhint: git add ${goldenPath} && git commit`);
+    });
   }
   console.log(reportPath);   // 最后一行 = report.json v1 绝对路径
 }
@@ -184,7 +197,11 @@ function flushAndExit(): void {
 }
 
 main().then(flushAndExit, (e: unknown) => {
-  if (e instanceof RecordRefusedError) {
+  if (e instanceof WorkspaceLockedError) {
+    // P0-9:后到进程遇活锁 → 可判读退出码(EX_TEMPFAIL=75,可重试),不阻塞等待。
+    console.error(`uiv: ${e.message}`);
+    process.exitCode = EXIT_WORKSPACE_LOCKED;
+  } else if (e instanceof RecordRefusedError) {
     console.error(`uiv: ${e.message}`);
     process.exitCode = 3;
   } else if (e instanceof CliUsageError) {

@@ -5,9 +5,10 @@
  * 产物目录口径:semantics.json 复制到 renders/<nodeDir>/;report.json/diff 归 reports/<nodeDir>/。
  * core 全测;CLI 层薄壳只接线。
  */
-import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
+import { atomicCopyFileSync, atomicWriteFileSync } from '../util/atomic.js';
 import { baselineDirName } from '../baseline/pull.js';
 import { FigmaSpecInvalidError } from '../figma/types.js';
 import type { Spec, SpecNode } from '../figma/types.js';
@@ -100,7 +101,7 @@ export async function runCheckL2(
   const write = (r: ReportV1): { report: ReportV1; reportPath: string; statePath: string } => {
     r.lane = opts.lane ?? 'slow';   // T2.8:单一出口盖章车道来源
     const validated = validateReportV1(r);
-    writeFileSync(reportPath, `${JSON.stringify(validated, null, 2)}\n`, 'utf8');
+    atomicWriteFileSync(reportPath, `${JSON.stringify(validated, null, 2)}\n`, 'utf8');
     return { report: validated, reportPath, statePath };
   };
 
@@ -125,7 +126,7 @@ export async function runCheckL2(
   }
   const renderDir = join(opts.uiVerifyDir, 'renders', nodeDir, ...cellSeg);
   mkdirSync(renderDir, { recursive: true });
-  copyFileSync(semSrc, join(renderDir, 'semantics.json'));
+  atomicCopyFileSync(semSrc, join(renderDir, 'semantics.json'));
 
   let figmaRoot: FigmaNode;
   let dump: SemanticsDump;
@@ -159,7 +160,7 @@ export async function runCheckL2(
     const blockingSeverities = opts.blockingSeverities ?? ['blocking', 'high'];
     const blockingHits = (l2.structural?.violations ?? []).filter((v) => blockingSeverities.includes(v.severity)).length;
     const state = stepState(prevState, { blockingHits, score: l2.score, pass: l2.pass });
-    writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+    atomicWriteFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
   }
 
   return write({ ...l2, compileError: null, pixel: v0.report.pixel, artifacts: v0.report.artifacts });

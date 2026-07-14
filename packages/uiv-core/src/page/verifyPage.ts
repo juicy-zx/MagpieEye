@@ -8,8 +8,9 @@
  *   pixel5-dark × 无 pin 态;fontScale1.3/smallPhone/tablet × 一切态 → render-only / render-only
  * state.json 防震荡不参与(disableState);逐格产物隔离到 cells/<cellId>/。
  */
-import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { atomicCopyFileSync, atomicWriteFileSync } from '../util/atomic.js';
 import { baselineDirName } from '../baseline/pull.js';
 import type { MappingStateRef } from '../baseline/mapping.js';
 import { SEVERITY_WEIGHT } from '../l2/constants.js';
@@ -158,7 +159,7 @@ export async function verifyPage(
   const reportsDir = join(opts.uiVerifyDir, 'reports', nodeDir);
   mkdirSync(reportsDir, { recursive: true });
   const pageReportPath = join(reportsDir, 'page-report.json');
-  writeFileSync(pageReportPath, `${JSON.stringify(pageReport, null, 2)}\n`, 'utf8');
+  atomicWriteFileSync(pageReportPath, `${JSON.stringify(pageReport, null, 2)}\n`, 'utf8');
 
   // T4.2:L1/L2 全过才触发 L3(轻量形态生成输入包;provider 注入时回填 l3Verdicts)。pass=false 分支零调用(触发前置);
   // 整段 advisory:失败仅 warn,不改 pass/返回值/退出码(同 L1 容错先例)。写盘后、--out 复制前接线,令 --out 拿到最终版。
@@ -178,7 +179,7 @@ export async function verifyPage(
 
   if (opts.outPath !== undefined) {
     mkdirSync(dirname(opts.outPath), { recursive: true });
-    copyFileSync(pageReportPath, opts.outPath);   // --out 另复制一份(magpie 传 .magpie/sessions/<id>/);attach 已写回,复制的是最终版
+    atomicCopyFileSync(pageReportPath, opts.outPath);   // --out 另复制一份(magpie 传 .magpie/sessions/<id>/);attach 已写回,复制的是最终版
   }
   return { report: finalReport, reportPath: pageReportPath };
 }
