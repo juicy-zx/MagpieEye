@@ -51,12 +51,12 @@ describe('T2.1 双车道 runner', () => {
     expect((s.runner as SpawnGradleRunner).extraArgs).toContain('--no-daemon');
   });
 
-  it('selectGradleRunner: ping ok → hot(UdsGradleRunner)', async () => {
+  it('selectGradleRunner: P0-1 硬禁用 —— 即便 daemon 存活(ping 可通)仍恒返回冷道', async () => {
     const d = dir();
     await fakeDaemon(join(d, 'daemon.sock'), (req) => ({ id: req.id, ok: true, payload: { pong: true } }));
     const s = await selectGradleRunner(d);
-    expect(s.lane).toBe('hot');
-    expect(s.runner).toBeInstanceOf(UdsGradleRunner);
+    expect(s.lane).toBe('cold');
+    expect(s.runner).toBeInstanceOf(SpawnGradleRunner);
   });
 
   it('selectGradleRunner: sock 为普通文件 → cold', async () => {

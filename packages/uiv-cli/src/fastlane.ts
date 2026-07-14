@@ -6,6 +6,11 @@
  */
 export const FAST_LANE_PREVIEWS = new Set<string>(['com.magpie.uiv.demo.CalibCardPreview']);
 
-export function isFastLaneEnabled(previewFqn: string, env: NodeJS.ProcessEnv = process.env): boolean {
-  return FAST_LANE_PREVIEWS.has(previewFqn) && env.UIV_FASTLANE !== '0';
+/**
+ * P0-1 alpha:冷路径沙箱为唯一交付。daemon 托管的快车道 worker 尚未纳入沙箱,代码级硬禁用
+ * (无逃生开关)—— 恒 false,令 commands.ts 中 renderPreviewViaDaemon 分支永不进入。
+ * 白名单常量 FAST_LANE_PREVIEWS / UIV_FASTLANE 语义保留,待 P1 daemon 沙箱化后复活本函数逻辑。
+ */
+export function isFastLaneEnabled(_previewFqn: string, _env: NodeJS.ProcessEnv = process.env): boolean {
+  return false;
 }
