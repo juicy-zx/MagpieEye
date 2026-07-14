@@ -172,14 +172,15 @@ describe('runCheckL2(uiv check 接入 L2,fixture 级不跑 gradle)', () => {
   });
 
   // T3.3 复用面:semanticsMinMtimeMs(陈旧 dump 门)+ disableState(逐格不参与防震荡)。
-  it('T3.3 semanticsMinMtimeMs:semantics.json 早于门 → semantics_export_failed(防上一格陈旧 dump 复用)', async () => {
+  // P0-2:存在但早于门的 dump 判 stale_artifact(陈旧回填),与 semantics_export_failed(文件缺失)区分。
+  it('T3.3 semanticsMinMtimeMs:semantics.json 早于门 → stale_artifact(防上一格陈旧 dump 复用)', async () => {
     const { demoDir, uiVerifyDir } = await setup(goodDump());
     const semPath = join(demoDir, 'app', 'build', 'uiv', 'CalibCard.semantics.json');
     const old = new Date(Date.now() - 600_000);
     utimesSync(semPath, old, old);
     const { report } = await runCheckL2(new FakeRunner(0, ''), { ...opts(demoDir, uiVerifyDir), semanticsMinMtimeMs: Date.now() });
     expect(report.reason).toBe('inconclusive');
-    expect(report.subReason).toBe('semantics_export_failed');
+    expect(report.subReason).toBe('stale_artifact');
   });
 
   it('T3.3 disableState:不写 state.json,regression false', async () => {
@@ -188,6 +189,105 @@ describe('runCheckL2(uiv check 接入 L2,fixture 级不跑 gradle)', () => {
     expect(existsSync(statePath)).toBe(false);
     expect(report.regression).toBe(false);
     expect(report.pass).toBe(true);
+  });
+});
+
+// P0-2 陈旧产物门(默认启用)常驻回归:经公开 uiv check 共用路径 runCheckL2,mock runner 模拟
+// gradle up-to-date / golden 回退。防假绿:陈旧文件均为合法白 PNG / 合法 goodDump——若被采用必然通过,
+// 故不 pass 只可能来自新鲜度门(而非解析失败)。
+describe('P0-2 陈旧产物门(渲染 PNG + semantics 双门,默认启用)', () => {
+  const NODE_DIR = '1-100@T1_0A_V1';
+  const STALE_MS = 600_000;
+  const renderPath = (u: string): string => join(u, 'renders', NODE_DIR, 'rendered.png');
+  const semRenderPath = (u: string): string => join(u, 'renders', NODE_DIR, 'semantics.json');
+  const ageFile = (p: string): void => { const t = new Date(Date.now() - STALE_MS); utimesSync(p, t, t); };
+
+  /** spec.json 就位但不预写任何渲染/语义产物,由各序列自行播种新鲜度。 */
+  async function setupSpecOnly(): Promise<{ demoDir: string; uiVerifyDir: string }> {
+    const root = mkdtempSync(join(tmpdir(), 'uiv-p02-'));
+    const demoDir = join(root, 'demo-android');
+    const uiVerifyDir = join(root, '.ui-verify');
+    mkdirSync(demoDir, { recursive: true });
+    mkdirSync(uiVerifyDir, { recursive: true });
+    await pullBaseline(new FixtureFigmaClient(FIXTURE), 'FILEKEY', '1:100', uiVerifyDir);
+    return { demoDir, uiVerifyDir };
+  }
+
+  /** 陈旧渲染候选:tier②(含短名、非 _actual/_compare,跑前清理不删)合法白 PNG;无 golden 兜底。 */
+  function seedStaleRender(demoDir: string): void {
+    const dir = join(demoDir, 'app', 'build', 'outputs', 'roborazzi');
+    mkdirSync(dir, { recursive: true });
+    const p = join(dir, 'com.magpie.uiv.demo.CalibCardScreenshotTest.CalibCard.png');
+    writeWhitePng(p); ageFile(p);
+  }
+
+  /** 陈旧语义 dump:合法 goodDump(与正控同内容,若被采用必 L2 通过)。 */
+  function seedStaleSemantics(demoDir: string): void {
+    const dir = join(demoDir, 'app', 'build', 'uiv');
+    mkdirSync(dir, { recursive: true });
+    const p = join(dir, 'CalibCard.semantics.json');
+    writeFileSync(p, JSON.stringify(goodDump()), 'utf8'); ageFile(p);
+  }
+
+  /** 模拟本轮 gradle:按需在 run() 内落新鲜(mtime=now)_actual / semantics;up-to-date 时两者皆不写。 */
+  class SimRunner implements GradleRunner {
+    constructor(private readonly freshActual: boolean, private readonly freshSem: boolean) {}
+    async run(cwd: string): Promise<{ exitCode: number; stderr: string }> {
+      if (this.freshActual) {
+        const dir = join(cwd, 'app', 'build', 'outputs', 'roborazzi');
+        mkdirSync(dir, { recursive: true });
+        writeWhitePng(join(dir, 'CalibCard_actual.png'));
+      }
+      if (this.freshSem) {
+        const dir = join(cwd, 'app', 'build', 'uiv');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, 'CalibCard.semantics.json'), JSON.stringify(goodDump()), 'utf8');
+      }
+      return { exitCode: 0, stderr: '' };
+    }
+  }
+
+  it('① 陈旧渲染 PNG + 本轮新 semantics → 不 pass + stale_artifact;陈旧渲染未复制进 renders', async () => {
+    const { demoDir, uiVerifyDir } = await setupSpecOnly();
+    seedStaleRender(demoDir);
+    const { report } = await runCheckL2(new SimRunner(false, true), opts(demoDir, uiVerifyDir));
+    expect(report.pass).toBe(false);
+    expect(report.reason).toBe('inconclusive');
+    expect(report.subReason).toBe('stale_artifact');
+    expect(existsSync(renderPath(uiVerifyDir))).toBe(false);   // ⑤ 陈旧渲染未复制
+  });
+
+  it('② 本轮新渲染 PNG + 陈旧 semantics → 不 pass + stale_artifact;陈旧 semantics 未复制进 renders', async () => {
+    const { demoDir, uiVerifyDir } = await setupSpecOnly();
+    seedStaleSemantics(demoDir);
+    const { report } = await runCheckL2(new SimRunner(true, false), opts(demoDir, uiVerifyDir));
+    expect(report.pass).toBe(false);
+    expect(report.reason).toBe('inconclusive');
+    expect(report.subReason).toBe('stale_artifact');
+    expect(existsSync(semRenderPath(uiVerifyDir))).toBe(false);   // ⑤ 陈旧 semantics 未复制
+  });
+
+  it('③ 双陈旧(gradle up-to-date 零新产物)→ 不 pass + stale_artifact;两者均未复制进 renders', async () => {
+    const { demoDir, uiVerifyDir } = await setupSpecOnly();
+    seedStaleRender(demoDir);
+    seedStaleSemantics(demoDir);
+    const { report } = await runCheckL2(new SimRunner(false, false), opts(demoDir, uiVerifyDir));
+    expect(report.pass).toBe(false);
+    expect(report.reason).toBe('inconclusive');
+    expect(report.subReason).toBe('stale_artifact');
+    expect(existsSync(renderPath(uiVerifyDir))).toBe(false);
+    expect(existsSync(semRenderPath(uiVerifyDir))).toBe(false);
+  });
+
+  it('④ 正控:渲染 + semantics 均本轮生成 → 正常 pass;产物复制进 renders', async () => {
+    const { demoDir, uiVerifyDir } = await setupSpecOnly();
+    const { report } = await runCheckL2(new SimRunner(true, true), opts(demoDir, uiVerifyDir));
+    expect(report.pass).toBe(true);
+    expect(report.reason).toBeNull();
+    expect(report.subReason).toBeNull();
+    expect(report.score).toBe(1);
+    expect(existsSync(renderPath(uiVerifyDir))).toBe(true);
+    expect(existsSync(semRenderPath(uiVerifyDir))).toBe(true);
   });
 });
 

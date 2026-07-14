@@ -88,6 +88,10 @@ export interface RunCheckL2Opts extends CheckOpts {
 export async function runCheckL2(
   runner: GradleRunner, opts: RunCheckL2Opts,
 ): Promise<{ report: ReportV1; reportPath: string; statePath: string }> {
+  // P0-2 陈旧产物门基准:本次编排起点(runCheck 内 gradle 实际启动更晚,故本轮真产出的 semantics dump
+  // mtime 必晚于 t0)。慢车道默认阈值取 t0-1000ms 容差(与 run.ts fresh() 同口径,吸收"dump 在 t0 前极短
+  // 窗口内落盘"的时序);gradle up-to-date 残留的上一轮 dump(远早于本轮)仍被拒。
+  const t0 = Date.now();
   // 快车道:worker PNG 经 preRenderedPng 短路 gradle,复用 runCheck 的 copy+L1+成功判定主链。
   const v0 = await runCheck(runner, opts.preRendered ? { ...opts, preRenderedPng: opts.preRendered.renderedPng } : opts);
   const nodeDir = baselineDirName(opts.nodeId, opts.version);
@@ -119,10 +123,16 @@ export async function runCheckL2(
   // 快车道 = worker 导出的同格式语义树(opts.preRendered.semanticsPath)。
   const shortName = (opts.testFqn.split('.').at(-1) ?? '').replace(/ScreenshotTest$/, '').replace(/Test$/, '');
   const semSrc = opts.preRendered?.semanticsPath ?? join(opts.demoDir, 'app', 'build', 'uiv', `${shortName}.semantics.json`);
-  // T3.3:mtime 门——semantics.json 早于本格 gradle 启动即判陈旧 dump 复用(防上一格残留冒充本格)。
-  if (!existsSync(semSrc)
-    || (opts.semanticsMinMtimeMs !== undefined && statSync(semSrc).mtimeMs < opts.semanticsMinMtimeMs)) {
+  // P0-2 陈旧产物门(默认启用):文件缺失 → semantics_export_failed(导出真失败);
+  // 存在但早于本轮 gradle 启动 → stale_artifact(gradle up-to-date 回填上一轮 dump)。
+  // 阈值:显式 semanticsMinMtimeMs(verify-page 逐格)精确沿用;否则慢车道默认 t0-1000ms;
+  // 快车道(preRendered)语义树由 daemon worker 现产,新鲜度经 daemon 流程保证,不设默认门。
+  if (!existsSync(semSrc)) {
     return write({ ...base, reason: 'inconclusive', subReason: 'semantics_export_failed' });
+  }
+  const semStaleThreshold = opts.semanticsMinMtimeMs ?? (opts.preRendered === undefined ? t0 - 1000 : undefined);
+  if (semStaleThreshold !== undefined && statSync(semSrc).mtimeMs < semStaleThreshold) {
+    return write({ ...base, reason: 'inconclusive', subReason: 'stale_artifact' });
   }
   const renderDir = join(opts.uiVerifyDir, 'renders', nodeDir, ...cellSeg);
   mkdirSync(renderDir, { recursive: true });

@@ -8,7 +8,7 @@ export interface ReportV0 {
   schemaVersion: 0;
   pass: boolean;
   reason: 'inconclusive' | null;
-  subReason: 'render_harness_error' | 'figma_spec_invalid' | null;
+  subReason: 'render_harness_error' | 'figma_spec_invalid' | 'stale_artifact' | null;   // P0-2:陈旧产物门(run.ts 收集层可产 stale_artifact)
   compileError: string | null;
   pixel: PixelResult | null;                       // advisory,不参与 pass
   artifacts: { baseline: string | null; render: string | null; diff: string | null };
@@ -52,8 +52,9 @@ export function validateReportV0(x: unknown): ReportV0 {
   if (r['reason'] !== null && r['reason'] !== 'inconclusive') {
     fail('reason', "'inconclusive' | null", r['reason']);
   }
-  if (r['subReason'] !== null && r['subReason'] !== 'render_harness_error' && r['subReason'] !== 'figma_spec_invalid') {
-    fail('subReason', "'render_harness_error' | 'figma_spec_invalid' | null", r['subReason']);
+  if (r['subReason'] !== null && r['subReason'] !== 'render_harness_error'
+    && r['subReason'] !== 'figma_spec_invalid' && r['subReason'] !== 'stale_artifact') {
+    fail('subReason', "'render_harness_error' | 'figma_spec_invalid' | 'stale_artifact' | null", r['subReason']);
   }
   checkStringOrNull(r['compileError'], 'compileError');
   checkPixel(r['pixel'], 'pixel');

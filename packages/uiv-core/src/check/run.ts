@@ -130,10 +130,16 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     // T2.6 三级优先+新鲜度门(章内设计):①本轮 _actual ②本轮非 _compare(旧 added 形态)③golden(unchanged 零产物);
     // 叠加跑前清理后,①②只可能命中本轮产物;mtime 早于本轮 gradle 启动(t0)的候选仍一律拒收(二道防线)。
     const goldenPath = join(opts.demoDir, 'app', 'src', 'test', 'snapshots', `${shortName}.png`);
+    const actualCand = findNewestPng(roboDir, `${shortName}_actual`);
+    const nonCompareCand = findNewestPng(roboDir, shortName, (n) => n.endsWith('_compare.png'));
     const fresh = (p: string | null): string | null => (p !== null && statSync(p).mtimeMs >= t0 - 1000 ? p : null);
-    found = fresh(findNewestPng(roboDir, `${shortName}_actual`))
-      ?? fresh(findNewestPng(roboDir, shortName, (n) => n.endsWith('_compare.png')))
-      ?? (existsSync(goldenPath) ? goldenPath : null);
+    found = fresh(actualCand) ?? fresh(nonCompareCand) ?? (existsSync(goldenPath) ? goldenPath : null);
+    // P0-2 陈旧产物门(默认启用):①② 候选存在但均早于本轮 gradle 启动(gradle up-to-date 回填上一轮渲染)、
+    // 且无 golden 兜底 → stale_artifact(区别于"从未产出任何候选"= render_harness_error)。
+    // golden 兜底(compare 通过零产物,渲染实等于 golden)保留旧语义:此时本轮语义 dump 的新鲜度由 runCheckL2 独立把门。
+    if (found === null && (actualCand !== null || nonCompareCand !== null)) {
+      return writeReport(reportsDir, { ...base, reason: 'inconclusive', subReason: 'stale_artifact' });
+    }
   }
   if (found === null) {
     return writeReport(reportsDir, { ...base, reason: 'inconclusive', subReason: 'render_harness_error' });

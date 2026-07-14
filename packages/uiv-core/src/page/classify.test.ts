@@ -22,14 +22,15 @@ function mkViolation(property: string, over: Partial<Violation> = {}): Violation
 }
 
 describe('classifyCell', () => {
-  it('① SUBREASON_CLASS 覆盖 SubReason 全 7 键且逐项符合表', () => {
+  it('① SUBREASON_CLASS 覆盖 SubReason 全 8 键且逐项符合表', () => {
     expect(SUBREASON_CLASS).toEqual({
       tag_coverage_low: 'implementation_gap', matching_rate_low: 'implementation_gap',
       semantics_export_failed: 'environment_gap', render_harness_error: 'environment_gap',
+      stale_artifact: 'environment_gap',
       figma_spec_invalid: 'environment_gap',
       native_graphics_unverified: 'environment_gap', fixture_unavailable: 'implementation_gap',
     });
-    expect(Object.keys(SUBREASON_CLASS)).toHaveLength(7);
+    expect(Object.keys(SUBREASON_CLASS)).toHaveLength(8);
   });
 
   it('② violations 非空(无 missing/编译)→ [behavior_drift]', () => {

@@ -81,10 +81,14 @@ export interface PixelDiagnostic {
   semChildCount?: number; figChildCount?: number;
 }
 
-/** report.json 顶层 reason=inconclusive 时的细分(设计文档 2.4 节/步骤 5)。 */
+/**
+ * report.json 顶层 reason=inconclusive 时的细分(设计文档 2.4 节/步骤 5)。
+ * stale_artifact(P0-2):本轮渲染 PNG/semantics 未真生成(gradle up-to-date 回填上一轮 / golden 回退),
+ * 与 semantics_export_failed(导出真失败/文件缺失)区分——陈旧=基础设施未刷新,非模型代码可闭合。
+ */
 export type SubReason =
   | 'tag_coverage_low' | 'matching_rate_low'
-  | 'semantics_export_failed' | 'render_harness_error'
+  | 'semantics_export_failed' | 'render_harness_error' | 'stale_artifact'
   | 'figma_spec_invalid' | 'native_graphics_unverified' | 'fixture_unavailable';
 
 /** 语义导出/挽具类不可判定错误(join 遇 density≠2.0 抛出)。 */
