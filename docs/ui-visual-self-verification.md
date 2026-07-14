@@ -7,7 +7,7 @@ created: 2026-06-12
 verified: 2026-06-12
 ---
 
-> 实现状态以 `.claude/plans/magpie-eye-full-impl/meta.json` 为准；§8 分阶段计划（含其中的命令引用）为设计期历史口径；其余章节的 CLI 示例已于 2026-07-13 按 `packages/uiv-cli/src/args.ts` 现状重写。
+> 对外实现与发布状态以 [项目状态](PROJECT_STATUS.md) 为准；§8 分阶段计划（含其中的命令引用）为设计期历史口径；其余章节的 CLI 示例已于 2026-07-13 按 `packages/uiv-cli/src/args.ts` 现状重写。
 
 # 鹊眼（Magpie Eye）：安卓 UI 还原度自检与纠错工具链
 

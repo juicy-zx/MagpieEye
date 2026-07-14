@@ -411,9 +411,7 @@ figma_spec_invalid 重 pin。把 inconclusive 当 fail 去改 UI 是最常见的
 
 **Q2:为什么我的 pass 报告里有一堆 skip 诊断?**
 设计使然(5.3):引擎对"不可断言"的场景选择显式跳过 + 记录,而不是硬断言产生
-假违规(接入前身正是被假 padding 违规逼出来的修复,见
-`.claude/plans/l2-derived-assertion-fix/meta.json`)。skip 不扣分;要审计断言执行
-面,看 `executed` 与 diagnostics 的规则明细。
+假违规。skip 不扣分;要审计断言执行面,看 `executed` 与 diagnostics 的规则明细。
 
 **Q3:XML 与 Compose 的能力差异?**
 
@@ -437,5 +435,5 @@ fail,和分数无关。所以"score 0.95 还 fail"不是 bug——去 violations
 
 - 主设计文档:`docs/ui-visual-self-verification.md`(分层判定口径的规范出处)
 - 判定引擎:`packages/uiv-core/src/l2/{constants,assert,match,report,invariant}.ts`
-- 决策台账:`.claude/plans/{l2-derived-assertion-fix,b3-space-between,t4.4-xml-view}/meta.json`
+- 项目状态:`docs/PROJECT_STATUS.md`(对外支持与交付口径)
 - daemon 加速(慢车道热路径/快车道):`docs/daemon-setup.md`;CI 门禁:`docs/ci-gate.md`
