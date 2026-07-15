@@ -9,9 +9,9 @@
 import { CLIP_TOL_DP, DENSITY, OVERLAP_MIN_DP, TOUCH_TARGET_MIN_DP } from './constants.js';
 import { toDp } from './join.js';
 import { L2Error } from './types.js';
-import type { SemDp, SemanticsDump, Violation } from './types.js';
+import type { SemDp, SemNode, SemanticsDump, Violation } from './types.js';
 
-export interface InvariantAdvisory { property: string; testTag: string | null; reason: 'native_graphics_unverified' }
+export interface InvariantAdvisory { property: string; testTag: string | null; reason: 'native_graphics_unverified' | 'expected_unsupported' }
 export interface InvariantResult { violations: Violation[]; executed: number; advisories: InvariantAdvisory[] }
 
 const HINTS: Record<string, string> = {
@@ -44,11 +44,16 @@ export function runInvariants(dump: SemanticsDump): InvariantResult {
   if (dump.density !== DENSITY) throw new L2Error('render_harness_error');
   const root = toDp(dump.root, dump.density);
   const nativeMode = dump.graphicsMode === 'NATIVE';
+  // producer 判据(dump 顶层无 producer 标记):root.touchBoundsInRoot==null ⇒ ViewDump(ViewDumpRule.kt:87 全节点硬 null),
+  // 非空 ⇒ SemanticsDump(Compose SemanticsDumpRule.kt:56 每节点恒产真值)。touchBoundsInRoot 缺席时据此分流表达。
+  const isViewProducer = dump.root.touchBoundsInRoot == null;
   const violations: Violation[] = [];
   const advisories: InvariantAdvisory[] = [];
   let executed = 0;
 
-  const visit = (n: SemDp, isRoot: boolean): void => {
+  // raw(原始 SemNode)与 SemDp 结构同构(toDp 逐子 map,顺序 1:1),沿递归携带以辨"显式 null"与"字段缺省(omit)"
+  // ——toDp 已把二者都归一为 touchBoundsDp 缺席,单看 SemDp 无法区分。
+  const visit = (n: SemDp, raw: SemNode, isRoot: boolean): void => {
     // 1. childClipped:非根 + 有 clipped boundsDp;unclipped(positionDp+sizeDp)与 clipped 四边任一差 >CLIP_TOL_DP。
     if (!isRoot && n.boundsDp !== undefined) {
       executed += 1;
@@ -62,13 +67,23 @@ export function runInvariants(dump: SemanticsDump): InvariantResult {
       }
     }
     // 2. touchTargetTooSmall:clickable,读 touchBoundsDp(CS3:必须读触控盒,layout 几何会误杀外扩小图标)。
-    //    T4.4:touchBoundsDp 缺席(可用性判断不适用)则跳过 touchTarget 门,不计数不承重。
-    if (n.clickable === true && n.touchBoundsDp !== undefined) {
-      executed += 1;
-      const w = n.touchBoundsDp.right - n.touchBoundsDp.left;
-      const h = n.touchBoundsDp.bottom - n.touchBoundsDp.top;
-      if (w < TOUCH_TARGET_MIN_DP || h < TOUCH_TARGET_MIN_DP) {
-        violations.push(mkViolation(n, 'touchTargetTooSmall', `>=${TOUCH_TARGET_MIN_DP}x${TOUCH_TARGET_MIN_DP}dp`, `${w}x${h}dp`));
+    //    有值→门照常承重;显式 null→按 producer 判据分流(ViewDump 触控几何物理不可观测→expected_unsupported
+    //    advisory,不进 violations/score/executed;SemanticsDump 触控盒 null=数据丢失→L2Error 失败,不给 advisory);
+    //    字段缺省(omit,legacy TS fixture 口径)→T4.4 纯可用性跳过,不计数不 advisory。
+    if (n.clickable === true) {
+      if (n.touchBoundsDp !== undefined) {
+        executed += 1;
+        const w = n.touchBoundsDp.right - n.touchBoundsDp.left;
+        const h = n.touchBoundsDp.bottom - n.touchBoundsDp.top;
+        if (w < TOUCH_TARGET_MIN_DP || h < TOUCH_TARGET_MIN_DP) {
+          violations.push(mkViolation(n, 'touchTargetTooSmall', `>=${TOUCH_TARGET_MIN_DP}x${TOUCH_TARGET_MIN_DP}dp`, `${w}x${h}dp`));
+        }
+      } else if (raw.touchBoundsInRoot === null) {
+        if (isViewProducer) {
+          advisories.push({ property: 'touchTargetTooSmall', testTag: n.testTag, reason: 'expected_unsupported' });
+        } else {
+          throw new L2Error('semantics_export_failed');
+        }
       }
     }
     // 3. missingContentDescription:clickable + cd 空 + 自身子树无可见文本(兄弟文本不豁免,收窄口径②)。
@@ -92,6 +107,7 @@ export function runInvariants(dump: SemanticsDump): InvariantResult {
     }
     // 5. siblingOverlap:父访问时按子序枚举 C(k,2) 对;交叠宽高均 >OVERLAP_MIN_DP 才判(同对仅报一次)。
     const kids = n.children;
+    const rawKids = raw.children;   // 与 kids 顺序 1:1(toDp 逐子 map),供递归携带原始节点。
     for (let i = 0; i < kids.length; i += 1) {
       for (let j = i + 1; j < kids.length; j += 1) {
         executed += 1;
@@ -104,8 +120,8 @@ export function runInvariants(dump: SemanticsDump): InvariantResult {
         }
       }
     }
-    for (const c of kids) visit(c, false);
+    for (let i = 0; i < kids.length; i += 1) visit(kids[i]!, rawKids[i]!, false);
   };
-  visit(root, true);
+  visit(root, dump.root, true);
   return { violations, executed, advisories };
 }

@@ -135,3 +135,39 @@ describe('runInvariants(L2-invariant 免基准套件,设计 3.3)', () => {
     try { runInvariants(bad); } catch (e) { expect((e as L2Error).subReason).toBe('render_harness_error'); }
   });
 });
+
+// ③b-fix ①(codex 019f6029 终裁):expected_unsupported 报告端表达。producer 判据 = root.touchBoundsInRoot 是否 null
+// (ViewDump 全节点硬 null;SemanticsDump root 恒非空)。touchBounds 显式 null 时:ViewDump→advisory;SemanticsDump→失败。
+describe('③b-fix ①:touchBounds 显式 null 的 producer 分流(expected_unsupported vs 失败)', () => {
+  // ViewDump:root 与全节点 touchBoundsInRoot 显式 null(ViewDumpRule.kt:87 诚实缺席口径)。
+  const viewDump = (kids: SemNode[]): SemanticsDump =>
+    ({ density: 2.0, root: semX(null, null, 0, 0, 360, 200, { children: kids, touchBoundsInRoot: null }) });
+
+  it('(1) View 绿灯:clickable+touchBounds 显式 null → 精确 expected_unsupported advisory,无 violation、不计入 executed', () => {
+    // 图标钮给 cd 隔离 missingCd;touchBounds 显式 null(ViewDump 物理不可观测)。
+    const r = runInvariants(viewDump([
+      semX('fig:btn', null, 0, 0, 40, 40, { clickable: true, contentDescription: '按钮', touchBoundsInRoot: null }),
+    ]));
+    expect(r.violations).toEqual([]);                         // 绿灯:无任何 violation
+    expect(r.advisories).toEqual([
+      { property: 'touchTargetTooSmall', testTag: 'fig:btn', reason: 'expected_unsupported' },
+    ]);
+    expect(r.executed).toBe(1);                               // touchTarget 缺席跳过不计数;仅 missingCd 执行
+  });
+
+  it('(2) SemanticsDump(root 非空)某 clickable 节点 touchBounds 显式 null → 失败(L2Error semantics_export_failed),绝不给该 advisory', () => {
+    // root 用默认真实触控盒 ⇒ 判为 SemanticsDump;btn 显式 null = Compose 数据丢失(恒产真值的反证)。
+    const dump = dumpX([
+      semX('fig:btn', null, 0, 0, 40, 40, { clickable: true, contentDescription: '按钮', touchBoundsInRoot: null }),
+    ]);
+    expect(() => runInvariants(dump)).toThrow(L2Error);       // 失败(抛出),而非静默 advisory
+    let advisoriesLeaked = true;
+    try {
+      runInvariants(dump);
+    } catch (e) {
+      expect((e as L2Error).subReason).toBe('semantics_export_failed');
+      advisoriesLeaked = false;                              // 抛出前无返回值 ⇒ 不可能得到 expected_unsupported advisory
+    }
+    expect(advisoriesLeaked).toBe(false);
+  });
+});
