@@ -38,6 +38,12 @@ kotlin {
 // 主源集零第三方依赖:ViewDumpRule 仅用 android.*(SDK bootclasspath)+ java.io。
 // -> POM 不含 Compose / Robolectric / Roborazzi 任何传递。
 
+dependencies {
+    // 全局 kotlin.stdlib.default.dependency=false 后,stdlib 需显式声明。主源集仅 android.* + java.io,
+    // stdlib 用 compileOnly:仅供编译,不进 POM/.module,消费者自供 stdlib(避免强加 2.2.x 拒收 2.0.x 编译器)。
+    compileOnly(kotlin("stdlib", "2.0.21"))
+}
+
 afterEvaluate {
     publishing {
         publications {
@@ -45,7 +51,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.magpie.uiv"
                 artifactId = "view-dump"
-                version = "0.1.0-alpha.3"
+                version = "0.1.0-alpha.4"
             }
         }
     }

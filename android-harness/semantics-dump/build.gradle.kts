@@ -44,6 +44,7 @@ dependencies {
     compileOnly(libs.androidx.compose.ui.text)
     compileOnly(libs.androidx.compose.ui.unit)
     compileOnly(libs.androidx.compose.ui.test.junit4) // ComposeContentTestRule 编译期符号
+    compileOnly(kotlin("stdlib", "2.0.21")) // 全局 flag 关闭内建 stdlib,compileOnly 不进 POM,消费者自供
 }
 
 afterEvaluate {
@@ -53,7 +54,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.magpie.uiv"
                 artifactId = "semantics-dump"
-                version = "0.1.0-alpha.3"
+                version = "0.1.0-alpha.4"
             }
         }
     }

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.magpie.uiv"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.4"
 
 // P0-8:插件 Kotlin 元数据向后兼容(与两 AAR 同,codex A 支持区间)。kotlin-dsl 默认用 Gradle 内建
 // Kotlin(9.5.1→2.2)编 → mv=2.2.0;下探 language/apiVersion 至 2.0 使 Gradle 8.5(内建 Kotlin 更低)
