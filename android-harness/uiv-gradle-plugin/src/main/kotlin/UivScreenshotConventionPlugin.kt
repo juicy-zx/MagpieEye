@@ -21,8 +21,10 @@ class UivScreenshotConventionPlugin : Plugin<Project> {
 
         tasks.withType(Test::class.java).configureEach {
             // headless 默认关;仅目标工程显式 opt-in 时注入(封死误初始化 AWT Toolkit -> WindowServer 的路径)。
+            // 经 Test.systemProperty 注入:AGP9 在 configureEach 之后接管/重置单测 jvmArgs 会丢弃 jvmArgs 追加,
+            // 而 systemProperty 路径存活到 test worker(codex 019f6029 finding① 终裁)。默认不写,维持零覆盖。
             if (headless.get()) {
-                jvmArgs("-Djava.awt.headless=true")
+                systemProperty("java.awt.headless", "true")
             }
             // 受控系统属性透传:仅转发目标工程显式声明的 key(gradlew -D 落 daemon,须显式转发给 test worker)。
             sysKeys.get().forEach { key ->

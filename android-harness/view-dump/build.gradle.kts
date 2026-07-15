@@ -35,7 +35,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.magpie.uiv"
                 artifactId = "view-dump"
-                version = "0.1.0-alpha"
+                version = "0.1.0-alpha.2"
             }
         }
     }
