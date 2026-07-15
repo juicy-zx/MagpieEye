@@ -25,6 +25,16 @@ android {
     }
 }
 
+// P0-8:发布制品 Kotlin 元数据向后兼容(codex A 支持区间)。harness 用 AGP9 内建 Kotlin 2.2.x 编 → mv=2.2.0,
+// Kotlin 2.0.x 消费者(如真实 AGP8/Kotlin2.0 工程)编译期拒收"compiled with a newer version of Kotlin"。
+// language/apiVersion 下探 2.0 → mv 降至 2.0.x,Kotlin>=2.0 消费者可编译。
+kotlin {
+    compilerOptions {
+        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+    }
+}
+
 // 主源集零第三方依赖:ViewDumpRule 仅用 android.*(SDK bootclasspath)+ java.io。
 // -> POM 不含 Compose / Robolectric / Roborazzi 任何传递。
 
@@ -35,7 +45,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.magpie.uiv"
                 artifactId = "view-dump"
-                version = "0.1.0-alpha.2"
+                version = "0.1.0-alpha.3"
             }
         }
     }

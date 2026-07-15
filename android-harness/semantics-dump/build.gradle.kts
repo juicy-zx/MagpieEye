@@ -27,6 +27,15 @@ android {
     }
 }
 
+// P0-8:发布制品 Kotlin 元数据向后兼容(codex A 支持区间)——language/apiVersion 下探 2.0,
+// 使 mv 降至 2.0.x,Kotlin>=2.0 消费者可编译(见 view-dump 同注)。
+kotlin {
+    compilerOptions {
+        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+    }
+}
+
 dependencies {
     // Compose 全部 compileOnly:仅供 SemanticsDumpRule 编译,不进 POM;运行时由目标工程提供。
     compileOnly(platform(libs.androidx.compose.bom))
@@ -44,7 +53,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.magpie.uiv"
                 artifactId = "semantics-dump"
-                version = "0.1.0-alpha.2"
+                version = "0.1.0-alpha.3"
             }
         }
     }
