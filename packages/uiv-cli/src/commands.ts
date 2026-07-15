@@ -22,6 +22,7 @@ import type { CliIgnoreRegion } from './args.js';
 import { selectMappingEntry } from './mapping-entry.js';
 import { isFastLaneEnabled } from './fastlane.js';
 import { renderPreviewViaDaemon, selectGradleRunner } from './gradle-runner.js';
+import type { ExecutionReceipt, LaneRequest } from './gradle-runner.js';
 import { withWorkspaceLock } from './workspace-lock.js';
 
 type Lane = 'fast' | 'slow' | 'fast-fallback-slow';
@@ -44,12 +45,15 @@ export interface CheckParams {
   preview: string; node: string; demo: string; version?: string; ignoreRegion?: CliIgnoreRegion;
   /** P0-8 批次②:Gradle project path(默认 :app,由 core 约定映射出模块目录)/ variant(默认 debug)。 */
   module?: string; variant?: string;
+  /** P0-8 双 lane(codex 019f6029):gradle 执行 lane 请求 + 溯源(default→direct / sandbox→冷道)。无隐性安全默认:
+   *  CLI 显式传 --sandbox 值,MCP handler 强制 sandbox。与 fast/slow 渲染轴正交。 */
+  lane: LaneRequest;
 }
 
-/** = `uiv check`(无 --record);返回 v1 report + 盘上路径。exitCode/record/末行打印由调用方处理。 */
+/** = `uiv check`(无 --record);返回 v1 report + 盘上路径 + execution receipt。exitCode/record/末行打印/receipt 发射由调用方处理。 */
 export async function runCheckCommand(
   p: CheckParams, cwd: string,
-): Promise<{ report: ReportV1; reportPath: string }> {
+): Promise<{ report: ReportV1; reportPath: string; execution: ExecutionReceipt }> {
   const uiVerifyDir = path.resolve(cwd, '.ui-verify');
   // P0-9:workspace 锁边界(CLI/MCP/直接 import commands 共用变更边界)。整个 check 编排持锁,finally 释放。
   return withWorkspaceLock(uiVerifyDir, async () => {
@@ -58,8 +62,8 @@ export async function runCheckCommand(
     addIgnoreRegion(uiVerifyDir, p.node, p.ignoreRegion);   // 先持久化再执行
   }
   const entry = await readMappingEntry(uiVerifyDir, p.node, p.version);
-  // gradle runner 恒选路:快车道失败时的回落道均走它。
-  const sel = await selectGradleRunner(uiVerifyDir);
+  // gradle runner 选路(direct/sandbox);快车道失败时的回落道均走它。
+  const sel = await selectGradleRunner(uiVerifyDir, p.lane);
   const runner = sel.runner;
 
   // T2.8 快车道:静态 preview 先试 fast(daemon 托管 worker);任何失败自动回落慢车道并如实标注 lane。
@@ -80,7 +84,7 @@ export async function runCheckCommand(
       console.error(`uiv: fast lane unavailable (${(e as Error).message}); falling back to slow`);
     }
   }
-  if (lane !== 'fast') console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
+  if (lane !== 'fast') console.error(`uiv: gradle lane=${sel.execution.effectiveLane} (${sel.reason})`);
 
   try {
     const { report, reportPath } = await runCheckL2(runner, {
@@ -96,7 +100,7 @@ export async function runCheckCommand(
       variant: p.variant ?? 'debug',
       ...(preRendered ? { preRendered } : {}),
     });
-    return { report, reportPath };
+    return { report, reportPath, execution: sel.execution };
   } finally {
     // D-07(a):释放 odiff server 子进程,防其 idle 悬挂拖住进程退出(实证 idle 7 分钟)。
     // Codex 裁定:本层(CLI command)与 MCP wrapper 层的 finally 双调用=幂等双保险(stopOdiffServer 幂等),有意为之,勿删。
@@ -110,12 +114,14 @@ export interface VerifyPageParams {
   version?: string; states?: string[]; matrix?: string; out?: string;
   /** P0-8 批次②:Gradle project path(默认 :app)/ variant(默认 debug),透传逐格 runCheck(L2)。 */
   module?: string; variant?: string;
+  /** P0-8 双 lane(codex 019f6029):gradle 执行 lane 请求 + 溯源。同 CheckParams.lane。 */
+  lane: LaneRequest;
 }
 
-/** = `uiv verify-page`(恒返回 report,无 --json 打印分支)。exitCode/末行打印由调用方处理。 */
+/** = `uiv verify-page`(恒返回 report,无 --json 打印分支)。exitCode/末行打印/receipt 发射由调用方处理。 */
 export async function runVerifyPageCommand(
   p: VerifyPageParams, cwd: string,
-): Promise<{ report: PageReport; reportPath: string }> {
+): Promise<{ report: PageReport; reportPath: string; execution: ExecutionReceipt }> {
   const uiVerifyDir = path.resolve(cwd, '.ui-verify');
   // P0-9:workspace 锁边界(与 CLI/MCP 共用)。整页外循环持锁,finally 释放。
   return withWorkspaceLock(uiVerifyDir, async () => {
@@ -123,8 +129,8 @@ export async function runVerifyPageCommand(
   const entry = await readMappingEntry(uiVerifyDir, p.node, p.version);
   const states = (p.states && p.states.length > 0) ? p.states : (entry.states?.map((s) => s.name) ?? []);
   const matrix = p.matrix ?? 'l-shape';   // CLI 默认经 args 已定 'l-shape';MCP 省略时同默认
-  const sel = await selectGradleRunner(uiVerifyDir);
-  console.error(`uiv: gradle lane=${sel.lane} (${sel.reason})`);
+  const sel = await selectGradleRunner(uiVerifyDir, p.lane);
+  console.error(`uiv: gradle lane=${sel.execution.effectiveLane} (${sel.reason})`);
   try {
     const { report, reportPath } = await verifyPage(sel.runner, {
       demoDir: path.resolve(cwd, p.demo),
@@ -142,7 +148,7 @@ export async function runVerifyPageCommand(
       ...(entry.states ? { pinnedStates: entry.states } : {}),
       ...(p.out !== undefined ? { outPath: path.resolve(cwd, p.out) } : {}),
     });
-    return { report, reportPath };
+    return { report, reportPath, execution: sel.execution };
   } finally {
     // D-07(a) + Codex 裁定:命令层与 MCP wrapper 层 finally 双调用=幂等双保险,勿删。
     stopOdiffServer();

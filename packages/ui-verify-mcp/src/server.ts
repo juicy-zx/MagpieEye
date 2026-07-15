@@ -81,6 +81,9 @@ export function createUiVerifyServer(impl: CommandImpl = realImpl): McpServer {
   }, (args) => toolCall(async () => {
     const { report, reportPath } = await impl.check({
       preview: args.preview, node: args.node, demo: args.demo,
+      // P0-8 双 lane:MCP 恒强制 sandbox(codex A / 交付裁定)。schema 不暴露 sandbox 字段,模型无法请求 direct;
+      // 即便有人运行 MCP,不可信/AI 生成的测试代码亦经 P0-1 冷道 Seatbelt 隔离(避免 CLI 默认 direct 的危险组合)。
+      lane: { requestedLane: 'sandbox', selectedBy: 'mcp-policy' },
       ...(args.version !== undefined ? { version: args.version } : {}),
       ...(args.ignoreRegion !== undefined ? { ignoreRegion: args.ignoreRegion } : {}),
     }, process.cwd());
@@ -104,6 +107,8 @@ export function createUiVerifyServer(impl: CommandImpl = realImpl): McpServer {
   }, (args) => toolCall(async () => {
     const { report, reportPath } = await impl.verifyPage({
       test: args.test, node: args.node, demo: args.demo, session: args.session,
+      // P0-8 双 lane:MCP 恒强制 sandbox(force,schema 不暴露);模型不能取直连。同 ui_check。
+      lane: { requestedLane: 'sandbox', selectedBy: 'mcp-policy' },
       ...(args.version !== undefined ? { version: args.version } : {}),
       ...(args.states !== undefined ? { states: args.states } : {}),
       ...(args.matrix !== undefined ? { matrix: args.matrix } : {}),

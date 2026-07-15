@@ -60,9 +60,9 @@ function makeFixture(): { workdir: string; template: string } {
   return { workdir, template };
 }
 
-describe('HOTFIX(defect1): 冷道 check 完工后进程在阈值内自行退出(spawn 真实 dist CLI)', () => {
+describe('HOTFIX(defect1): check 完工后进程在阈值内自行退出(P0-8 默认 direct lane,spawn 真实 dist CLI)', () => {
   it.skipIf(!existsSync(DIST_CLI))(
-    'daemon.sock 缺失(lane=cold)+ 长命孙进程持 stderr + odiff server → 进程 <12s 退出,不悬挂',
+    '无 --sandbox(lane=direct,DirectGradleRunner)+ 长命孙进程持 stderr + odiff server → 进程 <12s 退出,不悬挂',
     async () => {
       const { workdir } = makeFixture();
       const child = spawn(

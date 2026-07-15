@@ -35,7 +35,7 @@ describe('parseCliArgs: baseline pull --check-version(T4.3 哨兵,与 baseline-p
 describe('parseCliArgs: check', () => {
   it('解析 --preview/--node/--demo(无 ignore-region 时为 null,缺省 record=false,version=null)', () => {
     expect(parseCliArgs(['check', '--preview', 'com.magpie.uiv.demo.CalibCardPreview', '--node', '1:100', '--demo', 'demo-android'])).toEqual({
-      kind: 'check', preview: 'com.magpie.uiv.demo.CalibCardPreview', node: '1:100', demo: 'demo-android', module: ':app', variant: 'debug', version: null, ignoreRegion: null, record: false,
+      kind: 'check', preview: 'com.magpie.uiv.demo.CalibCardPreview', node: '1:100', demo: 'demo-android', module: ':app', variant: 'debug', version: null, ignoreRegion: null, record: false, sandbox: false,
     });
   });
   it('check 解析可选 --version(D-02/M3 消歧;缺省 null)', () => {
@@ -53,6 +53,17 @@ describe('parseCliArgs: check', () => {
     const b = ['check', '--preview', 'a.BPreview', '--node', '1:1', '--demo', 'd'];
     expect((parseCliArgs([...b, '--record']) as CheckCmd).record).toBe(true);
     expect((parseCliArgs(b) as CheckCmd).record).toBe(false);
+  });
+  // P0-8 双 lane:--sandbox 布尔旗标(默认 false → direct;true → 冷道沙箱 opt-in),与 --record 同剔除范式可共存。
+  it('check --sandbox 解析为 sandbox:true;缺省 false;与 --record 共存', () => {
+    const b = ['check', '--preview', 'a.BPreview', '--node', '1:1', '--demo', 'd'];
+    expect((parseCliArgs(b) as CheckCmd).sandbox).toBe(false);
+    expect((parseCliArgs([...b, '--sandbox']) as CheckCmd).sandbox).toBe(true);
+    const both = parseCliArgs([...b, '--record', '--sandbox']) as CheckCmd;
+    expect(both.record).toBe(true);
+    expect(both.sandbox).toBe(true);
+    // --sandbox/--record 剔除后成对解析不受污染(module/variant 仍正确)
+    expect((parseCliArgs([...b, '--sandbox', '--module', ':feature:x']) as CheckCmd).module).toBe(':feature:x');
   });
   // P0-8 批次②:参数化旗标(--project 等价 --demo;--module 默认 :app;--variant 默认 debug)。
   it('check --module/--variant 解析;缺省 :app / debug', () => {
@@ -104,13 +115,22 @@ describe('parseCliArgs: verify-page', () => {
       '--out', '/tmp/r.json', '--json'])).toEqual({
         kind: 'verify-page', test: 'com.magpie.uiv.demo.CalibPageScreenshotTest', node: '1:100', demo: 'demo-android',
         module: ':app', variant: 'debug',
-        session: 'S1', version: null, states: ['empty', 'longText'], matrix: 'full', json: true, out: '/tmp/r.json',
+        session: 'S1', version: null, states: ['empty', 'longText'], matrix: 'full', json: true, out: '/tmp/r.json', sandbox: false,
       });
   });
-  it('缺省:version=null、states=[]、matrix=l-shape、json=false、out=null', () => {
+  it('缺省:version=null、states=[]、matrix=l-shape、json=false、out=null、sandbox=false', () => {
     expect(parseCliArgs(['verify-page', '--test', 'T', '--node', '1:100', '--demo', 'd', '--session', 'standalone']))
       .toEqual({ kind: 'verify-page', test: 'T', node: '1:100', demo: 'd', module: ':app', variant: 'debug', session: 'standalone',
-        version: null, states: [], matrix: 'l-shape', json: false, out: null });
+        version: null, states: [], matrix: 'l-shape', json: false, out: null, sandbox: false });
+  });
+  // P0-8 双 lane:verify-page --sandbox 布尔旗标,与 --json 同剔除范式可共存。
+  it('verify-page --sandbox 解析为 sandbox:true;缺省 false;与 --json 共存', () => {
+    const b = ['verify-page', '--test', 'T', '--node', '1:100', '--demo', 'd', '--session', 'S'];
+    expect((parseCliArgs(b) as VerifyPageCmd).sandbox).toBe(false);
+    expect((parseCliArgs([...b, '--sandbox']) as VerifyPageCmd).sandbox).toBe(true);
+    const both = parseCliArgs([...b, '--json', '--sandbox']) as VerifyPageCmd;
+    expect(both.json).toBe(true);
+    expect(both.sandbox).toBe(true);
   });
   it('解析可选 --version(D-02/M3 消歧;给定即取值)', () => {
     const c = parseCliArgs(['verify-page', '--test', 'T', '--node', '1:100', '--demo', 'd', '--session', 'S', '--version', 'T1_0A_V1']) as VerifyPageCmd;

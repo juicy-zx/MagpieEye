@@ -12,6 +12,12 @@
  * --record 在 check pass=false 时拒录 → exit 3;pull 恒 0(baseline.png 缺失仅 WARN);其余异常 exit 2。
  * 本入口只负责 argv 解析 / IO 呈现(末行路径、--json、WARN 打印)/ exitCode / 退出治理;
  * check/verify-page/baseline-pull 的实际编排复用 commands.ts(与 MCP server 同源)。
+ *
+ * P0-8 双 lane 信任语义(codex 019f6029 A):check/verify-page 默认 **direct** —— **以当前用户权限直接执行目标工程
+ * 的 gradle/脚本/插件/测试代码,可读写本机并联网**,仅作"本地开发者主动为自己代码背书"的默认。跑未知/AI/MCP/不可信 PR/
+ * 未隔离 CI 的测试代码时须显式 `--sandbox`(P0-1 冷道 Seatbelt 隔离)。CI 模板须显式选 lane,不凭 CI/TTY 猜信任。
+ * 每次 check/verify-page 父进程发射 execution receipt(stderr;requestedLane/effectiveLane/selectedBy…),
+ * 成功与失败(main().catch)两路径都发,记实际执行姿态防蒙混(非 gradle 自报);sandbox 失败不回退 direct。
  */
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -22,9 +28,28 @@ import {
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
-import { selectGradleRunner } from './gradle-runner.js';
+import { SandboxError, buildExecutionReceipt, selectGradleRunner } from './gradle-runner.js';
+import type { ExecutionReceipt, LaneRequest } from './gradle-runner.js';
 import { runBaselinePullCommand, runCheckCommand, runVerifyPageCommand } from './commands.js';
 import { EXIT_WORKSPACE_LOCKED, WorkspaceLockedError, withWorkspaceLock } from './workspace-lock.js';
+
+/** P0-8 双 lane:--sandbox 布尔 → lane 请求 + 溯源(cli-flag/cli-default)。无隐性安全默认:缺旗标即 direct(codex E)。 */
+function laneFromFlag(sandbox: boolean): LaneRequest {
+  return sandbox
+    ? { requestedLane: 'sandbox', selectedBy: 'cli-flag' }
+    : { requestedLane: 'default', selectedBy: 'cli-default' };
+}
+
+/** execution receipt 发射:stderr 恒发(machine-greppable 单行 JSON);父进程记实际执行姿态,非 gradle 自报。 */
+function emitReceipt(receipt: ExecutionReceipt): void {
+  console.error(`uiv: execution ${JSON.stringify(receipt)}`);
+}
+
+/**
+ * 失败路径 receipt(codex E:gradle 未产 ReportV1 就失败也须输出同类 receipt)。命令抛错前 main() 预置本值,
+ * main().catch 据此发射;成功路径发射后置 null 免重复。no-fallback:effectiveLane 恒记请求 lane,绝不改记 direct。
+ */
+let pendingReceipt: ExecutionReceipt | null = null;
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
@@ -129,15 +154,19 @@ async function main(): Promise<void> {
   }
 
   if (cmd.kind === 'verify-page') {
-    const { report, reportPath } = await runVerifyPageCommand({
+    const lane = laneFromFlag(cmd.sandbox);
+    pendingReceipt = buildExecutionReceipt(lane);   // 命令抛错时供 main().catch 发射
+    const { report, reportPath, execution } = await runVerifyPageCommand({
       test: cmd.test, node: cmd.node, demo: cmd.demo, session: cmd.session,
       module: cmd.module, variant: cmd.variant,
-      states: cmd.states, matrix: cmd.matrix,
+      states: cmd.states, matrix: cmd.matrix, lane,
       ...(cmd.version !== null ? { version: cmd.version } : {}),
       ...(cmd.out !== null ? { out: cmd.out } : {}),
     }, cwd);
     process.exitCode = report.pass ? 0 : 1;   // UI 违规非零,report 必已落盘
-    if (cmd.json) console.log(JSON.stringify(report, null, 2));
+    emitReceipt(execution);                    // stderr 恒发
+    pendingReceipt = null;                      // 成功已发,免 catch 重复
+    if (cmd.json) console.log(JSON.stringify({ execution, report }, null, 2));   // --json 时 receipt 并入 envelope(末行仍 report 路径)
     console.log(reportPath);   // 最后一行恒为 page-report 绝对路径
     return;
   }
@@ -179,19 +208,21 @@ async function main(): Promise<void> {
   }
 
   // check
-  const { report, reportPath } = await runCheckCommand({
+  const lane = laneFromFlag(cmd.sandbox);
+  pendingReceipt = buildExecutionReceipt(lane);   // 命令抛错时供 main().catch 发射
+  const { report, reportPath, execution } = await runCheckCommand({
     preview: cmd.preview, node: cmd.node, demo: cmd.demo,
-    module: cmd.module, variant: cmd.variant,
+    module: cmd.module, variant: cmd.variant, lane,
     ...(cmd.version !== null ? { version: cmd.version } : {}),
     ...(cmd.ignoreRegion !== null ? { ignoreRegion: cmd.ignoreRegion } : {}),
   }, cwd);
   process.exitCode = report.pass ? 0 : 1;   // D-07(c): exit code 以 L2 report pass/fail 为准
   if (cmd.record) {
     // --record 罕用(T2.6 录 golden),不入 MCP 工具面;抽取后 runCheckCommand 不回传 runner,
-    // record 分支就地重选一次(选路确定性,行为等价:cold=纯 SpawnGradleRunner 构造,hot=一次 500ms ping)。
+    // record 分支就地重选一次(选路确定性,行为等价);lane 与 check 主体一致(--sandbox 同步 record)。
     // P0-9:record 走 gradle 录 golden = 独立写命令,自持 workspace 锁(check 主体的锁已在 runCheckCommand 内释放)。
     await withWorkspaceLock(uiVerifyDir, async () => {
-      const sel = await selectGradleRunner(uiVerifyDir);
+      const sel = await selectGradleRunner(uiVerifyDir, lane);
       const { goldenPath } = await runRecord(
         sel.runner,
         { demoDir: path.resolve(cwd, cmd.demo), testFqn: previewToTestFqn(cmd.preview), moduleName: cmd.module, variant: cmd.variant },
@@ -200,6 +231,8 @@ async function main(): Promise<void> {
       console.log(`golden recorded: ${goldenPath}\nhint: git add ${goldenPath} && git commit`);
     });
   }
+  emitReceipt(execution);      // stderr 恒发
+  pendingReceipt = null;        // 成功已发,免 catch 重复
   console.log(reportPath);   // 最后一行 = report.json v1 绝对路径
 }
 
@@ -224,6 +257,12 @@ function flushAndExit(): void {
 }
 
 main().then(flushAndExit, (e: unknown) => {
+  // P0-8 双 lane 失败路径 receipt(codex E):gradle 未产 ReportV1 就失败也须发射。no-fallback:effectiveLane 恒记请求 lane,
+  // 绝不改记 direct;sandbox 建立失败(SandboxError)仅把 sandboxEstablished 落回 false(明确"试了沙箱、没建成、未跑 direct")。
+  if (pendingReceipt !== null) {
+    emitReceipt(e instanceof SandboxError ? { ...pendingReceipt, sandboxEstablished: false } : pendingReceipt);
+    pendingReceipt = null;
+  }
   if (e instanceof WorkspaceLockedError) {
     // P0-9:后到进程遇活锁 → 可判读退出码(EX_TEMPFAIL=75,可重试),不阻塞等待。
     console.error(`uiv: ${e.message}`);

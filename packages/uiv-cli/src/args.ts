@@ -8,8 +8,9 @@ export interface CliIgnoreRegion { x: number; y: number; w: number; h: number }
 
 export interface BaselinePullCmd { kind: 'baseline-pull'; fixture: string; file: string; node: string }
 export interface BaselineCheckVersionCmd { kind: 'baseline-check-version'; file: string; metaFixture: string | null }
-/** P0-8 批次②:demo=工程根(--demo 或 --project,后者为规范名);module=Gradle project path(默认 :app);variant 默认 debug。 */
-export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; module: string; variant: string; version: string | null; ignoreRegion: CliIgnoreRegion | null; record: boolean }
+/** P0-8 批次②:demo=工程根(--demo 或 --project,后者为规范名);module=Gradle project path(默认 :app);variant 默认 debug。
+ *  P0-8 双 lane:sandbox=`--sandbox` 布尔(默认 false → direct 直连;true → P0-1 冷道沙箱 opt-in)。 */
+export interface CheckCmd { kind: 'check'; preview: string; node: string; demo: string; module: string; variant: string; version: string | null; ignoreRegion: CliIgnoreRegion | null; record: boolean; sandbox: boolean }
 /** P0-8 批次②:环境静态预检(不跑 gradle)。demo=工程根;module=Gradle project path(默认 :app);--json 输出单个 envelope。 */
 export interface PreflightCmd { kind: 'preflight'; demo: string; module: string; json: boolean }
 export interface PinStateArg { name: string; judgePath: 'parity'; figmaVariantNodeId: string }
@@ -24,6 +25,7 @@ export interface VerifyPageCmd {
   test: string; node: string; demo: string; module: string; variant: string; session: string;
   version: string | null;   // D-02/M3 消歧：可选，给定时按 nodeId+version 唯一命中 mapping entry
   states: string[]; matrix: string; json: boolean; out: string | null;
+  sandbox: boolean;   // P0-8 双 lane:--sandbox 布尔(默认 false → direct;true → 冷道沙箱 opt-in)
 }
 export interface ReportCmd { kind: 'report'; junit: boolean; in: string; out: string | null; suite: string | null }
 export interface L3AttachCmd { kind: 'l3-attach'; report: string; verdicts: string; pack: string }
@@ -134,9 +136,10 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
     };
   }
   if (cmd === 'check') {
-    // --record 是无值布尔旗标(T2.6),先剔除再走 --flag value 成对解析。
+    // --record(T2.6)/--sandbox(P0-8 双 lane)均无值布尔旗标,先剔除再走 --flag value 成对解析。
     const record = rest.includes('--record');
-    const rest2 = rest.filter((a) => a !== '--record');
+    const sandbox = rest.includes('--sandbox');
+    const rest2 = rest.filter((a) => a !== '--record' && a !== '--sandbox');
     // P0-8 批次②:--project 等价 --demo(工程根);--module(Gradle project path,默认 :app)/--variant(默认 debug)。
     const flags = collectFlags(rest2, ['--preview', '--node', '--demo', '--project', '--module', '--variant', '--version', '--ignore-region']);
     const rawRegion = flags.get('--ignore-region');
@@ -150,6 +153,7 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       version: flags.get('--version') ?? null,
       ignoreRegion: rawRegion === undefined ? null : parseIgnoreRegion(rawRegion),
       record,
+      sandbox,
     };
   }
   if (cmd === 'preflight') {
@@ -193,9 +197,10 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
     };
   }
   if (cmd === 'verify-page') {
-    // --json 是无值布尔旗标(同 --record 剔除法),其余成对解析。--test/--node/--demo/--session 必填。
+    // --json/--sandbox 均无值布尔旗标(同 --record 剔除法),其余成对解析。--test/--node/--demo/--session 必填。
     const json = rest.includes('--json');
-    const rest2 = rest.filter((a) => a !== '--json');
+    const sandbox = rest.includes('--sandbox');
+    const rest2 = rest.filter((a) => a !== '--json' && a !== '--sandbox');
     // P0-8 批次②:--project 等价 --demo;--module(默认 :app)/--variant(默认 debug)。
     const flags = collectFlags(rest2, ['--test', '--node', '--demo', '--project', '--module', '--variant', '--session', '--version', '--states', '--matrix', '--out']);
     const statesRaw = flags.get('--states');
@@ -212,6 +217,7 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       matrix: flags.get('--matrix') ?? 'l-shape',
       json,
       out: flags.get('--out') ?? null,
+      sandbox,
     };
   }
   if (cmd === 'report') {

@@ -6,7 +6,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { describe, expect, it } from 'vitest';
 import type { PageReport, ReportV1 } from '@magpie-eye/uiv-core';
-import type { VerifyPageParams } from '@magpie-eye/uiv-cli/commands';
+import type { CheckParams, VerifyPageParams } from '@magpie-eye/uiv-cli/commands';
 import { createUiVerifyServer } from './server.js';
 import type { CommandImpl } from './server.js';
 
@@ -131,6 +131,28 @@ describe('createUiVerifyServer 三工具', () => {
     expect(spans).toHaveLength(2);
     const sorted = [...spans].sort((a, b) => a.start - b.start);
     expect(sorted[1]!.start).toBeGreaterThanOrEqual(sorted[0]!.end);   // 无重叠 = 串行
+  });
+
+  it('⑦ P0-8 MCP 恒强制 sandbox:handler 传 lane={sandbox, mcp-policy};schema 不暴露 sandbox 字段(模型不能取直连)', async () => {
+    let checkSeen: CheckParams | undefined;
+    let verifySeen: VerifyPageParams | undefined;
+    const client = await connect(makeFake({
+      check: async (p) => { checkSeen = p; return { reportPath: '/tmp/r.json', report: reportV1Fixture }; },
+      verifyPage: async (p) => { verifySeen = p; return { reportPath: '/tmp/p.json', report: pageReportFixture }; },
+    }));
+    await client.callTool({ name: 'ui_check', arguments: { preview: 'com.x.FooPreview', node: '1:100', demo: 'demo' } });
+    await client.callTool({ name: 'ui_verify_page', arguments: { test: 'com.x.CalibPageScreenshotTest', node: '1:100', demo: 'demo', session: 's1' } });
+    // 两工具 handler 均恒传 sandbox lane + mcp-policy 溯源(即便有人运行 MCP 也走 P0-1 冷道隔离)。
+    expect(checkSeen?.lane).toEqual({ requestedLane: 'sandbox', selectedBy: 'mcp-policy' });
+    expect(verifySeen?.lane).toEqual({ requestedLane: 'sandbox', selectedBy: 'mcp-policy' });
+    // schema 不含 sandbox 字段:模型无法请求 direct(force 不可绕过)。
+    const { tools } = await client.listTools();
+    const props = (name: string): string[] => {
+      const t = tools.find((x) => x.name === name);
+      return Object.keys((t!.inputSchema as { properties?: Record<string, unknown> }).properties ?? {});
+    };
+    expect(props('ui_check')).not.toContain('sandbox');
+    expect(props('ui_verify_page')).not.toContain('sandbox');
   });
 
   it('⑥ 每次调用后 stopOdiff 被调(含成功与 impl 抛错路径)', async () => {
