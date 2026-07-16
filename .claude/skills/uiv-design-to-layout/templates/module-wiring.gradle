@@ -1,0 +1,35 @@
+// 模板:消费模块接线(Groovy DSL;buildscript classpath 形态工程,如无 version catalog 的存量工程)。
+// 一个模块配一次。maven 制品当前发布在 mavenLocal(仓库块须含 mavenLocal + google + mavenCentral)。
+
+// ===== 根 build.gradle 的 buildscript.dependencies 追加 =====
+//   classpath 'com.magpie.uiv:uiv-gradle-plugin:0.1.0-alpha.4'
+//   classpath 'io.github.takahirom.roborazzi:roborazzi-gradle-plugin:1.63.0'
+
+// ===== 目标模块 build.gradle =====
+apply plugin: 'uiv.screenshot'                    // 零覆盖约定插件(不改你现有 test 配置)
+apply plugin: 'io.github.takahirom.roborazzi'     // 渲染 PNG(check 需 PNG 才进 L2)
+
+android {
+    testOptions {
+        unitTests {
+            includeAndroidResources = true        // Robolectric 必需
+        }
+    }
+    kotlinOptions {
+        // 仅 Kotlin 2.0.x/2.1.x 工程需要:roborazzi 1.63+ 用 Kotlin 2.3 编(metadata 2.3.0),
+        // 低版本编译器拒收 → 越过元数据版本检查。Kotlin >=2.2 工程删掉此行。
+        freeCompilerArgs += ['-Xskip-metadata-version-check']
+    }
+}
+
+dependencies {
+    // XML/View 屏用 view-dump;Compose 屏用 semantics-dump(两者可并存)
+    testImplementation 'com.magpie.uiv:view-dump:0.1.0-alpha.4'
+    // testImplementation 'com.magpie.uiv:semantics-dump:0.1.0-alpha.4'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.16'
+    testImplementation 'io.github.takahirom.roborazzi:roborazzi:1.63.0'
+    // Compose 屏另需(semantics-dump 的 Compose 是 compileOnly,消费方自供测试运行时):
+    // testImplementation 'io.github.takahirom.roborazzi:roborazzi-compose:1.63.0'
+    // testImplementation "androidx.compose.ui:ui-test-junit4"
+}
