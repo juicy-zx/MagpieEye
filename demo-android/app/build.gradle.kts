@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose) // AGP 9 内建 Kotlin,不 apply kotlin-android
     alias(libs.plugins.roborazzi)
-    id("uiv.screenshot")
 }
 
 android {
@@ -27,6 +26,30 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true // Robolectric 必需
+            // 以下渲染环境钉死逐字迁自原 demo-android/build-logic/UivScreenshotConventionPlugin
+            // (该 convention plugin 已随本次 init-script 迁移退场;uiv.device/uiv.state 的 -P 转发
+            // 已改由 uiv CLI 每次 spawn 前写盘的 init script 接管,见 packages/uiv-core/src/check/run.ts
+            // 的 INIT_SCRIPT_CONTENT,此处不再重复)。
+            all {
+                // C2:封死测试代码误初始化 AWT Toolkit -> WindowServer 的路径
+                it.jvmArgs("-Djava.awt.headless=true")
+                // C2:可写且可从中加载 dylib 的 tmpdir(RNG dylib 与字体解包后 System.load)
+                val tmpDir = layout.buildDirectory.dir("robolectric-tmp").get().asFile
+                it.systemProperty("java.io.tmpdir", tmpDir.absolutePath)
+                it.doFirst { tmpDir.mkdirs() }
+                // 关键:gradlew 命令行 -D 只落在 Gradle daemon JVM 上,
+                // 必须显式透传给 fork 出来的 test worker JVM,离线验收才真正生效
+                // T4.5:对比度 ATF 检查须 robolectric.useRealAni(4.15+)才能查到真实 Compose 渲染内容;
+                // 转发能力全局可用,但属性本身默认未设,仅显式 -D 调用时生效(局部/advisory,不改变默认测试行为)。
+                listOf("robolectric.offline", "robolectric.dependency.dir", "robolectric.useRealAni").forEach { key ->
+                    providers.systemProperty(key).orNull?.let { v -> it.systemProperty(key, v) }
+                }
+                // uiv.ci.threshold 双保险静态搬入:门 B(ci-gate.sh)的 gradle 调用不一定经 uiv CLI,
+                // 与 CLI init script 的同名转发重复设置同值无害。uiv.device/uiv.state 不在此静态搬入之
+                // 列——已由 init script 转发,静态搬入反而会在没有 init script 的裸调用下掩盖假矩阵。
+                providers.gradleProperty("uiv.ci.threshold").orNull?.let { v -> it.systemProperty("uiv.ci.threshold", v) }
+                it.maxHeapSize = "2g"
+            }
         }
     }
 }

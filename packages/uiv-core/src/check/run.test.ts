@@ -55,10 +55,10 @@ describe('runCheck (injectable gradle runner)', () => {
     expect(report.pass).toBe(false);
     expect(report.compileError).toContain('e: CalibCard.kt:5: unresolved');
     expect(report.subReason).toBeNull();
-    // 固定 gradle 参数契约(修正①:限定式 :app:testDebugUnitTest)
+    // 固定 gradle 参数契约(修正①:限定式 :app:testDebugUnitTest;init script 转发注入见下方专述)
     expect(runner.calls[0]).toEqual({
       cwd: demoDir,
-      args: [':app:testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true'],
+      args: [':app:testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true', '--init-script', join(demoDir, '.uiv', 'uiv-forward.init.gradle')],
     });
   });
   it('挽具失败(无编译特征): reason=inconclusive + subReason=render_harness_error', async () => {
@@ -115,7 +115,7 @@ describe('T2.1(D-07): UIV_RERUN=1 强制 --rerun(测量脚本专用,默认不影
     }
     expect(runner.calls[0]).toEqual({
       cwd: demoDir,
-      args: [':app:testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true', '--rerun'],
+      args: [':app:testDebugUnitTest', '--tests', TEST_FQN, '-Proborazzi.test.compare=true', '--rerun', '--init-script', join(demoDir, '.uiv', 'uiv-forward.init.gradle')],
     });
   });
 });
@@ -281,6 +281,54 @@ describe('P0-8 批次②:参数化(--module 目录 / --variant 任务派生)', (
     expect(report.subReason).toBe('module_dir_missing');
     expect(runner.calls.length).toBe(0);   // gradle 调用前失败:runner 零调用
     expect(existsSync(join(demoDir, 'ghost'))).toBe(false);   // 不惰性建目录
+  });
+});
+
+describe('init script 注入(替代 uiv-gradle-plugin 转发职能,写入 demoDir 内供 --sandbox Seatbelt 可读)', () => {
+  const scriptPathFor = (demoDir: string): string => join(demoDir, '.uiv', 'uiv-forward.init.gradle');
+
+  it('gradle args 含 --init-script + 其后路径 = <demoDir>/.uiv/uiv-forward.init.gradle;spawn 前文件已存在且内容含三键转发', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();
+    let existedAtSpawnTime = false;
+    let contentAtSpawnTime = '';
+    const runner: GradleRunner = {
+      async run() {
+        existedAtSpawnTime = existsSync(scriptPathFor(demoDir));
+        contentAtSpawnTime = existedAtSpawnTime ? readFileSync(scriptPathFor(demoDir), 'utf8') : '';
+        return { exitCode: 1, stderr: 'infra explosion without kotlin markers' };
+      },
+    };
+    const { report } = await runCheck(runner, opts(demoDir, uiVerifyDir));
+    expect(report.subReason).toBe('render_harness_error');
+    expect(existedAtSpawnTime).toBe(true);
+    expect(contentAtSpawnTime).toContain('uiv.device');
+    expect(contentAtSpawnTime).toContain('uiv.state');
+    expect(contentAtSpawnTime).toContain('uiv.ci.threshold');
+    expect(contentAtSpawnTime).toContain('providers.gradleProperty');
+    expect(contentAtSpawnTime).toContain('tasks.withType(Test)');
+  });
+
+  it('args 精确含 --init-script <绝对路径>,路径落在 demoDir 内(沙箱可读性结构断言)', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();
+    seedRoborazziPng(demoDir);
+    const runner = new FakeRunner(0, '');
+    await runCheck(runner, opts(demoDir, uiVerifyDir));
+    const args = runner.calls[0]!.args;
+    const idx = args.indexOf('--init-script');
+    expect(idx).toBeGreaterThanOrEqual(0);
+    const scriptArg = args[idx + 1];
+    expect(scriptArg).toBe(scriptPathFor(demoDir));
+    expect(scriptArg!.startsWith(demoDir)).toBe(true);
+  });
+
+  it('幂等:同 demoDir 连跑两次不报错,文件均被覆写落地', async () => {
+    const { demoDir, uiVerifyDir } = makeDirs();
+    seedRoborazziPng(demoDir);
+    await runCheck(new FakeRunner(0, ''), opts(demoDir, uiVerifyDir));
+    expect(existsSync(scriptPathFor(demoDir))).toBe(true);
+    seedRoborazziPng(demoDir);
+    await expect(runCheck(new FakeRunner(0, ''), opts(demoDir, uiVerifyDir))).resolves.toBeDefined();
+    expect(existsSync(scriptPathFor(demoDir))).toBe(true);
   });
 });
 

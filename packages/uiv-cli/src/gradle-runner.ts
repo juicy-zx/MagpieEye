@@ -293,6 +293,9 @@ export interface ExecutionReceipt {
   gradleUserHomeMode: 'inherited' | 'project-local';
   networkMode: 'host' | 'denied-except-localhost';
   gradleOffline: boolean;
+  /** init-script 替代 uiv-gradle-plugin 转发职能的绝对路径(demoDir 内)。buildExecutionReceipt 本身
+   *  不知 demoDir,保持纯函数;由调用方(index.ts)按需补设,故为可选字段。 */
+  initScript?: string;
 }
 
 /**

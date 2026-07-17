@@ -38,6 +38,32 @@ export interface CheckOpts {
 
 const COMPILE_ERROR_RE = /^e: .*$|^.*Compilation error.*$/gm;
 
+/** init script 替代 uiv-gradle-plugin 的转发职能(与 demo build-logic 旧插件逐字等价搬运):
+ *  三个固定 -P 属性(uiv.device/uiv.state/uiv.ci.threshold)搬运到 fork 的 test worker JVM 系统属性。 */
+const INIT_SCRIPT_CONTENT = `// uiv 自动生成,请勿手改;由 uiv CLI 每次调用前覆写(gitignore 建议:.uiv/)
+allprojects {
+    tasks.withType(Test).configureEach {
+        ['uiv.device', 'uiv.state', 'uiv.ci.threshold'].each { key ->
+            def v = providers.gradleProperty(key).orNull
+            if (v != null) systemProperty(key, v)
+        }
+    }
+}
+`;
+
+/** init script 绝对路径(demoDir 内 —— --sandbox lane 的 Seatbelt 只放行 workspace=demoDir)。纯路径计算,供 receipt 复用。 */
+export function initScriptPath(demoDir: string): string {
+  return join(demoDir, '.uiv', 'uiv-forward.init.gradle');
+}
+
+/** 幂等覆写 init script;写失败自然上抛(fail-fast,不静默跳过)。返回绝对路径供 --init-script 注入。 */
+function writeInitScript(demoDir: string): string {
+  const filePath = initScriptPath(demoDir);
+  mkdirSync(join(demoDir, '.uiv'), { recursive: true });
+  atomicWriteFileSync(filePath, INIT_SCRIPT_CONTENT, 'utf8');
+  return filePath;
+}
+
 /** 从 stderr 截取编译错误匹配段;无匹配返回 null。 */
 function extractCompileError(stderr: string): string | null {
   const lines = stderr.match(COMPILE_ERROR_RE);
@@ -129,9 +155,12 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     // T2.1(D-07):UIV_RERUN=1 追加 --rerun,供测量脚本强制忽略 up-to-date/build cache 真实重跑
     // (默认不追加,不影响正常 check 的增量构建性能)。
     const rerunArgs = process.env.UIV_RERUN === '1' ? ['--rerun'] : [];
+    // init-script 替代 uiv-gradle-plugin 转发职能:每次 spawn 前幂等覆写,--init-script 追加注入。
+    const initScript = writeInitScript(opts.demoDir);
     // P0-8 批次②-fix(修正①):task 按所选模块 project path + variant 限定派生(:app + debug → :app:testDebugUnitTest)。
     const { exitCode, stderr } = await runner.run(opts.demoDir, [
       unitTestTask(opts.moduleName ?? ':app', opts.variant ?? 'debug'), '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs, ...(opts.extraGradleArgs ?? []),
+      '--init-script', initScript,
     ]);
 
     if (exitCode !== 0) {

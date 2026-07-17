@@ -1,3 +1,7 @@
+// DEPRECATED(2026-07-16 起退出 alpha 交付):本插件职能已由 uiv CLI 的 init script
+// 接管(消费模块零构建文件改动,无需 apply 本插件)。坐标 0.1.0-alpha.4 留存不变、
+// 不再随交付演进;源码保留供 v0.2 前追溯,不建议新工程接入。
+
 plugins {
     `kotlin-dsl`
     `maven-publish`

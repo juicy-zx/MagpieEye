@@ -53,8 +53,10 @@ bootstrap 输入；它**不宣称**对任意用户 `~/.m2` 中的私有制品提
   P0-2 陈旧产物门默认化、P0-3 编译错误分类修复、P0-4 npm 发布合同与 engines 声明、
   P0-9 并发隔离与原子写、P1 机器接口（`uiv preflight` 静态区间校验 + `--module`／
   `--variant` 参数化）。
-- P0-8 Android harness 产品化：工程主体**已完成**（独立 Gradle 插件 + view-dump／
-  semantics-dump 两制品发 mavenLocal；仓外 fixture 仅经已发布制品接入、冷道离线跑通；
+- P0-8 Android harness 产品化：工程主体**已完成**（交付制品收敛为 view-dump／
+  semantics-dump 两制品发 mavenLocal，消费侧接入零构建文件改动——转发由 uiv CLI
+  的 init script 自动注入；已发布的 uiv-gradle-plugin:0.1.0-alpha.4 坐标留存不变但
+  标记 deprecated，不再随交付演进；仓外 fixture 仅经已发布制品接入、冷道离线跑通；
   golden 四类硬门 View／Semantics／文本布局／bounds；双 lane 信任模型）。当前处
   **ready_for_clean_CI_gate**——仅待一次干净 CI 环境的在线首装（online-bootstrap）
   补证后方可标 alpha 就绪；本机因 JVM／Gradle TLS 路径限制无法替代该证据。

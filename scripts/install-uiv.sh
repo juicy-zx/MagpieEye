@@ -6,7 +6,7 @@
 #   ./scripts/install-uiv.sh --skip-link  # 不建全局命令(用 node packages/uiv-cli/dist/index.js 调用)
 #
 # 前置(脚本会检查):Node >= 26 / npm >= 11;首次安装需联网(npm 依赖)。
-# Android harness 制品(com.magpie.uiv:view-dump / semantics-dump / uiv-gradle-plugin)由远程 Maven 仓
+# Android harness 制品(com.magpie.uiv:view-dump / semantics-dump)由远程 Maven 仓
 # 预先发布提供,本脚本不处理——目标 Android 工程的 repositories 需包含该远程仓。
 # 目标工程跑真渲染另需 JDK + Android SDK(工程自身的 gradle 前置,与本安装无关)。
 # 平台:macOS / Linux(bash)。Windows 请用 WSL。--sandbox 隔离 lane 仅 macOS,direct lane 全平台。

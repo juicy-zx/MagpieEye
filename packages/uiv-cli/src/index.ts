@@ -23,7 +23,7 @@ import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   CachedFigmaClient, FixtureFigmaClient, RecordRefusedError, RestFigmaClient, UIV_CORE_VERSION,
-  atomicWriteFileSync, attachL3Verdicts, detectVersionDrift, extractMetaVersion, pinBaseline, runPreflight, runRecord, toJUnitXml,
+  atomicWriteFileSync, attachL3Verdicts, detectVersionDrift, extractMetaVersion, initScriptPath, pinBaseline, runPreflight, runRecord, toJUnitXml,
   validatePageReport, validateReportV1,
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
@@ -155,7 +155,9 @@ async function main(): Promise<void> {
 
   if (cmd.kind === 'verify-page') {
     const lane = laneFromFlag(cmd.sandbox);
-    pendingReceipt = buildExecutionReceipt(lane);   // 命令抛错时供 main().catch 发射
+    // receipt 的 initScript 字段(信任链透明):demoDir 内绝对路径,与 run.ts 实际写入路径同一纯函数计算,单一事实来源。
+    const initScript = initScriptPath(path.resolve(cwd, cmd.demo));
+    pendingReceipt = { ...buildExecutionReceipt(lane), initScript };   // 命令抛错时供 main().catch 发射
     const { report, reportPath, execution } = await runVerifyPageCommand({
       test: cmd.test, node: cmd.node, demo: cmd.demo, session: cmd.session,
       module: cmd.module, variant: cmd.variant,
@@ -164,9 +166,9 @@ async function main(): Promise<void> {
       ...(cmd.out !== null ? { out: cmd.out } : {}),
     }, cwd);
     process.exitCode = report.pass ? 0 : 1;   // UI 违规非零,report 必已落盘
-    emitReceipt(execution);                    // stderr 恒发
+    emitReceipt({ ...execution, initScript });  // stderr 恒发
     pendingReceipt = null;                      // 成功已发,免 catch 重复
-    if (cmd.json) console.log(JSON.stringify({ execution, report }, null, 2));   // --json 时 receipt 并入 envelope(末行仍 report 路径)
+    if (cmd.json) console.log(JSON.stringify({ execution: { ...execution, initScript }, report }, null, 2));   // --json 时 receipt 并入 envelope(末行仍 report 路径)
     console.log(reportPath);   // 最后一行恒为 page-report 绝对路径
     return;
   }
@@ -209,7 +211,9 @@ async function main(): Promise<void> {
 
   // check
   const lane = laneFromFlag(cmd.sandbox);
-  pendingReceipt = buildExecutionReceipt(lane);   // 命令抛错时供 main().catch 发射
+  // receipt 的 initScript 字段(信任链透明):demoDir 内绝对路径,与 run.ts 实际写入路径同一纯函数计算,单一事实来源。
+  const initScript = initScriptPath(path.resolve(cwd, cmd.demo));
+  pendingReceipt = { ...buildExecutionReceipt(lane), initScript };   // 命令抛错时供 main().catch 发射
   const { report, reportPath, execution } = await runCheckCommand({
     preview: cmd.preview, node: cmd.node, demo: cmd.demo,
     module: cmd.module, variant: cmd.variant, lane,
@@ -231,7 +235,7 @@ async function main(): Promise<void> {
       console.log(`golden recorded: ${goldenPath}\nhint: git add ${goldenPath} && git commit`);
     });
   }
-  emitReceipt(execution);      // stderr 恒发
+  emitReceipt({ ...execution, initScript });   // stderr 恒发
   pendingReceipt = null;        // 成功已发,免 catch 重复
   console.log(reportPath);   // 最后一行 = report.json v1 绝对路径
 }
