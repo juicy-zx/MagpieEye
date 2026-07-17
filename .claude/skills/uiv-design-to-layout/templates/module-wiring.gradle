@@ -2,11 +2,10 @@
 // 一个模块配一次。maven 制品当前发布在 mavenLocal(仓库块须含 mavenLocal + google + mavenCentral)。
 
 // ===== 根 build.gradle 的 buildscript.dependencies 追加 =====
-//   classpath 'com.magpie.uiv:uiv-gradle-plugin:0.1.0-alpha.4'
 //   classpath 'io.github.takahirom.roborazzi:roborazzi-gradle-plugin:1.63.0'
 
 // ===== 目标模块 build.gradle =====
-apply plugin: 'uiv.screenshot'                    // 零覆盖约定插件(不改你现有 test 配置)
+// 转发由 uiv CLI init script 自动注入,无需任何插件;建议 .gitignore 加 .uiv/
 apply plugin: 'io.github.takahirom.roborazzi'     // 渲染 PNG(check 需 PNG 才进 L2)
 
 android {

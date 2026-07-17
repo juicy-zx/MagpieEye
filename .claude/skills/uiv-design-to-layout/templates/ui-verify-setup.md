@@ -25,7 +25,7 @@ mapping.json(数组,一节点一条):
 
 ## 取得冻结 spec 的两条路
 
-1. **在线拉取**(有 FIGMA_PAT):`uiv baseline pull --fixture <runDir> --file <fileKey> --node <nodeId>` → 落 spec.json(+baseline.png 若可)。
+1. **在线冻结**(有 FIGMA_PAT):在 runDir 下执行 `FIGMA_PAT=<pat> uiv pin --file <fileKey> --node <nodeId> --test <ScreenshotTest 全限定名> --demo <Android工程根>` → 落 spec.json 并**同时写好 mapping.json**(默认 minScore 0.9、matrix l-shape,含 testFqn/demoDir)。baseline.png 未拉到时仅 WARN(L1 advisory 缺席,非阻塞)。勘误(2026-07-16 实测):`baseline pull` 只支持罐头 fixture 模式(其 `--fixture` 是 fixture 文件路径,传 runDir 目录会 EISDIR),不走 REST——在线冻结一律用 `pin`。
 2. **复用已冻结件**:从别处拷贝 `spec.json`(冻结基线是自包含 JSON,可离线复用;mapping 的 version 须与 spec 内 version 一致)。
 
 ## 运行
