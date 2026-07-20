@@ -1,6 +1,6 @@
 {
   "name": "@magpie-eye/ui-verify-mcp",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.1",
   "private": true,
   "license": "UNLICENSED",
   "type": "module",
@@ -19,8 +19,8 @@
     "npm": ">=11.0.0"
   },
   "dependencies": {
-    "@magpie-eye/uiv-cli": "0.0.1",
-    "@magpie-eye/uiv-core": "0.0.1",
+    "@magpie-eye/uiv-cli": "0.1.0-alpha.1",
+    "@magpie-eye/uiv-core": "0.1.0-alpha.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^3.25.0"
   }

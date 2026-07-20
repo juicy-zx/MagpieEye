@@ -42,6 +42,7 @@ Android 侧构建与 render-daemon 启动(launchd 常驻、沙箱 UDS 白名单)
 - 对外项目状态:[`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md)(发布状态、
   支持范围与交付面边界)——对外实现与发布口径以此为准
 - Figma 侧标定结论:`docs/calibration.md`
+- 安全政策与漏洞上报:[`SECURITY.md`](SECURITY.md)
 
 ## Release Gate 与 FIGMA_PAT
 
