@@ -248,14 +248,19 @@ describe('P0-2 陈旧产物门(渲染 PNG + semantics 双门,默认启用)', () 
     }
   }
 
-  it('① 陈旧渲染 PNG + 本轮新 semantics → 不 pass + stale_artifact;陈旧渲染未复制进 renders', async () => {
+  // 修面一(假陈旧防护,P0,取代本用例此前断言的假阳性 stale_artifact):witness(build/uiv/<short>.semantics.json)
+  // 是"测试体本轮真实执行"唯一可信落盘证据(SemanticsDumpRule 每次真实执行必重写,无零写路径)。exit 0(roborazzi
+  // compare 不过会令测试失败、exit≠0)+ witness 新鲜 → compare 通过 = 陈旧候选内容与本轮渲染逐位一致,run.ts
+  // 接受该候选为 render 事实,不再误报 stale_artifact。
+  it('① 陈旧渲染 PNG + 本轮新 semantics(witness 新鲜)→ 视为真实执行+compare 通过,接受陈旧候选为 render(修面一)', async () => {
     const { demoDir, uiVerifyDir } = await setupSpecOnly();
     seedStaleRender(demoDir);
     const { report } = await runCheckL2(new SimRunner(false, true), opts(demoDir, uiVerifyDir));
-    expect(report.pass).toBe(false);
-    expect(report.reason).toBe('inconclusive');
-    expect(report.subReason).toBe('stale_artifact');
-    expect(existsSync(renderPath(uiVerifyDir))).toBe(false);   // ⑤ 陈旧渲染未复制
+    expect(report.pass).toBe(true);
+    expect(report.reason).toBeNull();
+    expect(report.subReason).toBeNull();
+    expect(report.score).toBe(1);
+    expect(existsSync(renderPath(uiVerifyDir))).toBe(true);   // witness 佐证真实执行,陈旧候选被接受并复制进 renders
   });
 
   it('② 本轮新渲染 PNG + 陈旧 semantics → 不 pass + stale_artifact;陈旧 semantics 未复制进 renders', async () => {

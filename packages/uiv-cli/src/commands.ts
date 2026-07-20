@@ -87,6 +87,9 @@ export async function runCheckCommand(
   if (lane !== 'fast') console.error(`uiv: gradle lane=${sel.execution.effectiveLane} (${sel.reason})`);
 
   try {
+    // T3.3 对齐:显式传 semanticsMinMtimeMs(实际产生执行那次调用的 t0),与 verify-page 逐格同口径。
+    // preRendered(快车道)语义树由 daemon worker 现产,新鲜度经 daemon 流程保证,维持不设默认门(不传)。
+    const t0 = Date.now();
     const { report, reportPath } = await runCheckL2(runner, {
       demoDir: path.resolve(cwd, p.demo),
       testFqn,
@@ -98,7 +101,7 @@ export async function runCheckCommand(
       // P0-8 批次②:moduleName(Gradle project path)/ variant 透传,core 约定映射出模块目录 + 派生 task。
       moduleName: p.module ?? ':app',
       variant: p.variant ?? 'debug',
-      ...(preRendered ? { preRendered } : {}),
+      ...(preRendered ? { preRendered } : { semanticsMinMtimeMs: t0 }),
     });
     return { report, reportPath, execution: sel.execution };
   } finally {

@@ -150,18 +150,35 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     }
     const roboDir = join(moduleDir, 'build', 'outputs', 'roborazzi');
     pruneRoborazziArtifacts(roboDir, shortName);
+    // 执行见证(witness):ViewDumpRule/SemanticsDumpRule 在测试体每次真实执行时必然重写该文件(无零写路径),
+    // 是"本轮跑过"的唯一可信落盘证据(PNG 走 roborazzi compare 生命周期,比对通过零写,mtime 不可信)。
+    const witnessPath = join(moduleDir, 'build', 'uiv', `${shortName}.semantics.json`);
+    const isWitnessFresh = (threshold: number): boolean =>
+      existsSync(witnessPath) && statSync(witnessPath).mtimeMs >= threshold - 1000;
 
-    const t0 = Date.now();
+    let t0 = Date.now();
     // T2.1(D-07):UIV_RERUN=1 追加 --rerun,供测量脚本强制忽略 up-to-date/build cache 真实重跑
     // (默认不追加,不影响正常 check 的增量构建性能)。
     const rerunArgs = process.env.UIV_RERUN === '1' ? ['--rerun'] : [];
     // init-script 替代 uiv-gradle-plugin 转发职能:每次 spawn 前幂等覆写,--init-script 追加注入。
     const initScript = writeInitScript(opts.demoDir);
     // P0-8 批次②-fix(修正①):task 按所选模块 project path + variant 限定派生(:app + debug → :app:testDebugUnitTest)。
-    const { exitCode, stderr } = await runner.run(opts.demoDir, [
+    const gradleArgs = [
       unitTestTask(opts.moduleName ?? ':app', opts.variant ?? 'debug'), '--tests', opts.testFqn, '-Proborazzi.test.compare=true', ...rerunArgs, ...(opts.extraGradleArgs ?? []),
       '--init-script', initScript,
-    ]);
+    ];
+    let { exitCode, stderr } = await runner.run(opts.demoDir, gradleArgs);
+
+    // 修面二(假新鲜防护,P0):exit 0 但 witness 陈旧 = 测试体本轮被 gradle up-to-date/build cache 跳过、未
+    // 真实执行(单格 check 默认无 --rerun,与 verify-page/record 不同)。首次调用未带 --rerun 时自动追加重试
+    // 一次并取新 t0 供后续所有新鲜度判定;已带 --rerun(UIV_RERUN=1 或 extraGradleArgs 显式带,如 verify-page
+    // 逐格恒带)视为已如实反映真实执行结果,不重试(防死循环)。重试后 witness 仍陈旧不再报错——dump 缺失/
+    // 陈旧的定性归 L2(runCheckL2 semantics 新鲜度门)既有信号,不在 pixel 侧越权。
+    if (exitCode === 0 && !gradleArgs.includes('--rerun') && !isWitnessFresh(t0)) {
+      console.error('uiv: test task skipped (up-to-date/cache); re-running with --rerun for fresh artifacts');
+      t0 = Date.now();
+      ({ exitCode, stderr } = await runner.run(opts.demoDir, [...gradleArgs, '--rerun']));
+    }
 
     if (exitCode !== 0) {
       const compileError = extractCompileError(stderr);
@@ -183,7 +200,17 @@ export async function runCheck(runner: GradleRunner, opts: CheckOpts): Promise<{
     // 且无 golden 兜底 → stale_artifact(区别于"从未产出任何候选"= render_harness_error)。
     // golden 兜底(compare 通过零产物,渲染实等于 golden)保留旧语义:此时本轮语义 dump 的新鲜度由 runCheckL2 独立把门。
     if (found === null && (actualCand !== null || nonCompareCand !== null)) {
-      return writeReport(reportsDir, { ...base, reason: 'inconclusive', subReason: 'stale_artifact' });
+      // 修面一(假陈旧防护,P0):witness 新鲜 = 测试体本轮确实执行过;exit 0 = roborazzi compare 通过 =
+      // 陈旧候选内容与本轮渲染逐位一致(compare 不过会令测试失败、exit≠0,已在上方短路返回)。接受该候选
+      // 为 render 事实(两候选皆存在时取 mtime 较新者),继续主链而非误报 stale_artifact。witness 也陈旧
+      // (测试确未执行)才维持 stale_artifact。
+      if (isWitnessFresh(t0)) {
+        found = actualCand === null ? nonCompareCand
+          : nonCompareCand === null ? actualCand
+          : (statSync(actualCand).mtimeMs >= statSync(nonCompareCand).mtimeMs ? actualCand : nonCompareCand);
+      } else {
+        return writeReport(reportsDir, { ...base, reason: 'inconclusive', subReason: 'stale_artifact' });
+      }
     }
   }
   if (found === null) {
