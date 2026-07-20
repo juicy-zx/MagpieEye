@@ -161,6 +161,23 @@ describe('runL2 组装(v1 结构块 + 顶层判定)', () => {
     expect(r.pass).toBe(false);
   });
 
+  // 批次⑤欠3(勘察发现,非账本原描述场景):matchThreeTier 只守 density,不守触控盒——parity 路径
+  // 默认开 invariant 集成(opts.invariant!==false)时,SemanticsDump producer 下 clickable 触控盒
+  // 数据丢失同样会让 runInvariants 抛 L2Error('semantics_export_failed')裸穿 runL2(与 invariant-only
+  // 路径同一类 bug,只是触发方式不同)。同口径转结构化 inconclusive,复用既有 subReason。
+  it('parity 路径:invariant 集成下 semantics 缺失形态(触控盒数据丢失)→ 结构化 inconclusive,而非裸抛', () => {
+    const dump = goodDump();
+    const swatch = dump.root.children[2]!;   // fig:1:103
+    swatch.clickable = true;
+    swatch.contentDescription = '色板';
+    swatch.touchBoundsInRoot = null;         // 数据丢失(root 触控盒非空 → SemanticsDump producer)
+    const r = runL2(calibSpec(), dump, {});
+    expect(r.reason).toBe('inconclusive');
+    expect(r.subReason).toBe('semantics_export_failed');
+    expect(r.pass).toBe(false);
+    expect(() => validateReportV1(r)).not.toThrow();
+  });
+
   // D-06 回归①(T2.7 同构):4 叶缺 1、其余 3 个全 tag 配对且各带偏差 → mr=0.75 熔断仍出全部 3 类违规 + missing。
   // untaggedCoverageThreshold=0 关掉 coverage 门,使 subReason 落在 matching_rate_low,隔离熔断语义。
   it('D-06①:mr=0.75 熔断态下 3 个 tag 配对照常出 position/fontSize/color,缺失叶出 missing', () => {
@@ -269,5 +286,21 @@ describe('T3.4 invariant 集成 + invariant-only 路径', () => {
     expect(dens.reason).toBe('inconclusive');
     expect(dens.subReason).toBe('render_harness_error');
     expect(dens.pass).toBe(false);
+  });
+
+  // 批次⑤欠3:runInvariants 除 density≠2 外,还会在 SemanticsDump(root 触控盒非空)producer 下遇
+  // clickable 节点 touchBoundsInRoot 显式 null(数据丢失)时抛 L2Error('semantics_export_failed')
+  // (见 invariant.test.ts③b-fix①(2))。runInvariantOnly 目前只手工前置守了 density,这条仍会
+  // 从 runInvariants 裸抛出 runInvariantOnly——应与 parity 路径(runL2 对 matchThreeTier 的 L2Error)
+  // 同口径转结构化 inconclusive,复用 L2Error 自带的 subReason,不发明新值。
+  it('④ runInvariantOnly:semantics 缺失形态(SemanticsDump producer 下 touchBounds 显式 null)→ 结构化 inconclusive(semantics_export_failed),而非裸抛', () => {
+    const btn: SemNode = { ...sem('fig:btn', 24, 24, 40, 40), clickable: true, contentDescription: '按钮', touchBoundsInRoot: null };
+    const dump: SemanticsDump = { density: 2.0, root: sem('fig:1:100', 0, 0, 720, 400, null, null, [btn]) };
+    const r = runInvariantOnly(dump, {});
+    expect(r.reason).toBe('inconclusive');
+    expect(r.subReason).toBe('semantics_export_failed');
+    expect(r.pass).toBe(false);
+    expect(r.judgePath).toBe('invariant-only');
+    expect(() => validateReportV1(r)).not.toThrow();
   });
 });

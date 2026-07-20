@@ -127,10 +127,15 @@ export function parseCliArgs(argv: string[]): ParsedCommand {
       };
     }
     const flags = collectFlags(rest1, ['--fixture', '--file', '--node']);
-    // T1.2 仅 fixture 模式;REST 通道待 B1 PAT
+    // T1.2 仅 fixture 模式;REST 通道待 B1 PAT。批次⑤欠2:缺 --fixture 时的报错须指向
+    // 在线冻结通道(uiv pin),避免误导用户以为 baseline pull 也能在线拉取。
+    const fixtureFlag = flags.get('--fixture');
+    if (fixtureFlag === undefined) {
+      throw new CliUsageError('missing required flag: --fixture(在线冻结请用 uiv pin(REST))');
+    }
     return {
       kind: 'baseline-pull',
-      fixture: required(flags, '--fixture'),
+      fixture: fixtureFlag,
       file: required(flags, '--file'),
       node: required(flags, '--node'),
     };

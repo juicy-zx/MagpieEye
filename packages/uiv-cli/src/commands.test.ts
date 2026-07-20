@@ -9,6 +9,7 @@ import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
 import { describe, expect, it } from 'vitest';
+import { CliUsageError } from './args.js';
 import { runCheckCommand, runBaselinePullCommand } from './commands.js';
 
 const FIXTURE = fileURLToPath(new URL('../../uiv-core/fixtures/rest-nodes-card.json', import.meta.url));
@@ -23,6 +24,18 @@ describe('runBaselinePullCommand(cwd 注入冒烟)', () => {
     expect(basename(r.baselinePngPath)).toBe('baseline.png');
     const spec = JSON.parse(readFileSync(r.specPath, 'utf8')) as { root: { bbox: { w: number } } };
     expect(spec.root.bbox.w).toBe(360);
+  });
+
+  // 批次⑤欠2(2026-07-16 勘误发现):按旧文档把 runDir 目录传给 --fixture,
+  // 此前 FixtureFigmaClient 内部 readFile 裸抛 EISDIR 栈,exit 2 无可读信息。
+  // 修法:前置校验产可读 CliUsageError,并指向在线冻结通道 uiv pin。
+  it('--fixture 传目录(EISDIR 场景)→ 可读 CliUsageError 指向 uiv pin,不再裸抛 EISDIR 栈', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'uiv-cmd-eisdir-'));
+    const fixtureDir = mkdtempSync(join(tmpdir(), 'uiv-cmd-eisdir-target-'));
+    await expect(runBaselinePullCommand({ fixture: fixtureDir, file: 'FKEY', node: '1:100' }, cwd))
+      .rejects.toThrow(CliUsageError);
+    await expect(runBaselinePullCommand({ fixture: fixtureDir, file: 'FKEY', node: '1:100' }, cwd))
+      .rejects.toThrow(/uiv pin/);
   });
 });
 

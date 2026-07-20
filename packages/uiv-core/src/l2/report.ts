@@ -77,6 +77,11 @@ function inconclusiveReport(subReason: SubReason, structural: StructuralV1 | nul
   };
 }
 
+/** runInvariantOnly 专用:同 inconclusiveReport,附加 judgePath/parityUnavailable(无 Figma 基准套件的顶层标记)。 */
+function invariantOnlyInconclusive(subReason: SubReason): ReportV1 {
+  return { ...inconclusiveReport(subReason, null, 0), judgePath: 'invariant-only', parityUnavailable: true };
+}
+
 export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): ReportV1 {
   const minScore = opts.minScore ?? DEFAULT_MIN_SCORE;
   const blockingSeverities = opts.blockingSeverities ?? DEFAULT_BLOCKING_SEVERITIES;
@@ -131,7 +136,15 @@ export function runL2(root: FigmaNode, dump: SemanticsDump, opts: RunL2Opts): Re
   // invariant 违规只进 verdict 条件 2(high 阻断)与 structural,不入 score 分母。
   let inv: InvariantResult = { violations: [], executed: 0, advisories: [] };
   if (opts.invariant !== false) {
-    inv = runInvariants(dump);
+    // 批次⑤欠3:runInvariants 除 density≠2 外,SemanticsDump producer 下 clickable 触控盒数据
+    // 丢失也会抛 L2Error('semantics_export_failed')(matchThreeTier 只守 density,不守触控盒)。
+    // 与上方 matchThreeTier 的 L2Error 处理同口径:转结构化 inconclusive,复用 e.subReason。
+    try {
+      inv = runInvariants(dump);
+    } catch (e) {
+      if (e instanceof L2Error) return inconclusiveReport(e.subReason, null, 0);
+      throw e;
+    }
     for (const v of inv.violations) violations.push(v);
   }
 
@@ -183,17 +196,18 @@ export function runInvariantOnly(
   const prevState = opts.prevState ?? null;
 
   // density 守卫:runInvariants 遇 density≠2 会抛 L2Error,此处先转 inconclusive(仍标 invariant-only)。
-  if (dump.density !== DENSITY) {
-    return {
-      schemaVersion: 1, pass: false, reason: 'inconclusive', subReason: 'render_harness_error',
-      compileError: null, pixel: null, structural: null,
-      artifacts: { baseline: null, render: null, diff: null },
-      score: 0, regression: false, regressionReason: null,
-      judgePath: 'invariant-only', parityUnavailable: true,
-    };
-  }
+  if (dump.density !== DENSITY) return invariantOnlyInconclusive('render_harness_error');
 
-  const inv = runInvariants(dump);
+  // 批次⑤欠3:density 之外(如 SemanticsDump producer 下 clickable 触控盒数据丢失)runInvariants
+  // 抛出的 L2Error 统一转结构化 inconclusive,与 runL2 对 matchThreeTier/runInvariants 的 L2Error
+  // 同口径(复用 e.subReason,不发明新值)。
+  let inv: InvariantResult;
+  try {
+    inv = runInvariants(dump);
+  } catch (e) {
+    if (e instanceof L2Error) return invariantOnlyInconclusive(e.subReason);
+    throw e;
+  }
   const sc = inv.executed === 0 ? 1 : score(inv.violations, inv.executed);   // informational,不参与 pass
   const blockingHits = inv.violations.filter((v) => blockingSeverities.includes(v.severity)).length;
   const pass = blockingHits === 0;                                           // 只按条件 2(口径裁定①)

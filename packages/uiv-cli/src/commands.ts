@@ -11,7 +11,7 @@
  * --record/--json/pin 逻辑不在本层(CLI 独有,MCP 不暴露)。
  */
 import { mkdirSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import {
   FixtureFigmaClient, addIgnoreRegion, pullBaseline, runCheckL2, stopOdiffServer, verifyPage,
@@ -168,7 +168,16 @@ export async function runBaselinePullCommand(
   const uiVerifyDir = path.resolve(cwd, '.ui-verify');
   // P0-9:workspace 锁边界(与 CLI/MCP 共用)。spec.json/mapping.json 落盘持锁。
   return withWorkspaceLock(uiVerifyDir, async () => {
-    const client = new FixtureFigmaClient(path.resolve(cwd, p.fixture));
+    const fixturePath = path.resolve(cwd, p.fixture);
+    // 批次⑤欠2:--fixture 传目录(旧文档示例传 runDir 的常见误用)时,FixtureFigmaClient 内部
+    // readFile 会裸抛 EISDIR 栈,exit 2 无可读信息。前置校验成可读 CliUsageError,同时指向
+    // 在线冻结通道 uiv pin。路径不存在等其它场景维持原行为,不在本次修复范围。
+    let isDir = false;
+    try { isDir = (await stat(fixturePath)).isDirectory(); } catch { /* 不存在等场景交由后续原有逻辑处理 */ }
+    if (isDir) {
+      throw new CliUsageError('--fixture 需要 fixture 文件(罐头 API 响应);若要在线冻结 spec 请用 uiv pin');
+    }
+    const client = new FixtureFigmaClient(fixturePath);
     const r = await pullBaseline(client, p.file, p.node, uiVerifyDir);
     return { specPath: r.specPath, baselinePngExists: r.baselinePngExists, baselinePngPath: r.baselinePngPath };
   });

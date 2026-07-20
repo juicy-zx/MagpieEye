@@ -11,6 +11,12 @@ describe('parseCliArgs: baseline pull', () => {
   it('缺 --fixture 抛 CliUsageError(T1.2 仅 fixture 模式,REST 通道待 PAT)', () => {
     expect(() => parseCliArgs(['baseline', 'pull', '--file', 'FKEY', '--node', '1:100'])).toThrow(/--fixture/);
   });
+  // 批次⑤欠2:baseline pull 只支持 fixture 模式,缺 --fixture 时的报错须指向在线冻结通道(uiv pin),
+  // 而非让用户误以为 baseline pull 也能在线拉取。
+  it('缺 --fixture 的报错文案指向 uiv pin(在线冻结通道)', () => {
+    expect(() => parseCliArgs(['baseline', 'pull', '--file', 'FKEY', '--node', '1:100']))
+      .toThrow(/uiv pin/);
+  });
   it('缺 --node 抛 CliUsageError', () => {
     expect(() => parseCliArgs(['baseline', 'pull', '--fixture', 'f.json', '--file', 'FKEY'])).toThrow(/--node/);
   });
