@@ -12,7 +12,11 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    # macos-latest 而非 ubuntu:本项目对外声明 macOS-only,测试套件也带 macOS 环境依赖
+    # (junit-xmllint 用系统 /usr/bin/xmllint;MCP stdio-e2e 走恒强制 sandbox,而 Seatbelt
+    # 在非 darwin 平台 fail-closed)。在声明支持的平台上验证,而不是在不支持的平台上放宽测试。
+    # 公开仓库的 macOS runner 不计费。
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
