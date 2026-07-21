@@ -1,4 +1,4 @@
-# 鹊眼(Magpie Eye)0.1.0-alpha.1 交付摘要清单
+# 鹊眼(Magpie Eye)0.1.0 交付摘要清单
 
 > 本文是发布信任链的**摘要清单**,不是安装文档。安装步骤见
 > [`docs/quickstart-external.md`](quickstart-external.md);对外发布状态与支持范围见
@@ -49,11 +49,12 @@ CLI 的交付形态是 **git 仓库本体**(`git clone` + `scripts/install-uiv.s
 寻址,覆盖仓库内全部受版本控制文件,包括三个 workspace 包与 `package-lock.json`)**。
 
 ```
-发布 commit SHA:2c1103fabb6482a8a9be430d88aa14438986ce79(tag `v0.1.0-alpha.1` 所指)
+发布 commit SHA:<RELEASE_COMMIT_SHA>
 ```
 
-已于 2026-07-20 打 tag 时回填(回填提交本身在 tag 之后——tag 指向的提交无法自引用其
-SHA;带外公示以本文件 main 版本为准)。
+`<RELEASE_COMMIT_SHA>` 为占位符,将在给本次发布**打 tag(`v0.1.0`)时**确定并
+回填——即打 tag 所指向的那个 commit 的完整 40 位 SHA。在占位符被回填为止,本文档不构成
+可核验的发布摘要,仅为清单骨架。
 
 第三方 npm 依赖(即 `@modelcontextprotocol/sdk`、`zod`、`looks-same`、`odiff-bin`、
 `pngjs` 等)不在本仓 git 树内,其完整性由根 `package-lock.json` 中各依赖条目的
