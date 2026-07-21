@@ -67,7 +67,17 @@ ok "uiv --version = $($UIV_BIN --version)"
 cat <<'EOF'
 
 安装完成。下一步(在目标 Android 工程):
-  1. 确认工程 repositories 含发布 com.magpie.uiv:* 制品的远程 Maven 仓(harness 制品由该仓提供)
+  1. 接线 harness 制品(本脚本只装 CLI,不改你的工程;以下两处需手工加):
+
+     // settings.gradle(.kts) 的 dependencyResolutionManagement.repositories
+     // 或 build.gradle(.kts) 的 allprojects.repositories —— 按你工程的形态二选一
+     maven { url = uri("https://juicy-zx.github.io/MagpieEye/maven") }
+
+     // 目标模块 build.gradle(.kts) 的 dependencies —— View/XML 与 Compose 各取其一
+     testImplementation("com.magpie.uiv:view-dump:0.1.0")        // View / XML 布局
+     testImplementation("com.magpie.uiv:semantics-dump:0.1.0")   // Jetpack Compose
+     // 另需 roborazzi(产 PNG):testImplementation("io.github.takahirom.roborazzi:roborazzi:1.63.0")
+     // 无需任何 gradle 插件——属性转发由 uiv CLI 的 init script 自动注入
   2. uiv preflight --project <工程根> --module :app --json   # 静态环境门
   3. 按 .claude/skills/uiv-design-to-layout/ 的规程接线模块、写布局与 ScreenshotTest
   4. uiv check --preview <pkg>.<Name>Preview --node <figmaId> --demo <工程根> --module :app
