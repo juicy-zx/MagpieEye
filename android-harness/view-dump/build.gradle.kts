@@ -60,7 +60,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.magpie.uiv"
                 artifactId = "view-dump"
-                version = providers.gradleProperty("uivPublishVersion").getOrElse("0.1.0-alpha.4")
+                version = providers.gradleProperty("uivPublishVersion").getOrElse("0.1.0")
             }
         }
     }

@@ -10,7 +10,7 @@
 | 组件 | 版本 | 说明 |
 |---|---|---|
 | `uiv` CLI(`uiv-core`/`uiv-cli`/`ui-verify-mcp`) | `0.1.x` | 技术预览,经 `scripts/install-uiv.sh` 从源码构建 |
-| Android harness AAR(`com.magpie.uiv:view-dump`、`com.magpie.uiv:semantics-dump`) | `0.1.0-alpha.4` | 经远程 Maven 仓分发 |
+| Android harness AAR(`com.magpie.uiv:view-dump`、`com.magpie.uiv:semantics-dump`) | `0.1.0` | 经远程 Maven 仓分发 |
 
 早于上表的历史版本、已废弃坐标(如 `uiv-gradle-plugin`)、以及仓库内非交付内容(实验性
 代码、内部计划文档)不在受理范围内。

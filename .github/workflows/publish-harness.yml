@@ -1,11 +1,19 @@
 name: Publish Harness
 
-# 触发:形如 harness-v0.1.0-alpha.5 的标签,与 release-cli.yml 的 v[0-9]* 触发互斥
-# (harness-v* 不以字面 "v" 开头)。
+# 触发方式两种:
+#   1. push 形如 harness-v0.1.0 的标签,与 release-cli.yml 的 v[0-9]* 触发互斥
+#      (harness-v* 不以字面 "v" 开头)。
+#   2. workflow_dispatch 手动触发,输入 version(如 0.1.0),便于 UI 点按钮发布。
 on:
   push:
     tags:
       - 'harness-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '要发布的 harness 版本号(如 0.1.0);仅 workflow_dispatch 触发时生效'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -36,13 +44,23 @@ jobs:
         with:
           gradle-version: '9.5.1'
 
-      # 从 tag 推导发布版本,不硬编码具体版本。
+      # 从 tag 或 workflow_dispatch 输入推导发布版本,不硬编码具体版本。
       - name: Resolve publish version
         id: meta
+        env:
+          DISPATCH_VERSION: ${{ github.event.inputs.version }}
         run: |
           set -euo pipefail
-          TAG="$GITHUB_REF_NAME"
-          VERSION="${TAG#harness-v}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            VERSION="$DISPATCH_VERSION"
+          else
+            TAG="$GITHUB_REF_NAME"
+            VERSION="${TAG#harness-v}"
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "错误:未能解析出发布版本号(检查 tag 名或 workflow_dispatch 的 version 输入)。" >&2
+            exit 1
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       # 发布到 build 内 staging 目录(android-harness/build/staging-repo),不碰 mavenLocal。
@@ -53,23 +71,101 @@ jobs:
           gradle -p android-harness publishAllPublicationsToStagingRepository \
             -PuivPublishVersion="$UIV_PUBLISH_VERSION"
 
-      # gh-pages 分支若不存在则明确报错并给出初始化指引,不自动创建
-      # (首发走 scripts/stage-harness-maven.sh + 手工初始化,见 docs/release-automation.md)。
-      - name: Check gh-pages branch exists
+      # P0-8 兼容性防线(不过即 fail 且不上仓——见下面两步)。
+      - name: P0-8 兼容性防线——POM/.module 零 kotlin-stdlib 传递依赖
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
         run: |
           set -euo pipefail
-          if ! git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
-            cat <<'EOF' >&2
-          错误:远程不存在 gh-pages 分支,本 workflow 不会自动创建它。
+          STAGING="android-harness/build/staging-repo/com/magpie/uiv"
+          for artifact in view-dump semantics-dump; do
+            POM="$STAGING/$artifact/$VERSION/$artifact-$VERSION.pom"
+            MODULE="$STAGING/$artifact/$VERSION/$artifact-$VERSION.module"
+            [ -f "$POM" ] || { echo "错误:找不到 $POM" >&2; exit 1; }
+            [ -f "$MODULE" ] || { echo "错误:找不到 $MODULE" >&2; exit 1; }
 
-          初始化步骤(一次性,手工执行):
-            1. 用 scripts/stage-harness-maven.sh 生成首发原字节的 Maven 树
-            2. 新建并推送一个名为 gh-pages 的分支,把该 Maven 树放入分支的 /maven 路径下
-            3. 仓库 Settings -> Pages -> 选择 gh-pages 分支启用 GitHub Pages
-          完整步骤见 docs/release-automation.md。初始化完成后重新推送本次 tag 即可继续。
-          EOF
-            exit 1
+            if grep -q '<dependency>' "$POM"; then
+              echo "错误:$POM 含 <dependency> 段——P0-8 兼容性防线要求零传递依赖,拒绝上仓。" >&2
+              exit 1
+            fi
+            if grep -qi 'kotlin-stdlib' "$POM" "$MODULE"; then
+              echo "错误:$artifact 的 POM/.module 含 kotlin-stdlib 传递依赖——P0-8 兼容性防线要求零传递依赖,拒绝上仓。" >&2
+              exit 1
+            fi
+            echo "OK: $artifact 的 POM 无 <dependency> 段,POM/.module 均无 kotlin-stdlib。"
+          done
+
+      - name: P0-8 兼容性防线——Kotlin metadata version 下探到 2.0.0(尽力而为)
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          STAGING="android-harness/build/staging-repo/com/magpie/uiv"
+          WORKDIR="$(mktemp -d)"
+          trap 'rm -rf "$WORKDIR"' EXIT
+
+          for artifact in view-dump semantics-dump; do
+            AAR="$STAGING/$artifact/$VERSION/$artifact-$VERSION.aar"
+            [ -f "$AAR" ] || { echo "错误:找不到 $AAR" >&2; exit 1; }
+
+            EXTRACT="$WORKDIR/$artifact"
+            mkdir -p "$EXTRACT"
+            unzip -q "$AAR" -d "$EXTRACT"
+            CLASSES_JAR="$EXTRACT/classes.jar"
+            [ -f "$CLASSES_JAR" ] || { echo "错误:$AAR 内找不到 classes.jar" >&2; exit 1; }
+
+            CLASSES_DIR="$EXTRACT/classes"
+            mkdir -p "$CLASSES_DIR"
+            unzip -q "$CLASSES_JAR" -d "$CLASSES_DIR"
+
+            FOUND_ANY=0
+            BAD_MV=0
+            while IFS= read -r -d '' classfile; do
+              MV_LINE="$(javap -v -p "$classfile" 2>/dev/null | grep -A2 'kotlin.Metadata(' | grep -oE 'mv=\[[0-9,]+\]' || true)"
+              if [ -n "$MV_LINE" ]; then
+                FOUND_ANY=1
+                echo "$artifact: $(basename "$classfile") -> $MV_LINE" | tee -a "$GITHUB_STEP_SUMMARY"
+                if [ "$MV_LINE" != "mv=[2,0,0]" ]; then
+                  BAD_MV=1
+                  echo "错误:$artifact 的 $(basename "$classfile") 的 $MV_LINE 未下探到 2.0.0。" >&2
+                fi
+              fi
+            done < <(find "$CLASSES_DIR" -name '*.class' -print0)
+
+            if [ "$FOUND_ANY" -eq 0 ]; then
+              echo "警告(降级断言):$artifact 未能用 javap 可靠解析出任何 @kotlin.Metadata,退化为断言构建配置存在。" | tee -a "$GITHUB_STEP_SUMMARY"
+              grep -q 'languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)' "android-harness/$artifact/build.gradle.kts" \
+                || { echo "错误:$artifact/build.gradle.kts 未设置 languageVersion=KOTLIN_2_0,降级断言也失败,拒绝上仓。" >&2; exit 1; }
+            elif [ "$BAD_MV" -eq 1 ]; then
+              exit 1
+            else
+              echo "OK: $artifact 全部 @kotlin.Metadata class 的 mv 均下探到 2.0.0。"
+            fi
+          done
+
+      # gh-pages 分支若不存在则自动创建孤儿分支,不再要求人工初始化。
+      # 用 git worktree 在独立目录操作,不影响本 job 主 checkout 的当前分支/tag。
+      - name: Ensure gh-pages branch exists
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            echo "gh-pages 分支已存在,跳过自动初始化。"
+            exit 0
           fi
+          echo "gh-pages 分支不存在,自动创建孤儿分支..."
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          WORKTREE_DIR="$(mktemp -d)"
+          git worktree add --orphan -b gh-pages "$WORKTREE_DIR"
+          (
+            cd "$WORKTREE_DIR"
+            mkdir -p "${GH_PAGES_MAVEN_PATH}"
+            touch "${GH_PAGES_MAVEN_PATH}/.gitkeep"
+            git add "${GH_PAGES_MAVEN_PATH}/.gitkeep"
+            git commit -m "chore: init gh-pages branch"
+            git push origin gh-pages
+          )
+          git worktree remove --force "$WORKTREE_DIR"
 
       - name: Checkout gh-pages
         uses: actions/checkout@v7
@@ -107,6 +203,27 @@ jobs:
             for f in "$dest/$artifact-$VERSION.aar" "$dest/$artifact-$VERSION.pom" "$dest/$artifact-$VERSION.module"; do
               sha256sum "$f" | awk '{print $1}' > "$f.sha256"
             done
+          done
+
+      # 每个 artifact 的版本目录下生成 SHA256SUMS 汇总(可用 sha256sum -c 校验),
+      # 并把摘要表打印进 job summary,供带外公示取用。
+      - name: Generate SHA256SUMS + job summary
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## harness $VERSION 制品摘要"
+            echo ""
+            echo "| artifact | file | sha256 |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for artifact in view-dump semantics-dump; do
+            dest="gh-pages/${GH_PAGES_MAVEN_PATH}/com/magpie/uiv/$artifact/$VERSION"
+            ( cd "$dest" && sha256sum "$artifact-$VERSION.aar" "$artifact-$VERSION.pom" "$artifact-$VERSION.module" > SHA256SUMS )
+            while read -r sha fname; do
+              echo "| $artifact | $fname | \`$sha\` |" >> "$GITHUB_STEP_SUMMARY"
+            done < "$dest/SHA256SUMS"
           done
 
       - name: Commit and push gh-pages

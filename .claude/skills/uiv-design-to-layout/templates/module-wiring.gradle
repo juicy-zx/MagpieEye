@@ -23,8 +23,8 @@ android {
 
 dependencies {
     // XML/View 屏用 view-dump;Compose 屏用 semantics-dump(两者可并存)
-    testImplementation 'com.magpie.uiv:view-dump:0.1.0-alpha.4'
-    // testImplementation 'com.magpie.uiv:semantics-dump:0.1.0-alpha.4'
+    testImplementation 'com.magpie.uiv:view-dump:0.1.0'
+    // testImplementation 'com.magpie.uiv:semantics-dump:0.1.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.16'
     testImplementation 'io.github.takahirom.roborazzi:roborazzi:1.63.0'

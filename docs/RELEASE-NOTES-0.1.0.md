@@ -18,10 +18,10 @@
 | 组件 | 版本 | 分发方式 |
 |---|---|---|
 | `uiv` CLI(`@magpie-eye/uiv-core` / `@magpie-eye/uiv-cli` / `@magpie-eye/ui-verify-mcp`) | `0.1.0` | git clone 本仓 + `scripts/install-uiv.sh` |
-| Android harness AAR:`com.magpie.uiv:view-dump` | `0.1.0-alpha.4` | 预发布至维护者远程 Maven 仓 |
-| Android harness AAR:`com.magpie.uiv:semantics-dump` | `0.1.0-alpha.4` | 预发布至维护者远程 Maven 仓 |
+| Android harness AAR:`com.magpie.uiv:view-dump` | `0.1.0` | 经 CI 全自动发布至维护者远程 Maven 仓 |
+| Android harness AAR:`com.magpie.uiv:semantics-dump` | `0.1.0` | 经 CI 全自动发布至维护者远程 Maven 仓 |
 
-这是当前唯一受支持的版本配对——CLI `0.1.0` 只与 harness AAR `0.1.0-alpha.4`
+这是当前唯一受支持的版本配对——CLI `0.1.0` 只与 harness AAR `0.1.0`
 一起验证过,请勿混用其他坐标版本。
 
 历史坐标 `com.magpie.uiv:uiv-gradle-plugin` **已退场**:早期版本需要目标工程额外应用

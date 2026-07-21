@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# 自 CI 全自动发布上线后(见 .github/workflows/publish-harness.yml、
+# docs/release-automation.md 第 4 节),本脚本**不再是首发路径**——新版本一律走 CI 打
+# tag 或 workflow_dispatch 发布,不再手工上传任何制品。本脚本仅保留为离线/应急兜底:
+# 手工发布 0.1.0-alpha.4 这批历史锚定字节(见下方脚本逻辑),不用于发布后续新版本。
+#
 # stage-harness-maven.sh — 首发原字节脚本:把 ~/.m2 里已锚定摘要的 0.1.0-alpha.4 两枚
 # harness AAR 三件套拷入 Maven 目录布局的输出目录,逐件核对 docs/RELEASE-0.1.0-digests.md
 # 中登记的 SHA-256,任一不符即失败——防止把和已公示摘要不同字节的产物错发到 gh-pages。
