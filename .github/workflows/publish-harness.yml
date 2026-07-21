@@ -1,0 +1,122 @@
+name: Publish Harness
+
+# 触发:形如 harness-v0.1.0-alpha.5 的标签,与 release-cli.yml 的 v[0-9]* 触发互斥
+# (harness-v* 不以字面 "v" 开头)。
+on:
+  push:
+    tags:
+      - 'harness-v*'
+
+permissions:
+  contents: write
+
+env:
+  GH_PAGES_MAVEN_PATH: maven
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Setup Gradle 9.5.1
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '9.5.1'
+
+      # 从 tag 推导发布版本,不硬编码具体版本。
+      - name: Resolve publish version
+        id: meta
+        run: |
+          set -euo pipefail
+          TAG="$GITHUB_REF_NAME"
+          VERSION="${TAG#harness-v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # 发布到 build 内 staging 目录(android-harness/build/staging-repo),不碰 mavenLocal。
+      - name: Publish to staging repo
+        env:
+          UIV_PUBLISH_VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          gradle -p android-harness publishAllPublicationsToStagingRepository \
+            -PuivPublishVersion="$UIV_PUBLISH_VERSION"
+
+      # gh-pages 分支若不存在则明确报错并给出初始化指引,不自动创建
+      # (首发走 scripts/stage-harness-maven.sh + 手工初始化,见 docs/release-automation.md)。
+      - name: Check gh-pages branch exists
+        run: |
+          set -euo pipefail
+          if ! git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            cat <<'EOF' >&2
+          错误:远程不存在 gh-pages 分支,本 workflow 不会自动创建它。
+
+          初始化步骤(一次性,手工执行):
+            1. 用 scripts/stage-harness-maven.sh 生成首发原字节的 Maven 树
+            2. 新建并推送一个名为 gh-pages 的分支,把该 Maven 树放入分支的 /maven 路径下
+            3. 仓库 Settings -> Pages -> 选择 gh-pages 分支启用 GitHub Pages
+          完整步骤见 docs/release-automation.md。初始化完成后重新推送本次 tag 即可继续。
+          EOF
+            exit 1
+          fi
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      # append-only 校验:staging 里每个 <artifact>/<version> 若已存在于 gh-pages 同路径下则 fail,
+      # 已发布版本的字节不可被后续 tag 覆盖。
+      - name: Append-only guard
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          for artifact in view-dump semantics-dump; do
+            dest="gh-pages/${GH_PAGES_MAVEN_PATH}/com/magpie/uiv/$artifact/$VERSION"
+            if [ -d "$dest" ]; then
+              echo "错误:$dest 已存在于 gh-pages——append-only 纪律禁止覆盖已发布版本。" >&2
+              exit 1
+            fi
+          done
+
+      # 拷贝 staging 产物到 gh-pages 的 /maven 路径,逐件生成 .sha256 sidecar。
+      - name: Copy staged artifacts into gh-pages
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          STAGING="android-harness/build/staging-repo/com/magpie/uiv"
+          for artifact in view-dump semantics-dump; do
+            src="$STAGING/$artifact/$VERSION"
+            dest="gh-pages/${GH_PAGES_MAVEN_PATH}/com/magpie/uiv/$artifact/$VERSION"
+            mkdir -p "$dest"
+            cp "$src/$artifact-$VERSION.aar" "$src/$artifact-$VERSION.pom" "$src/$artifact-$VERSION.module" "$dest/"
+            for f in "$dest/$artifact-$VERSION.aar" "$dest/$artifact-$VERSION.pom" "$dest/$artifact-$VERSION.module"; do
+              sha256sum "$f" | awk '{print $1}' > "$f.sha256"
+            done
+          done
+
+      - name: Commit and push gh-pages
+        working-directory: gh-pages
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${GH_PAGES_MAVEN_PATH}/com/magpie/uiv/view-dump/$VERSION" "${GH_PAGES_MAVEN_PATH}/com/magpie/uiv/semantics-dump/$VERSION"
+          git commit -m "publish harness $VERSION"
+          git push origin gh-pages

@@ -1,0 +1,73 @@
+name: Release CLI
+
+# 触发:形如 v0.1.0 的标签(harness-v* 不以字面 "v" 开头,天然不撞此 pattern,
+# 与 publish-harness.yml 的 harness-v* 触发互斥)。
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # 质量门:vitest 全量套件必须绿,红则整个 release job 失败,不产出 GitHub Release。
+      - name: Test
+        run: npm test
+
+      # 从 tag 推导版本号与可选发布物路径,不硬编码具体版本。
+      # 正文文件缺省时生成占位说明并把本次 Release 标记为 draft,防止误发无正文内容的正式 Release。
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          NOTES_FILE="docs/RELEASE-NOTES-${VERSION}.md"
+          DIGESTS_FILE="docs/RELEASE-${VERSION}-digests.md"
+
+          if [ -f "$NOTES_FILE" ]; then
+            echo "notes_file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+            echo "draft=false" >> "$GITHUB_OUTPUT"
+          else
+            PLACEHOLDER="$RUNNER_TEMP/release-notes-placeholder.md"
+            {
+              echo "# $TAG"
+              echo
+              echo "占位发布说明:未找到 \`$NOTES_FILE\`。本 Release 已自动标记为 draft,"
+              echo "请维护者补写正式发布说明(docs/RELEASE-NOTES-${VERSION}.md)后手动发布。"
+            } > "$PLACEHOLDER"
+            echo "notes_file=$PLACEHOLDER" >> "$GITHUB_OUTPUT"
+            echo "draft=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ -f "$DIGESTS_FILE" ]; then
+            echo "digests_file=$DIGESTS_FILE" >> "$GITHUB_OUTPUT"
+          else
+            echo "digests_file=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          body_path: ${{ steps.meta.outputs.notes_file }}
+          draft: ${{ steps.meta.outputs.draft == 'true' }}
+          files: ${{ steps.meta.outputs.digests_file }}

@@ -47,6 +47,15 @@ dependencies {
     compileOnly(kotlin("stdlib", "2.0.21")) // 全局 flag 关闭内建 stdlib,compileOnly 不进 POM,消费者自供
 }
 
+publishing {
+    repositories {
+        maven {
+            name = "staging"
+            url = uri(rootProject.layout.buildDirectory.dir("staging-repo"))
+        }
+    }
+}
+
 afterEvaluate {
     publishing {
         publications {
@@ -54,7 +63,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.magpie.uiv"
                 artifactId = "semantics-dump"
-                version = "0.1.0-alpha.4"
+                version = providers.gradleProperty("uivPublishVersion").getOrElse("0.1.0-alpha.4")
             }
         }
     }
