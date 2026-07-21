@@ -23,3 +23,6 @@ experiments/fastlane-spike/*/.gradle/
 .env
 .env.*
 !.env.example
+
+# 内部计划与过程记录不随公开仓分发(P0-7 裁定;本地保留)
+.claude/plans/
