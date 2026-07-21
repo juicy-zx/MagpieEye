@@ -40,7 +40,7 @@ CLI 的交付形态是 **git 仓库本体**(`git clone` + `scripts/install-uiv.s
 寻址,覆盖仓库内全部受版本控制文件,包括三个 workspace 包与 `package-lock.json`)**。
 
 ```
-发布 commit SHA:8f7587028013cfa2322e7f01859c2d5cbee5be3c(tag `v0.1.0` 所指)
+发布 commit SHA:f88eb3af7a827ce2926a2df2841ebf96211b73a3(tag `v0.1.0` 所指)
 ```
 
 已于 2026-07-20 打 tag 时回填(回填提交本身在 tag 之后——tag 指向的提交无法自引用其
