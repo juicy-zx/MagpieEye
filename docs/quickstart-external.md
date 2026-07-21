@@ -118,6 +118,10 @@ matrix,供后续 `check`/`verify-page` 读取)。`WARN baseline.png missing` 属
 影响 L1(advisory),不阻断硬门禁;如需 L1 像素比对,按 onboarding-guide 第 2.3 节手工
 补 `baseline.png`。
 
+`pin` 需要 Figma PAT,两种配置方式:环境变量 `FIGMA_PAT=<pat>`,或在目标工程根放一个
+`.figma-pat` 文件(写入 PAT 原文;env 优先于文件)——**该文件必须加入 `.gitignore`**,
+否则 CLI 会打印警告提醒有凭据泄露风险。
+
 ### 4.4 check:内循环
 
 ```bash

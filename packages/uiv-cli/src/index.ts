@@ -28,6 +28,7 @@ import {
 } from '@magpie-eye/uiv-core';
 import type { FigmaClient, MappingEntry } from '@magpie-eye/uiv-core';
 import { CliUsageError, parseCliArgs, previewToTestFqn } from './args.js';
+import { resolveFigmaPat } from './figma-pat.js';
 import { SandboxError, buildExecutionReceipt, selectGradleRunner } from './gradle-runner.js';
 import type { ExecutionReceipt, LaneRequest } from './gradle-runner.js';
 import { runBaselinePullCommand, runCheckCommand, runVerifyPageCommand } from './commands.js';
@@ -77,10 +78,10 @@ async function main(): Promise<void> {
     if (cmd.metaFixture !== null) {
       // getNodes 不在本命令路径上,首参(nodes fixture)不适用,占位空串。
       client = new FixtureFigmaClient('', path.resolve(cmd.metaFixture));
-    } else if (process.env.FIGMA_PAT) {
-      client = new RestFigmaClient();
     } else {
-      throw new CliUsageError('check-version needs --meta-fixture or FIGMA_PAT (B1)');
+      const pat = resolveFigmaPat(cwd);   // env FIGMA_PAT 优先,否则 <cwd>/.figma-pat(未 gitignore/权限过宽仅告警,见 figma-pat.ts)
+      if (pat) client = new RestFigmaClient({ pat });
+      else throw new CliUsageError('check-version needs --meta-fixture or FIGMA_PAT (B1),或在当前目录放 `.figma-pat` 文件(需 gitignore)');
     }
     const mappingPath = path.join(uiVerifyDir, 'mapping.json');
     let entries: MappingEntry[];
@@ -124,11 +125,15 @@ async function main(): Promise<void> {
   if (cmd.kind === 'pin') {
     // P0-9:pin 写 spec.json/mapping.json(+.uiv-cache)持锁(CLI-only 写命令,锁边界在此)。
     await withWorkspaceLock(uiVerifyDir, async () => {
-    // 口径 4:--fixture→Fixture,否则 FIGMA_PAT→Rest,双缺→usage error(B1);统一经 CachedFigmaClient 缓存。
+    // 口径 4:--fixture→Fixture,否则 FIGMA_PAT/.figma-pat→Rest,双缺→usage error(B1);统一经 CachedFigmaClient 缓存。
     let inner: FigmaClient;
-    if (cmd.fixture !== null) inner = new FixtureFigmaClient(path.resolve(cmd.fixture));
-    else if (process.env.FIGMA_PAT) inner = new RestFigmaClient();
-    else throw new CliUsageError('pin needs --fixture or FIGMA_PAT (B1)');
+    if (cmd.fixture !== null) {
+      inner = new FixtureFigmaClient(path.resolve(cmd.fixture));
+    } else {
+      const pat = resolveFigmaPat(cwd);   // env FIGMA_PAT 优先,否则 <cwd>/.figma-pat(未 gitignore/权限过宽仅告警,见 figma-pat.ts)
+      if (pat) inner = new RestFigmaClient({ pat });
+      else throw new CliUsageError('pin needs --fixture or FIGMA_PAT (B1),或在当前目录放 `.figma-pat` 文件(需 gitignore)');
+    }
     const client = new CachedFigmaClient(inner, path.resolve(process.cwd(), '.uiv-cache'));
     const sourceDoc = cmd.source ?? process.env.UIV_SOURCE_DOC;   // scope 来源:--source ?? UIV_SOURCE_DOC(loop 注入)
     const r = await pinBaseline(client, process.cwd(), {
